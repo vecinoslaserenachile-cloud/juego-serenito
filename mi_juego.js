@@ -1,122 +1,101 @@
 // ====================================================================
 // CÓDIGO PRINCIPAL DEL JUEGO (mi_juego.js)
-// Versión: Escenario Básico + Serenito + Primeros Muros Coloniales
+// Versión: Escenario Básico + Serenito + MOVIMIENTO DEL JUGADOR
 // ====================================================================
 
-// --- 1. CONFIGURACIÓN BÁSICA DEL MOTOR ---
 const canvas = document.getElementById("renderCanvas");
-// Iniciamos el motor gráfico con 'antialias: true' para que los bordes se vean suaves.
-const engine = new BABYLON.Engine(canvas, true);
+// Activamos 'preserveDrawingBuffer' por si necesitamos tomar capturas de pantalla luego
+const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
 
-// --- FUNCIÓN PRINCIPAL: Aquí creamos el mundo ---
+// --- VARIABLES GLOBALES (Para que todo el código pueda acceder a ellas) ---
+let serenitoMesh = null; // Aquí guardaremos al personaje cuando cargue
+let inputMap = {}; // Aquí guardaremos qué teclas están presionadas
+
+
+// --- FUNCIÓN PRINCIPAL: CREATE SCENE ---
 const createScene = function () {
-    // Creamos la escena vacía
     const scene = new BABYLON.Scene(engine);
-    // Color de fondo del cielo (un celeste claro estilo Serena)
-    scene.clearColor = new BABYLON.Color3(0.6, 0.8, 1);
+    scene.clearColor = new BABYLON.Color3(0.6, 0.8, 1); // Cielo celeste
 
-    // --- 2. CÁMARA (Nuestros ojos) ---
-    // Cámara que gira alrededor del centro.
-    // Parámetros: Nombre, ángulo horizontal, ángulo vertical, distancia, objetivo, escena.
-    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 10, new BABYLON.Vector3(0, 1, 0), scene);
-    camera.attachControl(canvas, true); // Permitimos control con mouse/tactil
-    camera.wheelPrecision = 50; // Velocidad del zoom con la rueda
-    camera.lowerRadiusLimit = 4; // No acercarse demasiado
-    camera.upperRadiusLimit = 20; // No alejarse demasiado
-    camera.lowerBetaLimit = 0.1; // No meterse debajo del suelo
+    // --- 1. CÁMARA DE SEGUIMIENTO ---
+    // Usamos una 'FollowCamera' que está diseñada para perseguir objetivos.
+    // Parámetros: Nombre, posición inicial, escena, objetivo (se define luego).
+    const camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 10, -10), scene);
+    camera.radius = 8; // Distancia al personaje
+    camera.heightOffset = 3; // Altura de la cámara sobre el personaje
+    camera.rotationOffset = 180; // Para que mire desde atrás
+    camera.cameraAcceleration = 0.05; // Qué tan rápido acelera para seguirlo
+    camera.maxCameraSpeed = 10; // Velocidad máxima
 
-    // --- 3. LUCES Y SOMBRAS (El Sol de Coquimbo) ---
-    // Luz ambiental suave (hemisférica) para que nada se vea completamente negro.
+    // --- 2. LUCES Y SOMBRAS ---
     const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
     hemiLight.intensity = 0.5;
 
-    // Luz direccional fuerte que simula el SOL.
-    // La dirección (-1, -2, -1) hace que venga de arriba y un lado.
     const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
-    dirLight.position = new BABYLON.Vector3(20, 40, 20); // Ponemos el sol alto
-    dirLight.intensity = 1.3; // Sol brillante
+    dirLight.position = new BABYLON.Vector3(20, 40, 20);
+    dirLight.intensity = 1.3;
 
-    // CREO EL GENERADOR DE SOMBRAS (Usando la luz del sol)
+    // Sombras suaves
     const shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
-    shadowGenerator.useBlurExponentialShadowMap = true; // Sombras con bordes suaves
-    shadowGenerator.blurKernel = 32; // Nivel de suavizado
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.blurKernel = 32;
 
-    // --- 4. EL ENTORNO (Suelo y Edificios) ---
-
-    // A) EL SUELO (Tierra/Arena)
-    // Creamos un plano grande de 60x60 metros.
-    const ground = BABYLON.MeshBuilder.CreateGround("suelo", {width: 60, height: 60}, scene);
-    // Material para el suelo
+    // --- 3. EL ENTORNO (Suelo y Muros) ---
+    // Suelo
+    const ground = BABYLON.MeshBuilder.CreateGround("suelo", {width: 100, height: 100}, scene);
     const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.75, 0.55); // Color arena claro
-    groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0); // Que no brille (mate)
+    groundMaterial.diffuseColor = new BABYLON.Color3(0.85, 0.75, 0.55); // Arena
+    groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0); // Mate
     ground.material = groundMaterial;
-    // ¡IMPORTANTE! El suelo debe RECIBIR las sombras.
     ground.receiveShadows = true;
 
-    // B) LOS MUROS COLONIALES (Técnica de Instanciación Rápida)
-    // 1. Creamos el "Molde Maestro": Una pared blanca simple.
-    // (Ancho 4m, Alto 3.5m, Profundidad 0.5m)
+    // Muros Coloniales (Instanciación)
     const muroMaestro = BABYLON.MeshBuilder.CreateBox("muroMaestro", {width: 4, height: 3.5, depth: 0.5}, scene);
-    // Material blanco hueso para la pared
     const materialMuro = new BABYLON.StandardMaterial("matMuroBlanco", scene);
-    materialMuro.diffuseColor = new BABYLON.Color3(0.95, 0.95, 0.9); // Blanco colonial
+    materialMuro.diffuseColor = new BABYLON.Color3(0.95, 0.95, 0.9);
     muroMaestro.material = materialMuro;
-    
-    // ESCONDEMOS EL MAESTRO. No queremos verlo, solo usarlo para clonar.
-    muroMaestro.isVisible = false;
+    muroMaestro.isVisible = false; // Escondemos el original
 
-    // 2. La "Fotocopiadora": Creamos una fila de 8 muros.
-    for (let i = 0; i < 8; i++) {
-        // ¡MAGIA! 'createInstance' clona el objeto casi sin costo de rendimiento.
+    // Creamos 10 muros en fila
+    for (let i = 0; i < 10; i++) {
         let clonMuro = muroMaestro.createInstance("muro_clon_" + i);
-        
-        // Posicionamos cada clon:
-        // Los separamos 4 metros entre sí en el eje X, empezando desde atrás (-14).
-        // Los subimos la mitad de su altura (1.75) en Y para que pisen el suelo.
-        // Los alejamos 6 metros del centro en el eje Z.
-        clonMuro.position = new BABYLON.Vector3((i * 4) - 14, 1.75, 6);
-        
-        // Hacemos que el clon proyecte y reciba sombras para darle realismo.
+        clonMuro.position = new BABYLON.Vector3((i * 4) - 20, 1.75, 8);
         clonMuro.receiveShadows = true;
         shadowGenerator.addShadowCaster(clonMuro);
     }
 
-    // --- 5. CARGAR AL PROTAGONISTA (Serenito) ---
-    BABYLON.SceneLoader.ImportMesh(
-        "",             // Ruta base (vacía)
-        "./",           // Carpeta actual
-        "serenito.glb", // NOMBRE EXACTO DE TU ARCHIVO EN GITHUB
-        scene,
-        function (meshes) {
-            // Esta función se ejecuta cuando el modelo termina de cargar
-            console.log("¡Serenito cargado en La Serena!");
+    // --- 4. SISTEMA DE CONTROL (TECLADO) ---
+    // Esto "escucha" cuando presionas una tecla
+    scene.actionManager = new BABYLON.ActionManager(scene);
+    // Cuando se presiona una tecla (OnKeyDown), guardamos que es 'true' en el mapa
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = true;
+    }));
+    // Cuando se suelta una tecla (OnKeyUp), guardamos que es 'false'
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+    }));
 
-            const serenitoRoot = meshes[0];
 
-            // AJUSTES DE POSICIÓN (Si flota un poco, ajusta este valor Y)
-            // serenitoRoot.position.y = 0.1;
+    // --- 5. CARGAR A SERENITO ---
+    BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes) {
+        console.log("¡Serenito listo para moverse!");
+        serenitoMesh = meshes[0]; // Guardamos al personaje en la variable global
 
-            // AJUSTES DE TAMAÑO (Si es muy grande o chico, descomenta y ajusta los 1)
-            // serenitoRoot.scaling = new BABYLON.Vector3(1, 1, 1);
+        // Ajustes iniciales
+        // serenitoMesh.position.y = 0;
+        // serenitoMesh.scaling = new BABYLON.Vector3(1, 1, 1);
 
-            // --- SOMBRAS PARA SERENITO ---
-            // Recorremos todas las partes del modelo
-            meshes.forEach(function(mesh) {
-                // Cada parte proyecta sombra en el suelo
-                shadowGenerator.addShadowCaster(mesh);
-                // Cada parte se hace sombra a sí misma (auto-sombreado)
-                mesh.receiveShadows = true;
-            });
-        },
-        null, // Función de progreso (no usada)
-        function (scene, message, exception) {
-             // Si falla, avisa en la consola (F12)
-             console.error("Error fatal: No se pudo cargar 'serenito.glb'. Verifique el nombre en GitHub.");
-        }
-    );
+        // Sombras
+        meshes.forEach(function(mesh) {
+            shadowGenerator.addShadowCaster(mesh);
+            mesh.receiveShadows = true;
+        });
 
-    // Devolvemos la escena terminada
+        // ¡IMPORTANTE! Le decimos a la cámara que persiga a Serenito
+        camera.lockedTarget = serenitoMesh;
+    });
+
     return scene;
 };
 
@@ -124,12 +103,42 @@ const createScene = function () {
 // --- INICIAR EL MOTOR ---
 const scene = createScene();
 
-// Bucle principal: Dibuja la escena constantemente
+
+// --- BUCLE PRINCIPAL DE JUEGO (Se ejecuta antes de dibujar cada imagen) ---
+scene.onBeforeRenderObservable.add(() => {
+    // Si Serenito aún no ha cargado, no hacemos nada
+    if (!serenitoMesh) return;
+
+    // Velocidad de movimiento y rotación
+    const moveSpeed = 0.15;
+    const rotateSpeed = 0.05;
+
+    // --- LÓGICA DE MOVIMIENTO ---
+    // Si presiona 'w' o Flecha Arriba -> Mover hacia adelante
+    if (inputMap["w"] || inputMap["arrowup"]) {
+        serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(moveSpeed));
+    }
+    // Si presiona 's' o Flecha Abajo -> Mover hacia atrás
+    if (inputMap["s"] || inputMap["arrowdown"]) {
+        serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(-moveSpeed));
+    }
+    // Si presiona 'a' o Flecha Izquierda -> Girar a la izquierda
+    if (inputMap["a"] || inputMap["arrowleft"]) {
+        serenitoMesh.rotate(BABYLON.Axis.Y, -rotateSpeed, BABYLON.Space.LOCAL);
+    }
+    // Si presiona 'd' o Flecha Derecha -> Girar a la derecha
+    if (inputMap["d"] || inputMap["arrowright"]) {
+        serenitoMesh.rotate(BABYLON.Axis.Y, rotateSpeed, BABYLON.Space.LOCAL);
+    }
+});
+
+
+// --- BUCLE DE RENDERIZADO ---
 engine.runRenderLoop(function () {
     scene.render();
 });
 
-// Ajustar si cambia el tamaño de la ventana del navegador
+// Ajustar pantalla
 window.addEventListener("resize", function () {
     engine.resize();
 });
