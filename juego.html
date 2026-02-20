@@ -13,9 +13,7 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        
         #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
-        
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
         .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
         .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b39700; }
@@ -24,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena...</div>
+    <div id="ui-status">Bisturí aplicado: Rotación 180° y Reubicación</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -42,12 +40,12 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
         
-        // --- 📍 AJUSTES DE REUBICACIÓN SOLICITADOS ---
-        const MUNI_X = 550;      // Movido una manzana a la derecha
-        const MUNI_Z = 200;
-        const MUNI_SIZE = 240;
-        const MUNI_ROTACION = 4.71; // Giro de 180 grados respecto al original (1.57 + 3.14)
-        // --------------------------------------------
+        // --- 📍 AJUSTES DE PRECISIÓN (BISTURÍ) ---
+        const MUNI_X = 550;      // Una manzana a la derecha
+        const MUNI_Z = 200;      // Posición calle
+        const MUNI_SIZE = 240;   // Escala del edificio
+        const MUNI_ROTACION = 0; // 180° respecto a la versión anterior (3.14 -> 0)
+        // -----------------------------------------
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
@@ -72,9 +70,8 @@
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
         suelo.material = matSuelo;
         suelo.checkCollisions = true;
-        statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 3. CARGAR MUNICIPALIDAD (Con nueva rotación y posición)
+        // 3. CARGAR MUNICIPALIDAD
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
             const bound = muni.getHierarchyBoundingVectors(true);
@@ -83,7 +80,7 @@
             
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // Alineación automática al suelo
+            // Alineación de pies del edificio al suelo
             const nivelSuelo = -bound.min.y * factor; 
             muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
             muni.rotation.y = MUNI_ROTACION; 
@@ -92,7 +89,7 @@
                 m.checkCollisions = true;
                 if(m.material) m.material.backFaceCulling = false;
             });
-            statusDiv.innerHTML += "<br>✅ Muni Reubicada y Girada";
+            statusDiv.innerHTML = "✅ Edificio: 180° aplicado";
         });
 
         // 4. CARGAR SERENITO
@@ -100,7 +97,7 @@
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
             
-            // AJUSTE: Y=0 para que pise el mapa exactamente
+            // AJUSTE BISTURÍ: Y=0 exacto para que no flote
             personaje.position = new BABYLON.Vector3(0, 0, 0); 
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
 
@@ -108,7 +105,7 @@
             camera.radius = 120;
 
             if (anims && anims.length > 0) animCaminar = anims[0];
-            statusDiv.innerHTML += "<br>✅ Serenito en el Suelo";
+            statusDiv.innerHTML += "<br>✅ Serenito: Pies en el suelo";
         });
 
         // 5. MOVIMIENTO
@@ -138,7 +135,7 @@
             }
         });
 
-        // 6. FUNCIONES BOTONES
+        // 6. FUNCIONES CÁMARA
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
@@ -154,9 +151,9 @@
         window.rescatar = function() {
             if(!personaje) return;
             destinoFinal = null;
-            personaje.position = new BABYLON.Vector3(0, 0, 0); // Vuelve al suelo exacto
+            personaje.position = new BABYLON.Vector3(0, 0, 0); 
             camaraSerenito();
-            statusDiv.innerHTML = "🚨 ¡Rescate exitoso!";
+            statusDiv.innerHTML = "🚨 Rescate: Centro de Plaza";
             setTimeout(() => { statusDiv.innerHTML = "✅ Sistema OK"; }, 2000);
         }
 
