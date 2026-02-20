@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - Rescate Pro</title>
+    <title>LA❤️SERENA - Proyecto Vecinos</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -12,7 +12,6 @@
     <style>
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial Black', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-        
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
             background: rgba(0, 0, 0, 0.9); padding: 25px; border-radius: 15px; 
@@ -22,7 +21,6 @@
         .linea1 { color: #ffd700; font-size: 28px; display: block; text-align: center; }
         .linea2 { color: #ff3333; font-size: 20px; display: block; text-align: center; margin-top: 5px; }
         #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
-        
         #botones {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
@@ -68,7 +66,7 @@
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // VISTA PANORÁMICA DE INICIO
+            // VISTA INICIAL PANORÁMICA (Sin zoom a Tesorería)
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.2, 85, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
 
@@ -82,15 +80,14 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO (Blindada)
+            // CARGA DE SERENITO (15MB)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // --- AJUSTE DE ALTURA AUTOMÁTICO ---
-                const bInfo = meshes[0].getHierarchyBoundingVectors(true);
+                // --- POSICIONAMIENTO FORZADO SEGURO ---
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
-                // Compensamos el pivote de la cabeza para que los pies toquen el suelo
-                personaje.position = new BABYLON.Vector3(0, (-bInfo.min.y * 1.7) + 0.1, 0);
+                // Forzamos altura de 1.5 para que el pivote de la cabeza no lo entierre
+                personaje.position = new BABYLON.Vector3(0, 1.5, 0);
                 
                 meshes.forEach(m => { 
                     m.isVisible = true; 
@@ -112,7 +109,7 @@
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
-                // Doble toque para caminar en celulares
+                // Doble toque para móviles
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -153,11 +150,9 @@
             return scene;
         };
 
-        // FUNCIÓN DE RESCATE (Por si se pierde de vista)
         window.rescatar = function() {
             if (!personaje) return;
-            const bInfo = personaje.getHierarchyBoundingVectors(true);
-            personaje.position = new BABYLON.Vector3(0, (-bInfo.min.y * 1.7) + 0.1, 0);
+            personaje.position = new BABYLON.Vector3(0, 1.5, 0);
             camera.lockedTarget = personaje;
             document.getElementById("estado").innerHTML = "🚀 POSICIÓN REINICIADA";
         };
@@ -167,7 +162,7 @@
             if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
             if (t==2) { camera.lockedTarget = personaje; camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
             if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 55; }
-            if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 85; }
+            if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 80; }
         }
 
         crearEscena();
