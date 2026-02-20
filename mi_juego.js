@@ -1,167 +1,113 @@
 /* =========================================
-   VARIABLES GLOBALES EXISTENTES (Mantener)
+   CONFIGURACIÓN INICIAL (CANVAS)
    ========================================= */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
 
-// Variables de Serenito (Mantenemos tu lógica actual)
-let serenito = { x: 100, y: 300, velocidad: 5, ancho: 40, alto: 60 };
+// Ajustar canvas al tamaño completo de la ventana
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize(); // Llamada inicial
 
 /* =========================================
-   NUEVAS VARIABLES: SISTEMA DE MINIJUEGOS
+   OBJETOS DEL JUEGO
    ========================================= */
-let enMinijuego = false; // "Interruptor" maestro
 
-// Zona de Activación (La esquina tipo Mario Party)
-// Digamos que está en la esquina inferior derecha cerca de la Muni
-const zonaPong = { x: canvas.width - 150, y: canvas.height - 150, ancho: 100, alto: 100 };
+// 1. SERENITO (El Protagonista)
+const serenito = {
+    x: 100,
+    y: 0, // Se ajusta en el bucle según el suelo
+    ancho: 50,
+    alto: 80,
+    velocidad: 6,
+    color: 'salmon' // Color temporal hasta que cargues tu sprite
+};
+
+// 2. LA MUNICIPALIDAD (El Edificio Rotado)
+const muni = {
+    x: 0, // Se calcula dinámicamente
+    y: 0,
+    ancho: 200,
+    alto: 120, // Invertido visualmente por la rotación
+    color: '#DDDDDD'
+};
+
+// CONTROLES DE TECLADO
+const teclas = {};
+window.addEventListener('keydown', e => teclas[e.key] = true);
+window.addEventListener('keyup', e => teclas[e.key] = false);
 
 /* =========================================
-   LÓGICA DEL BUCLE PRINCIPAL (Game Loop)
+   MOTOR DEL JUEGO (GAME LOOP)
    ========================================= */
 function gameLoop() {
-    if (!enMinijuego) { 
-        // --- AQUÍ VA TU CÓDIGO ORIGINAL QUE YA TIENES ---
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        dibujarEscenario(); // Tus edificios bonitos
-        moverSerenito();    // Tu movimiento
-        dibujarSerenito();  // Tus sprites
-        
-        // --- AGREGA SOLO ESTO AL FINAL DEL IF ---
-        dibujarZonaActivacion(); // Para ver dónde pisar
-        verificarEntradaPong();  // Para detectar si entraste
-    } 
-    // No borres el requestAnimationFrame
+    // A. Limpiar pantalla
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // B. Calcular posiciones dinámicas (responsive)
+    const sueloY = canvas.height - 100;
+    
+    // Posición de la Muni: Esquina derecha
+    muni.x = canvas.width - 250; 
+    muni.y = sueloY - 50; 
+
+    // Posición de Serenito (Gravedad simple: siempre en el suelo)
+    serenito.y = sueloY - serenito.alto;
+
+    // C. Mover Serenito
+    if (teclas['ArrowRight'] || teclas['d']) serenito.x += serenito.velocidad;
+    if (teclas['ArrowLeft'] || teclas['a']) serenito.x -= serenito.velocidad;
+
+    // Límites de pantalla para Serenito
+    if (serenito.x < 0) serenito.x = 0;
+    if (serenito.x > canvas.width - serenito.ancho) serenito.x = canvas.width - serenito.ancho;
+
+    // --- DIBUJAR ---
+
+    // 1. EL SUELO
+    ctx.fillStyle = "#4CAF50"; // Verde pasto
+    ctx.fillRect(0, sueloY, canvas.width, 100);
+
+    // 2. LA MUNICIPALIDAD ROTADA (Lógica compleja recuperada)
+    ctx.save(); // Guardar estado normal
+    
+    // Trasladamos el punto 0,0 al centro de donde queremos la muni
+    let centroMuniX = muni.x + muni.ancho / 2;
+    let centroMuniY = muni.y + muni.alto / 2;
+    ctx.translate(centroMuniX, centroMuniY);
+    
+    // ROTACIÓN: 90 grados a la izquierda (Anti-horario)
+    ctx.rotate(-90 * Math.PI / 180); 
+    
+    // Dibujamos el edificio centrado en el nuevo eje rotado
+    ctx.fillStyle = muni.color;
+    ctx.fillRect(-muni.ancho / 2, -muni.alto / 2, muni.ancho, muni.alto);
+    
+    // Detalle: Techo (Para ver que está girada)
+    ctx.fillStyle = "#8B0000"; // Rojo oscuro
+    ctx.fillRect(-muni.ancho / 2, -muni.alto / 2, 30, muni.alto); // Franja lateral que ahora es superior
+    
+    // Texto rotado
+    ctx.fillStyle = "black";
+    ctx.font = "16px Arial";
+    ctx.fillText("MUNI", -20, 0);
+    
+    ctx.restore(); // Restaurar estado normal (MUY IMPORTANTE)
+
+    // 3. DIBUJAR A SERENITO
+    ctx.fillStyle = serenito.color;
+    ctx.fillRect(serenito.x, serenito.y, serenito.ancho, serenito.alto);
+    
+    // Ojos de Serenito (para ver hacia dónde mira)
+    ctx.fillStyle = "black";
+    ctx.fillRect(serenito.x + 30, serenito.y + 10, 5, 5);
+
+    // Repetir el ciclo
     requestAnimationFrame(gameLoop);
-};
-    } else {
-        // Si estamos en minijuego, el loop principal se "congela" visualmente
-        // y el loop del Pong toma el control dentro del canvas pequeño.
-    }
 }
 
-/* =========================================
-   NUEVAS FUNCIONES PARA INTEGRAR
-   ========================================= */
-
-function dibujarZonaActivacion() {
-    // Dibujamos un cuadrado brillante en el suelo
-    ctx.fillStyle = "rgba(255, 215, 0, 0.5)"; // Dorado semitransparente
-    ctx.fillRect(zonaPong.x, zonaPong.y, zonaPong.ancho, zonaPong.alto);
-    
-    // Texto flotante
-    ctx.fillStyle = "white";
-    ctx.font = "14px Arial";
-    ctx.fillText("Zona de Juegos", zonaPong.x + 5, zonaPong.y - 10);
-}
-
-function verificarEntradaMinijuego() {
-    // Detección de colisión simple (Rectángulo contra Rectángulo)
-    if (serenito.x < zonaPong.x + zonaPong.ancho &&
-        serenito.x + serenito.ancho > zonaPong.x &&
-        serenito.y < zonaPong.y + zonaPong.alto &&
-        serenito.y + serenito.alto > zonaPong.y) {
-        
-        activarMinijuego();
-    }
-}
-
-function activarMinijuego() {
-    enMinijuego = true;
-    document.getElementById('minigame-overlay').style.display = 'block';
-    
-    // Iniciar el loop del Pong (función definida abajo)
-    iniciarPong();
-    
-    // Opcional: Mover a Serenito un poco atrás para que no reactive el juego al salir
-    serenito.x -= 50; 
-    serenito.y -= 50;
-}
-
-function cerrarMinijuego() {
-    enMinijuego = false;
-    document.getElementById('minigame-overlay').style.display = 'none';
-    detenerPong(); // Detener el loop del pong para ahorrar recursos
-    gameLoop(); // Reactivar el loop principal
-}
-
-/* =========================================
-   LÓGICA DEL MINIJUEGO PONG (Módulo Aislado)
-   ========================================= */
-let pongLoopId;
-const pCanvas = document.getElementById('pongCanvas');
-const pCtx = pCanvas.getContext('2d');
-
-// Variables del Pong
-let pelota = { x: 250, y: 150, dx: 4, dy: 4, radio: 10 };
-let paleta = { x: 200, y: 280, ancho: 100, alto: 10 };
-
-function iniciarPong() {
-    actualizarPong();
-}
-
-function detenerPong() {
-    cancelAnimationFrame(pongLoopId);
-}
-
-// Control del mouse para el Pong
-pCanvas.addEventListener('mousemove', function(evt) {
-    let rect = pCanvas.getBoundingClientRect();
-    let mouseX = evt.clientX - rect.left;
-    paleta.x = mouseX - paleta.ancho / 2;
-});
-
-function actualizarPong() {
-    if (!enMinijuego) return;
-
-    // 1. Limpiar canvas del Pong
-    pCtx.fillStyle = 'black';
-    pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
-
-    // 2. Dibujar Pelota
-    pCtx.beginPath();
-    pCtx.arc(pelota.x, pelota.y, pelota.radio, 0, Math.PI*2);
-    pCtx.fillStyle = 'white';
-    pCtx.fill();
-    pCtx.closePath();
-
-    // 3. Dibujar Paleta
-    pCtx.fillStyle = '#00FF00'; // Verde retro
-    pCtx.fillRect(paleta.x, paleta.y, paleta.ancho, paleta.alto);
-
-    // 4. Mover Pelota
-    pelota.x += pelota.dx;
-    pelota.y += pelota.dy;
-
-    // Rebote Paredes Laterales
-    if (pelota.x + pelota.radio > pCanvas.width || pelota.x - pelota.radio < 0) {
-        pelota.dx = -pelota.dx;
-    }
-
-    // Rebote Techo
-    if (pelota.y - pelota.radio < 0) {
-        pelota.dy = -pelota.dy;
-    }
-
-    // Rebote Paleta
-    if (pelota.y + pelota.radio > paleta.y &&
-        pelota.x > paleta.x &&
-        pelota.x < paleta.x + paleta.ancho) {
-        pelota.dy = -pelota.dy;
-    }
-
-    // Perder (Suelo) -> Reiniciar pelota
-    if (pelota.y - pelota.radio > pCanvas.height) {
-        pelota.x = pCanvas.width / 2;
-        pelota.y = pCanvas.height / 2;
-        // Aquí podrías restar vidas
-    }
-
-    pongLoopId = requestAnimationFrame(actualizarPong);
-}
-
-// INICIAR EL JUEGO AL CARGAR
+// INICIAR
 gameLoop();
-
