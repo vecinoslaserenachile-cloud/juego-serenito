@@ -2,24 +2,102 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - Mapa Real</title>
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0b0b1a; }
-        #renderCanvas { width: 100%; height: 100%; touch-action: none; }
-        #ui { position: absolute; top: 15px; left: 15px; color: white; font-family: 'Segoe UI', sans-serif; 
-              background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 2px solid #ffd700; pointer-events: none; }
-    </style>
+    <title>Vecinos La Serena 3D - Final</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
+    <style>
+        body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
+        #ui {
+            position: absolute; top: 15px; left: 15px;
+            color: white; font-family: sans-serif;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px; border-radius: 8px;
+            border-left: 5px solid #ffd700;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
     <div id="ui">
-        <strong style="color: #ffd700;">Vecinos La Serena Chile</strong><br>
-        📍 Sector: Centro Histórico / Plaza de Armas<br>
-        🎮 Mover: WASD o Flechas<br>
-        🔄 Girar: Arrastrar con el dedo o mouse
+        <h3 style="margin:0; color:#ffd700;">La Serena 3D</h3>
+        <p>📍 Plaza de Armas</p>
+        <p>🎮 Mover: WASD o Flechas</p>
     </div>
+
     <canvas id="renderCanvas"></canvas>
-    <script src="mi_juego.js"></script>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const crearEscena = function () {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.6, 0.7); // Cielo azulado
+
+            // 1. ACTIVAR LECTOR DRACO (Indispensable para tu archivo liviano)
+            BABYLON.DracoCompression.Configuration = {
+                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
+            };
+
+            // 2. CÁMARA
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 8, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.lowerRadiusLimit = 3;
+            camera.upperRadiusLimit = 25;
+
+            // 3. ILUMINACIÓN (Sin brillo excesivo)
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 1.1;
+
+            // 4. EL SUELO (MAPA)
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 150, height: 150}, scene);
+            const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+            
+            // Truco anti-cache: Agregamos un número random para forzar la carga
+            const textura = new BABYLON.Texture("mapa.jpg?v=" + Math.random(), scene);
+            
+            matSuelo.diffuseTexture = textura;
+            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0); // ¡ESTO QUITA EL DESTELLO BLANCO!
+            suelo.material = matSuelo;
+
+            // 5. CARGAR A SERENITO (Versión Draco)
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Math.random(), scene, function (meshes, ps, sk, anims) {
+                const personaje = meshes[0];
+                
+                // Ajustes
+                personaje.scaling = new BABYLON.Vector3(-1.5, 1.5, 1.5); // Espejo para leer bien
+                personaje.position.y = 0; 
+                camera.lockedTarget = personaje; // La cámara lo sigue
+
+                // Activar animación automáticamente
+                if (anims && anims.length > 0) {
+                    anims[0].play(true);
+                }
+
+                // 6. CONTROLES
+                const inputMap = {};
+                scene.actionManager = new BABYLON.ActionManager(scene);
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
+
+                scene.onBeforeRenderObservable.add(() => {
+                    const vel = 0.2;
+                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; }
+                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; }
+                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; }
+                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; }
+                });
+            });
+
+            return scene;
+        };
+
+        const scene = crearEscena();
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
+        window.addEventListener("click", () => canvas.focus());
+    </script>
 </body>
 </html>
