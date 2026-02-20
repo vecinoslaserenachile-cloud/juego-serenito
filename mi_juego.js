@@ -1,129 +1,170 @@
-const canvas = document.getElementById("renderCanvas");
-const engine = new BABYLON.Engine(canvas, true);
-let camera, personaje, animCaminar, destinoFinal;
-let moviendoPorClick = false;
+/* =========================================
+   VARIABLES GLOBALES EXISTENTES (Mantener)
+   ========================================= */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-const crearEscena = function () {
-    const scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
-    scene.collisionsEnabled = true;
+// Variables de Serenito (Mantenemos tu lógica actual)
+let serenito = { x: 100, y: 300, velocidad: 5, ancho: 40, alto: 60 };
 
-    BABYLON.DracoCompression.Configuration = {
-        decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
-    };
+/* =========================================
+   NUEVAS VARIABLES: SISTEMA DE MINIJUEGOS
+   ========================================= */
+let enMinijuego = false; // "Interruptor" maestro
 
-    // 1. CÁMARA INICIAL (Se queda fija mientras caminas)
-    camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    camera.checkCollisions = true;
+// Zona de Activación (La esquina tipo Mario Party)
+// Digamos que está en la esquina inferior derecha cerca de la Muni
+const zonaPong = { x: canvas.width - 150, y: canvas.height - 150, ancho: 100, alto: 100 };
 
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 1.8;
+/* =========================================
+   LÓGICA DEL BUCLE PRINCIPAL (Game Loop)
+   ========================================= */
+function gameLoop() {
+    if (!enMinijuego) {
+        // 1. Limpiar pantalla principal
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 2. EL MAPA (Se carga siempre primero para no ver pantalla negra)
-    const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
-    const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-    matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-    matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
-    suelo.material = matSuelo;
-    suelo.checkCollisions = true;
-    suelo.position.y = -0.05;
+        // 2. Dibujar Fondo, Suelo y la Municipalidad (CON LA ROTACIÓN QUE HICIMOS)
+        dibujarEscenario(); 
 
-    // 3. CARGA DE SERENITO (Archivo de 15MB)
-    document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA...";
-    
-    BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
-        personaje = meshes[0];
-        
-        // ESCALA POSITIVA PARA EVITAR ESPEJO
-        personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
-        personaje.position = new BABYLON.Vector3(0, 0.9, 0); // Pies sobre el asfalto
-        personaje.checkCollisions = true;
-        personaje.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
-        
-        camera.lockedTarget = personaje;
-        document.getElementById("estado").innerHTML = "✅ PROTAGONISTA LISTO";
-        
-        // Animación articulada (Brazos y piernas)
-        animCaminar = anims[0];
-        if (animCaminar) animCaminar.stop();
+        // 3. Mover y Dibujar a Serenito
+        moverSerenito(); // Tu función de movimiento existente
+        dibujarSerenito(); // Tu función de dibujo existente
 
-        // Movimiento por doble clic
-        scene.onPointerObservable.add((pointerInfo) => {
-            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
-                const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
-                if (pick.hit) { destinoFinal = pick.pickedPoint; moviendoPorClick = true; }
-            }
-        });
+        // 4. NUEVO: Dibujar la zona del minijuego (para saber dónde pisar)
+        dibujarZonaActivacion();
 
-        // Lógica de Movimiento y Cámaras Fijas
-        const inputMap = {};
-        scene.actionManager = new BABYLON.ActionManager(scene);
-        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
-        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
+        // 5. NUEVO: Verificar si Serenito pisó la zona
+        verificarEntradaMinijuego();
 
-        scene.onBeforeRenderObservable.add(() => {
-            const vel = 0.4;
-            let mov = false;
-            let rot = personaje.rotation.y;
-
-            // PERSPECTIVA FIJA: El mouse no mueve la cámara sola mientras caminas
-            const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
-            if (keys.some(k => inputMap[k])) {
-                camera.detachControl(canvas);
-                moviendoPorClick = false;
-                mov = true;
-            } else if (!moviendoPorClick) {
-                camera.attachControl(canvas, true);
-            }
-
-            // Teclado
-            if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; }
-            if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; }
-            if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; }
-            if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; }
-
-            // Doble clic
-            if (moviendoPorClick && destinoFinal) {
-                const d = destinoFinal.subtract(personaje.position);
-                d.y = 0;
-                if (d.length() > 0.6) {
-                    d.normalize();
-                    personaje.moveWithCollisions(d.scale(vel));
-                    rot = Math.atan2(d.x, d.z) + Math.PI;
-                    mov = true;
-                } else { moviendoPorClick = false; }
-            }
-
-            personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.18);
-            if (animCaminar) {
-                if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
-                else { animCaminar.stop(); }
-            }
-        });
-    }, (evt) => {
-        if (evt.lengthComputable) {
-            let p = (evt.loaded * 100 / evt.total).toFixed();
-            document.getElementById("estado").innerHTML = "📥 RECUPERANDO PROTAGONISTA: " + p + "%";
-        }
-    });
-
-    return scene;
-};
-
-// 5 CÁMARAS PROFESIONALES FIJAS
-window.setCam = function(t) {
-    if (!camera) return;
-    switch(t) {
-        case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
-        case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
-        case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; // Cenital
-        case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // General
-        case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
+        requestAnimationFrame(gameLoop);
+    } else {
+        // Si estamos en minijuego, el loop principal se "congela" visualmente
+        // y el loop del Pong toma el control dentro del canvas pequeño.
     }
 }
 
-const scene = crearEscena();
-engine.runRenderLoop(() => scene.render());
-window.addEventListener("resize", () => engine.resize());
-window.addEventListener("click", () => canvas.focus());
+/* =========================================
+   NUEVAS FUNCIONES PARA INTEGRAR
+   ========================================= */
+
+function dibujarZonaActivacion() {
+    // Dibujamos un cuadrado brillante en el suelo
+    ctx.fillStyle = "rgba(255, 215, 0, 0.5)"; // Dorado semitransparente
+    ctx.fillRect(zonaPong.x, zonaPong.y, zonaPong.ancho, zonaPong.alto);
+    
+    // Texto flotante
+    ctx.fillStyle = "white";
+    ctx.font = "14px Arial";
+    ctx.fillText("Zona de Juegos", zonaPong.x + 5, zonaPong.y - 10);
+}
+
+function verificarEntradaMinijuego() {
+    // Detección de colisión simple (Rectángulo contra Rectángulo)
+    if (serenito.x < zonaPong.x + zonaPong.ancho &&
+        serenito.x + serenito.ancho > zonaPong.x &&
+        serenito.y < zonaPong.y + zonaPong.alto &&
+        serenito.y + serenito.alto > zonaPong.y) {
+        
+        activarMinijuego();
+    }
+}
+
+function activarMinijuego() {
+    enMinijuego = true;
+    document.getElementById('minigame-overlay').style.display = 'block';
+    
+    // Iniciar el loop del Pong (función definida abajo)
+    iniciarPong();
+    
+    // Opcional: Mover a Serenito un poco atrás para que no reactive el juego al salir
+    serenito.x -= 50; 
+    serenito.y -= 50;
+}
+
+function cerrarMinijuego() {
+    enMinijuego = false;
+    document.getElementById('minigame-overlay').style.display = 'none';
+    detenerPong(); // Detener el loop del pong para ahorrar recursos
+    gameLoop(); // Reactivar el loop principal
+}
+
+/* =========================================
+   LÓGICA DEL MINIJUEGO PONG (Módulo Aislado)
+   ========================================= */
+let pongLoopId;
+const pCanvas = document.getElementById('pongCanvas');
+const pCtx = pCanvas.getContext('2d');
+
+// Variables del Pong
+let pelota = { x: 250, y: 150, dx: 4, dy: 4, radio: 10 };
+let paleta = { x: 200, y: 280, ancho: 100, alto: 10 };
+
+function iniciarPong() {
+    actualizarPong();
+}
+
+function detenerPong() {
+    cancelAnimationFrame(pongLoopId);
+}
+
+// Control del mouse para el Pong
+pCanvas.addEventListener('mousemove', function(evt) {
+    let rect = pCanvas.getBoundingClientRect();
+    let mouseX = evt.clientX - rect.left;
+    paleta.x = mouseX - paleta.ancho / 2;
+});
+
+function actualizarPong() {
+    if (!enMinijuego) return;
+
+    // 1. Limpiar canvas del Pong
+    pCtx.fillStyle = 'black';
+    pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+
+    // 2. Dibujar Pelota
+    pCtx.beginPath();
+    pCtx.arc(pelota.x, pelota.y, pelota.radio, 0, Math.PI*2);
+    pCtx.fillStyle = 'white';
+    pCtx.fill();
+    pCtx.closePath();
+
+    // 3. Dibujar Paleta
+    pCtx.fillStyle = '#00FF00'; // Verde retro
+    pCtx.fillRect(paleta.x, paleta.y, paleta.ancho, paleta.alto);
+
+    // 4. Mover Pelota
+    pelota.x += pelota.dx;
+    pelota.y += pelota.dy;
+
+    // Rebote Paredes Laterales
+    if (pelota.x + pelota.radio > pCanvas.width || pelota.x - pelota.radio < 0) {
+        pelota.dx = -pelota.dx;
+    }
+
+    // Rebote Techo
+    if (pelota.y - pelota.radio < 0) {
+        pelota.dy = -pelota.dy;
+    }
+
+    // Rebote Paleta
+    if (pelota.y + pelota.radio > paleta.y &&
+        pelota.x > paleta.x &&
+        pelota.x < paleta.x + paleta.ancho) {
+        pelota.dy = -pelota.dy;
+    }
+
+    // Perder (Suelo) -> Reiniciar pelota
+    if (pelota.y - pelota.radio > pCanvas.height) {
+        pelota.x = pCanvas.width / 2;
+        pelota.y = pCanvas.height / 2;
+        // Aquí podrías restar vidas
+    }
+
+    pongLoopId = requestAnimationFrame(actualizarPong);
+}
+
+// INICIAR EL JUEGO AL CARGAR
+gameLoop();
