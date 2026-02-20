@@ -11,18 +11,60 @@
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
+        /* ESTILOS GENERALES */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
+        
+        /* BARRA DE HERRAMIENTAS INFERIOR */
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
-        .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 10px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 14px; transition: all 0.1s; }
+        .btn:hover { background: #ffe44d; }
         .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b39700; }
-        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
+        .btn-rescate { background: #ff4444; color: white; box-shadow: 0 4px 0 #990000; }
+        .btn-rescate:hover { background: #ff6666; }
+
+        /* PANEL DE ARQUITECTO (DERECHA SUPERIOR) */
+        #panel-arquitecto {
+            position: absolute; top: 20px; right: 20px; width: 260px;
+            background: rgba(20, 20, 30, 0.9); color: white; padding: 20px;
+            border-radius: 12px; border: 1px solid #ffd700; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 200; backdrop-filter: blur(5px);
+        }
+        #panel-arquitecto h3 { margin: 0 0 15px 0; font-size: 16px; color: #ffd700; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: #ccc; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #ffd700; }
+        .valor-display { color: #00ff00; font-family: monospace; font-weight: bold; }
+        
+        /* ESTADO DEL SISTEMA */
+        #ui-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); color: lime; padding: 8px 15px; border-radius: 20px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">Ajustando diagonales y rotaciones...</div>
+    <div id="ui-status">Sistema Cargado: Modo Arquitecto Activo</div>
+
+    <div id="panel-arquitecto">
+        <h3>🏗️ Panel Arquitecto</h3>
+        
+        <div class="control-group">
+            <label>Posición X (Este/Oeste) <span id="valX" class="valor-display">550</span></label>
+            <input type="range" id="inputX" min="-1200" max="1200" value="550">
+        </div>
+
+        <div class="control-group">
+            <label>Posición Z (Norte/Sur) <span id="valZ" class="valor-display">200</span></label>
+            <input type="range" id="inputZ" min="-1200" max="1200" value="200">
+        </div>
+
+        <div class="control-group">
+            <label>Rotación (Grados) <span id="valRot" class="valor-display">0°</span></label>
+            <input type="range" id="inputRot" min="0" max="360" value="0">
+        </div>
+        <div style="font-size: 11px; text-align: center; color: #888; margin-top: 10px;">
+            Ajusta los sliders hasta que encaje en el mapa.
+        </div>
+    </div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -37,107 +79,224 @@
         const engine = new BABYLON.Engine(canvas, true);
         const statusDiv = document.getElementById("ui-status");
 
-        let scene, camera, personaje, animCaminar;
+        // VARIABLES GLOBALES
+        let scene, camera, light, shadowGenerator;
+        let personaje, animCaminar;
+        let edificioMuni = null;
         let destinoFinal = null;
-        
-        // --- 📍 AJUSTES DE PRECISIÓN ---
-        // Edificio Blanco y Rojo (Muni)
-        const MUNI_X = 550;      
-        const MUNI_Z = 200;
-        const MUNI_ROTACION = 1.57; // 90 grados a la izquierda exactos respecto a la versión anterior
 
-        // Intendencia (Diagonal Izquierda y Frente)
-        const INTEN_X = -100;    // Desplazado a la izquierda (negativo para diagonal)
-        const INTEN_Z = 600;     // Cuadra de enfrente
-        const INTEN_SIZE = 240;
-        const INTEN_ROTACION = 1.57; // Orientación inicial para ajustar
-        // -----------------------------------------
-
+        // --- 1. CONFIGURACIÓN DE LA ESCENA ---
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // Cielo azul claro
             scene.collisionsEnabled = true;
 
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
+            // Luz Hemisférica (Ambiente)
+            const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+            hemiLight.intensity = 0.6;
 
+            // Luz Direccional (Sol - Para las Sombras)
+            const dirLight = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
+            dirLight.position = new BABYLON.Vector3(200, 400, 200);
+            dirLight.intensity = 1.5;
+
+            // Generador de Sombras
+            shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
+            shadowGenerator.useBlurExponentialShadowMap = true;
+            shadowGenerator.blurKernel = 32;
+
+            // Cámara inicial
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
+            camera.lowerRadiusLimit = 20; // No acercarse demasiado
+            camera.upperRadiusLimit = 800; // No alejarse demasiado
 
             return scene;
         };
 
         scene = crearEscena();
 
-        // 2. CARGAR MAPA
-        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
+        // --- 2. EL SUELO (MAPA) ---
+        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 3000, height: 3000}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+        matSuelo.specularColor = new BABYLON.Color3(0, 0, 0); // Quitar brillo al mapa
         suelo.material = matSuelo;
         suelo.checkCollisions = true;
+        suelo.receiveShadows = true; // IMPORTANTE: El suelo recibe sombras
 
-        // 3. CARGAR MUNICIPALIDAD (BISTURÍ: 90° a la izquierda)
-        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            const muni = meshes[0];
-            const bound = muni.getHierarchyBoundingVectors(true);
-            const size = bound.max.subtract(bound.min);
-            const factor = 240 / Math.max(size.x, size.y, size.z);
-            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
-            const nivelSuelo = -bound.min.y * factor; 
-            muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
-            muni.rotation.y = MUNI_ROTACION; 
-
-            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
-            statusDiv.innerHTML = "✅ Muni: Giro 90° OK";
-        });
-
-        // 4. CARGAR INTENDENCIA (DIAGONAL IZQUIERDA)
-        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            const inten = meshes[0];
-            const bound = inten.getHierarchyBoundingVectors(true);
-            const size = bound.max.subtract(bound.min);
-            const factor = INTEN_SIZE / Math.max(size.x, size.y, size.z);
-            inten.scaling = new BABYLON.Vector3(factor, factor, factor);
-            const nivelSueloInten = -bound.min.y * factor; 
-            inten.position = new BABYLON.Vector3(INTEN_X, nivelSueloInten, INTEN_Z);
-            inten.rotation.y = INTEN_ROTACION;
-
-            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
-            statusDiv.innerHTML += "<br>✅ Intendencia: Diagonal OK";
-        });
-
-        // 5. SERENITO Y MOVIMIENTO
+        // --- 3. CARGAR SERENITO ---
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(10, 10, 10);
+            personaje.scaling = new BABYLON.Vector3(10, 10, 10); // Ajusta según tu modelo
             personaje.position = new BABYLON.Vector3(0, 0, 0); 
-            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
+            personaje.ellipsoid = new BABYLON.Vector3(2, 5, 2); // Caja de colisión del cuerpo
+
+            // Agregar sombras a Serenito
+            meshes.forEach(m => {
+                shadowGenerator.addShadowCaster(m);
+                m.receiveShadows = true;
+            });
+
+            // Configurar cámara
             camera.lockedTarget = personaje;
-            if (anims && anims.length > 0) animCaminar = anims[0];
+            camera.radius = 120;
+
+            // Animación
+            if (anims && anims.length > 0) {
+                animCaminar = anims[0];
+                animCaminar.stop();
+            }
         });
 
-        scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+        // --- 4. CARGAR MUNICIPALIDAD ---
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            edificioMuni = meshes[0];
+            
+            // Normalizar tamaño
+            const bound = edificioMuni.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 240 / Math.max(size.x, size.y, size.z);
+            edificioMuni.scaling = new BABYLON.Vector3(factor, factor, factor);
+            
+            // Posición inicial (lee los sliders)
+            actualizarEdificio();
+
+            // Configurar materiales y sombras
+            meshes.forEach(m => {
+                m.checkCollisions = true;
+                shadowGenerator.addShadowCaster(m); // El edificio proyecta sombra
+                m.receiveShadows = true;
+                if(m.material) m.material.backFaceCulling = false;
+            });
+
+            statusDiv.innerHTML = "✅ Sistema Listo: Mapa + Sombras + Panel";
+        });
+
+        // --- 5. LOGICA DEL PANEL DE ARQUITECTO ---
+        const inputX = document.getElementById("inputX");
+        const inputZ = document.getElementById("inputZ");
+        const inputRot = document.getElementById("inputRot");
+        
+        // Elementos de texto
+        const valX = document.getElementById("valX");
+        const valZ = document.getElementById("valZ");
+        const valRot = document.getElementById("valRot");
+
+        function actualizarEdificio() {
+            if (!edificioMuni) return;
+
+            let x = parseFloat(inputX.value);
+            let z = parseFloat(inputZ.value);
+            let rot = parseFloat(inputRot.value);
+
+            // Actualizar UI
+            valX.innerText = x;
+            valZ.innerText = z;
+            valRot.innerText = rot + "°";
+
+            // Mover objeto
+            edificioMuni.position.x = x;
+            edificioMuni.position.z = z;
+            // Mantener la altura base (ajustar si el edificio flota o se hunde)
+            edificioMuni.position.y = 0; 
+            
+            // Rotar
+            edificioMuni.rotation.y = rot * (Math.PI / 180);
+        }
+
+        // Listeners
+        inputX.addEventListener("input", actualizarEdificio);
+        inputZ.addEventListener("input", actualizarEdificio);
+        inputRot.addEventListener("input", actualizarEdificio);
+
+
+        // --- 6. SISTEMA DE MOVIMIENTO (CLICK TO WALK) ---
+        scene.onPointerDown = (evt, pick) => {
+            // Evitamos que camine si tocamos el UI o el cielo
+            // SOLO camina si clickeamos el mesh llamado "suelo"
+            if (pick.hit && pick.pickedMesh && pick.pickedMesh.name === "suelo") {
+                destinoFinal = pick.pickedPoint;
+                
+                // Efecto visual al hacer click (un pequeño puntero)
+                crearPuntero(destinoFinal);
+            }
+        };
+
+        // Función auxiliar para mostrar dónde hiciste clic
+        function crearPuntero(pos) {
+            const disco = BABYLON.MeshBuilder.CreateDisc("puntero", {radius: 2}, scene);
+            disco.position = new BABYLON.Vector3(pos.x, 0.5, pos.z);
+            disco.rotation.x = Math.PI / 2;
+            const mat = new BABYLON.StandardMaterial("matPunt", scene);
+            mat.diffuseColor = new BABYLON.Color3(1, 1, 0);
+            mat.emissiveColor = new BABYLON.Color3(1, 1, 0);
+            disco.material = mat;
+            
+            // Animación simple: desaparecer
+            const anim = new BABYLON.Animation("fade", "visibility", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
+            anim.setKeys([{frame: 0, value: 1}, {frame: 20, value: 0}]);
+            disco.animations.push(anim);
+            scene.beginAnimation(disco, 0, 20, false, 1, () => disco.dispose());
+        }
 
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
+            
             let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0;
+            diff.y = 0; // Ignorar altura
+            
             if (diff.length() > 1.5) {
-                personaje.rotation.y = Math.atan2(diff.x, diff.z);
-                personaje.moveWithCollisions(diff.normalize().scale(1.2));
+                diff.normalize();
+                
+                // Rotación suave del personaje
+                let angulo = Math.atan2(diff.x, diff.z);
+                let rotActual = personaje.rotation.y;
+                // Ajuste matemático para encontrar el giro más corto
+                let diffRot = angulo - rotActual;
+                while (diffRot < -Math.PI) diffRot += Math.PI * 2;
+                while (diffRot > Math.PI) diffRot -= Math.PI * 2;
+                
+                personaje.rotation.y += diffRot * 0.1;
+                
+                // Mover
+                personaje.moveWithCollisions(diff.scale(1.5)); // Velocidad 1.5
+                
                 if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-            } else { if (animCaminar) animCaminar.stop(); destinoFinal = null; }
+            } else {
+                if (animCaminar) animCaminar.stop();
+                destinoFinal = null;
+            }
         });
 
-        window.camaraSerenito = function() { camera.lockedTarget = personaje; camera.radius = 120; }
+        // --- 7. BOTONES DE CÁMARA ---
+        window.camaraSerenito = function() {
+            if(!personaje) return;
+            camera.lockedTarget = personaje;
+            camera.radius = 120;
+            camera.beta = Math.PI/3; // Ángulo normal
+        }
+
         window.camaraAerea = function() {
             camera.lockedTarget = null;
-            camera.setPosition(new BABYLON.Vector3(200, 500, 800));
-            camera.setTarget(new BABYLON.Vector3(200, 0, 400));
+            // Centrar vista en el edificio
+            let cx = parseFloat(inputX.value);
+            let cz = parseFloat(inputZ.value);
+            
+            camera.setPosition(new BABYLON.Vector3(cx, 600, cz + 600)); // Más alto
+            camera.setTarget(new BABYLON.Vector3(cx, 0, cz));
         }
-        window.rescatar = function() { if(personaje) { personaje.position = new BABYLON.Vector3(0, 0, 0); camaraSerenito(); } }
 
+        window.rescatar = function() {
+            if(!personaje) return;
+            destinoFinal = null;
+            personaje.position = new BABYLON.Vector3(0, 0, 0); 
+            camaraSerenito();
+            statusDiv.innerHTML = "🚨 Rescate Exitoso";
+        }
+
+        // --- 8. ARRANQUE ---
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
     </script>
