@@ -8,12 +8,11 @@ const crearEscena = function () {
     scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
     scene.collisionsEnabled = true;
 
-    // Configuración Draco para el archivo de 15MB
     BABYLON.DracoCompression.Configuration = {
         decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
     };
 
-    // 1. CÁMARA ARC ROTATE (Configuración Inicial)
+    // 1. CÁMARA ARC ROTATE
     camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 14, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
     camera.checkCollisions = true;
@@ -30,11 +29,11 @@ const crearEscena = function () {
     suelo.checkCollisions = true;
     suelo.position.y = -0.05;
 
-    // 3. CARGA DE SERENITO (Prioridad 1)
+    // 3. CARGA DE SERENITO (Prioridad Absoluta)
     BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
         personaje = meshes[0];
         
-        // ESCALA Y ALTURA: Corrección de efecto espejo y pies en el suelo
+        // ESCALA POSITIVA: Así se lee bien LA❤️SERENA y serenito en el sombrero
         personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
         personaje.position = new BABYLON.Vector3(0, 0.9, 0); 
         personaje.checkCollisions = true;
@@ -43,11 +42,10 @@ const crearEscena = function () {
         camera.lockedTarget = personaje;
         document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN POSICIÓN";
         
-        // Animación articulada (Mueve brazos y piernas)
         animCaminar = anims[0];
         if (animCaminar) animCaminar.stop();
 
-        // Movimiento por Doble Clic
+        // DOBLE CLIC PARA CAMINAR
         scene.onPointerObservable.add((pointerInfo) => {
             if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                 const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -55,18 +53,17 @@ const crearEscena = function () {
             }
         });
 
-        // Bucle de Movimiento y Cámaras Fijas
         const inputMap = {};
         scene.actionManager = new BABYLON.ActionManager(scene);
         scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
         scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
         scene.onBeforeRenderObservable.add(() => {
-            const vel = 0.4;
+            const vel = 0.42;
             let moviendo = false;
             let rot = personaje.rotation.y;
 
-            // PERSPECTIVA FIJA: El mouse NO mueve la cámara sola si el usuario eligió una vista
+            // PERSPECTIVA FIJA: El mouse NO mueve la cámara mientras caminas
             const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
             if (keys.some(k => inputMap[k])) {
                 camera.detachControl(canvas);
@@ -82,7 +79,7 @@ const crearEscena = function () {
             if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; }
             if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; }
 
-            // Doble Clic
+            // Doble clic
             if (moviendoPorClick && destinoFinal) {
                 const d = destinoFinal.subtract(personaje.position);
                 d.y = 0;
@@ -103,38 +100,25 @@ const crearEscena = function () {
     }, (evt) => {
         if (evt.lengthComputable) {
             let p = (evt.loaded * 100 / evt.total).toFixed();
-            document.getElementById("estado").innerHTML = "📥 RECUPERANDO PROTAGONISTA: " + p + "%";
+            document.getElementById("estado").innerHTML = "📥 CARGANDO SERENITO: " + p + "%";
         }
     });
-
-    // BARRERAS PARA LAS CALLES (Edificios)
-    function edif(n, x, z, w, h, d) {
-        const b = BABYLON.MeshBuilder.CreateBox(n, {width: w, height: h, depth: d}, scene);
-        b.position = new BABYLON.Vector3(x, h/2, z);
-        b.checkCollisions = true;
-        const m = new BABYLON.StandardMaterial("m"+n, scene);
-        m.diffuseColor = new BABYLON.Color3(0.8, 0.7, 0.6);
-        b.material = m;
-    }
-    edif("Gore", -45, -30, 24, 12, 34);
-    edif("Catedral", 0, -60, 30, 22, 45);
 
     return scene;
 };
 
-// 5 CÁMARAS FIJAS PROFESIONALES
+// 5 CÁMARAS PROFESIONALES FIJAS
 function setCam(t) {
     if (!camera) return;
     switch(t) {
-        case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
-        case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
-        case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; // Cenital
-        case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // General
-        case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
+        case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; 
+        case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break;
+        case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break;
+        case 4: camera.alpha = -Math.PI/2.8; camera.beta = Math.PI/3.5; camera.radius = 55; break;
+        case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break;
     }
 }
 
 const scene = crearEscena();
 engine.runRenderLoop(() => scene.render());
 window.addEventListener("resize", () => engine.resize());
-window.addEventListener("click", () => canvas.focus());
