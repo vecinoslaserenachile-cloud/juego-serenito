@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - Detective</title>
+    <title>Vecinos La Serena 3D - Diagnóstico</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
@@ -15,16 +15,16 @@
             background: rgba(0, 0, 0, 0.8);
             padding: 15px; border-radius: 8px;
             border-left: 5px solid #ffd700; pointer-events: none;
+            max-width: 300px;
         }
-        /* ESTILO PARA EL MENSAJE DE ERROR */
-        #debug-msg { margin-top: 10px; font-weight: bold; color: #00ff00; }
+        #estado { margin-top: 10px; font-weight: bold; color: #ffff00; font-size: 14px; }
     </style>
 </head>
 <body>
     <div id="ui">
         <h3 style="margin:0; color:#ffd700;">La Serena 3D</h3>
-        <p>🎮 WASD o Flechas</p>
-        <div id="debug-msg">⏳ Intentando cargar a Serenito...</div>
+        <p>📍 Plaza de Armas</p>
+        <div id="estado">⏳ Conectando...</div>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -32,65 +32,92 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const debugText = document.getElementById("debug-msg");
+        const textoEstado = document.getElementById("estado");
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.6, 0.7);
 
+            // --- 1. CONFIGURACIÓN DRACO ROBUSTA ---
+            // Usamos el CDN oficial estable para que no falle la descompresión
             BABYLON.DracoCompression.Configuration = {
-                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
+                decoder: {
+                    wasmUrl: "https://cdn.babylonjs.com/draco_wasm_wrapper_gltf.js",
+                    wasmBinaryUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.wasm",
+                    fallbackUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.js"
+                }
             };
 
-            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 8, BABYLON.Vector3.Zero(), scene);
+            // Cámara
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.lowerRadiusLimit = 3; camera.upperRadiusLimit = 25;
+            camera.lowerRadiusLimit = 2; camera.upperRadiusLimit = 40;
 
+            // Luz
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.1;
+            light.intensity = 1.2;
 
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 150, height: 150}, scene);
+            // Suelo (Mapa)
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 200, height: 200}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg?v=" + Math.random(), scene);
+            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
-            // --- CARGADOR DETECTIVE ---
+            // --- 2. CARGADOR CON REPORTE DETALLADO ---
+            textoEstado.innerHTML = "🔍 Buscando 'serenito.glb'...";
+            
             BABYLON.SceneLoader.ImportMesh(
                 "", 
                 "./", 
-                "serenito.glb?v=" + Math.random(), // Busca este nombre exacto
+                "serenito.glb", 
                 scene, 
-                // SI TIENE ÉXITO:
+                // A) SI FUNCIONA
                 function (meshes, ps, sk, anims) {
-                    debugText.innerHTML = "✅ ¡ÉXITO! Serenito está en escena.";
-                    debugText.style.color = "#00ff00"; // Verde
+                    textoEstado.innerHTML = "✅ ¡CARGADO! (15 MB)";
+                    textoEstado.style.color = "#00ff00"; // Verde
                     
                     const personaje = meshes[0];
                     personaje.scaling = new BABYLON.Vector3(-1.5, 1.5, 1.5);
                     personaje.position.y = 0;
                     camera.lockedTarget = personaje;
 
-                    if (anims && anims.length > 0) anims[0].play(true);
+                    if (anims && anims.length > 0) {
+                        anims[0].play(true);
+                    } else {
+                        textoEstado.innerHTML += "<br>⚠️ Ojo: No trae animación.";
+                    }
 
+                    // Controles
                     const inputMap = {};
                     scene.actionManager = new BABYLON.ActionManager(scene);
                     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                     scene.onBeforeRenderObservable.add(() => {
-                        const vel = 0.2;
+                        const vel = 0.25;
                         if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; }
                         if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; }
                         if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; }
                         if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; }
                     });
                 },
-                null, // Progreso (ignorar)
-                // SI FALLA (Aquí está la clave):
+                // B) MIENTRAS CARGA (PROGRESO)
+                function (evt) {
+                    if (evt.lengthComputable) {
+                        const porcentaje = (evt.loaded * 100 / evt.total).toFixed();
+                        textoEstado.innerHTML = "📥 Descargando: " + porcentaje + "%";
+                    } else {
+                        textoEstado.innerHTML = "📥 Descargando (calculando)...";
+                    }
+                },
+                // C) SI FALLA (ERROR)
                 function (scene, message, exception) {
-                    debugText.innerHTML = "❌ ERROR CRÍTICO:<br>" + message;
-                    debugText.style.color = "red";
+                    textoEstado.style.color = "red";
+                    textoEstado.innerHTML = "❌ FALLÓ LA CARGA.<br>";
+                    textoEstado.innerHTML += "Posibles causas:<br>";
+                    textoEstado.innerHTML += "1. El nombre no es 'serenito.glb' (minúsculas).<br>";
+                    textoEstado.innerHTML += "2. El archivo está corrupto.<br>";
                     console.error(message);
                 }
             );
