@@ -1,29 +1,131 @@
-scene.onBeforeRenderObservable.add(() => {
-    if (!personaje || !destinoFinal) return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LA❤️SERENA - Proyecto Vecinos</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
-    let velocidad = 0.8; // Ajusta según la escala de tu mapa
-    let diferencia = destinoFinal.subtract(personaje.position);
-    diferencia.y = 0; // Mantener siempre el nivel del suelo
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Arial Black', sans-serif; }
+        #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; outline: none; }
+        #ui {
+            position: absolute; top: 15px; left: 15px; color: white;
+            background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
+            border: 3px solid #bc13fe; pointer-events: none; width: 220px; z-index: 10;
+        }
+        #botones { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
+        .btn { background: #ffd700; color: black; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 0 #b39700; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <b style="color:#ffd700; font-size: 18px;">LA❤️SERENA</b><br>
+        <small id="status" style="color:#00ff00">📡 NAVEGACIÓN TÁCTIL ACTIVA</small>
+    </div>
+    <div id="botones">
+        <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
+        <button class="btn" onclick="setCam(4)">🏙️ Vista Ciudad</button>
+    </div>
+    <canvas id="renderCanvas"></canvas>
 
-    // Si la distancia es mayor a un umbral mínimo, seguimos moviendo
-    if (diferencia.length() > 0.2) { 
-        diferencia.normalize();
-        personaje.moveWithCollisions(diferencia.scale(velocidad));
-        
-        // Rotación fluida hacia el destino
-        let anguloDeseado = Math.atan2(diferencia.x, diferencia.z);
-        personaje.rotation.y = anguloDeseado;
-        
-        // Ejecutar animación de caminata si existe
-        if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-    } 
-    else {
-        // AJUSTE FINAL: Forzamos la posición exacta del clic para evitar desfases
-        personaje.position.x = destinoFinal.x;
-        personaje.position.z = destinoFinal.z;
-        
-        // Detener movimiento y animación
-        destinoFinal = null; 
-        if (animCaminar) animCaminar.stop();
-    }
-});
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        let scene, camera, personaje, animCaminar, suelo;
+        let destinoFinal = null;
+        let baseHeight = 0;
+
+        // AJUSTE DE ESCALA RESPONSIVE
+        const esMovil = window.innerWidth < 600;
+        const factorEscala = esMovil ? 5.5 : 2.8;
+
+        const crearEscena = function () {
+            scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 0.9);
+
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 50 : 90, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.upperBetaLimit = Math.PI / 2.3; // Límite para no bajar del suelo
+            camera.lowerRadiusLimit = 15;
+            camera.upperRadiusLimit = 350;
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 2.5;
+
+            // EL MAPA
+            suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1200, height: 1200}, scene);
+            const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+            suelo.material = matSuelo;
+
+            // CARGA DE SERENITO
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+                personaje = meshes[0];
+                personaje.scaling = new BABYLON.Vector3(-factorEscala, factorEscala, factorEscala);
+                
+                const bInfo = meshes[0].getHierarchyBoundingVectors(true);
+                baseHeight = (-bInfo.min.y * factorEscala);
+                personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
+                
+                camera.setTarget(new BABYLON.Vector3(0, baseHeight + 2, 0));
+                camera.lockedTarget = personaje;
+
+                meshes.forEach(m => { m.isVisible = true; });
+
+                if (anims && anims.length > 0) {
+                    animCaminar = anims[0];
+                    animCaminar.stop();
+                }
+
+                // NAVEGACIÓN POR CLIC/TOQUE
+                scene.onPointerObservable.add((pi) => {
+                    if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                        const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
+                        if (pick.hit) { destinoFinal = pick.pickedPoint; }
+                    }
+                });
+
+                scene.onBeforeRenderObservable.add(() => {
+                    if (!personaje || !destinoFinal) return;
+
+                    let vel = esMovil ? 1.4 : 0.95;
+                    let diff = destinoFinal.subtract(personaje.position);
+                    diff.y = 0;
+
+                    if (diff.length() > 0.5) { 
+                        diff.normalize();
+                        personaje.moveWithCollisions(diff.scale(vel));
+                        personaje.rotation.y = Math.atan2(diff.x, diff.z);
+                        if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                    } else {
+                        // SNAPPING FINAL: Llega al punto exacto
+                        personaje.position.x = destinoFinal.x;
+                        personaje.position.z = destinoFinal.z;
+                        destinoFinal = null; 
+                        if (animCaminar) animCaminar.stop();
+                    }
+                });
+            });
+
+            return scene;
+        };
+
+        window.setCam = function(t) {
+            if (!camera || !personaje) return;
+            camera.lockedTarget = null;
+            if (t==1) { camera.lockedTarget = personaje; camera.radius = esMovil ? 45 : 70; }
+            if (t==4) { camera.radius = esMovil ? 160 : 250; camera.beta = Math.PI/4; }
+        }
+
+        crearEscena();
+        engine.runRenderLoop(() => { if (scene) scene.render(); });
+        window.addEventListener("resize", () => { engine.resize(); });
+    </script>
+</body>
+</html>
