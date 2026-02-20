@@ -14,10 +14,8 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
         
-        /* ESTADO DEL SISTEMA */
         #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
         
-        /* BARRA DE BOTONES */
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
         .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
         .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b39700; }
@@ -41,26 +39,24 @@
         const engine = new BABYLON.Engine(canvas, true);
         const statusDiv = document.getElementById("ui-status");
 
-        // VARIABLES GLOBALES
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
         
-        // AJUSTES MUNICIPALIDAD (Esquina Prat/Carrera)
-        const MUNI_X = 280;
+        // --- 📍 AJUSTES DE REUBICACIÓN SOLICITADOS ---
+        const MUNI_X = 550;      // Movido una manzana a la derecha
         const MUNI_Z = 200;
         const MUNI_SIZE = 240;
+        const MUNI_ROTACION = 4.71; // Giro de 180 grados respecto al original (1.57 + 3.14)
+        // --------------------------------------------
 
-        // --- 1. CREAR ESCENA BÁSICA ---
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0); // Cielo Celeste
+            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
 
-            // Luz
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
-            // Cámara inicial (Aérea)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
@@ -68,9 +64,9 @@
             return scene;
         };
 
-        scene = crearEscena(); // Inicializamos la escena YA, para que no se quede pegado
+        scene = crearEscena();
 
-        // --- 2. CARGAR MAPA (SUELO) ---
+        // 2. CARGAR MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -78,45 +74,44 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // --- 3. CARGAR MUNICIPALIDAD (Segura) ---
+        // 3. CARGAR MUNICIPALIDAD (Con nueva rotación y posición)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
-            
-            // Cálculo automático para pisar el suelo
             const bound = muni.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = MUNI_SIZE / Math.max(size.x, size.y, size.z);
             
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // El truco del -min.y hace que la base toque siempre el 0 exacto
+            // Alineación automática al suelo
             const nivelSuelo = -bound.min.y * factor; 
             muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
-            muni.rotation.y = 1.57; // Mirando a la plaza
+            muni.rotation.y = MUNI_ROTACION; 
 
             meshes.forEach(m => {
-                m.checkCollisions = true; // Paredes sólidas
+                m.checkCollisions = true;
                 if(m.material) m.material.backFaceCulling = false;
             });
-            statusDiv.innerHTML += "<br>✅ Muni Lista (Esquina)";
+            statusDiv.innerHTML += "<br>✅ Muni Reubicada y Girada";
         });
 
-        // --- 4. CARGAR SERENITO ---
+        // 4. CARGAR SERENITO
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            personaje.position = new BABYLON.Vector3(0, 0, 0); // Centro plaza
-            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2); // Cuerpo físico
+            
+            // AJUSTE: Y=0 para que pise el mapa exactamente
+            personaje.position = new BABYLON.Vector3(0, 0, 0); 
+            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
 
-            camera.lockedTarget = personaje; // La cámara empieza siguiéndolo
+            camera.lockedTarget = personaje;
             camera.radius = 120;
 
             if (anims && anims.length > 0) animCaminar = anims[0];
-
-            statusDiv.innerHTML += "<br>✅ Serenito Listo";
+            statusDiv.innerHTML += "<br>✅ Serenito en el Suelo";
         });
 
-        // --- 5. LÓGICA DE MOVIMIENTO (Clic) ---
+        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
@@ -125,23 +120,17 @@
 
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
-            
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
-            
             if (diff.length() > 1.5) {
                 diff.normalize();
-                
-                // Rotación suave
                 let angulo = Math.atan2(diff.x, diff.z);
                 let currentRot = personaje.rotation.y;
                 let diffRot = angulo - currentRot;
                 while (diffRot < -Math.PI) diffRot += Math.PI * 2;
                 while (diffRot > Math.PI) diffRot -= Math.PI * 2;
                 personaje.rotation.y += diffRot * 0.1;
-
                 personaje.moveWithCollisions(diff.scale(1.2));
-                
                 if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
             } else {
                 if (animCaminar) animCaminar.stop();
@@ -149,17 +138,15 @@
             }
         });
 
-        // --- 6. FUNCIONES DE LOS BOTONES ---
+        // 6. FUNCIONES BOTONES
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
             camera.radius = 100;
-            camera.beta = Math.PI / 3;
         }
 
         window.camaraAerea = function() {
             camera.lockedTarget = null;
-            // Elevar la cámara para ver la panorámica
             camera.setPosition(new BABYLON.Vector3(MUNI_X, 400, MUNI_Z + 400));
             camera.setTarget(new BABYLON.Vector3(MUNI_X, 0, MUNI_Z));
         }
@@ -167,13 +154,12 @@
         window.rescatar = function() {
             if(!personaje) return;
             destinoFinal = null;
-            personaje.position = new BABYLON.Vector3(0, 2, 0); // Vuelve al centro
+            personaje.position = new BABYLON.Vector3(0, 0, 0); // Vuelve al suelo exacto
             camaraSerenito();
             statusDiv.innerHTML = "🚨 ¡Rescate exitoso!";
             setTimeout(() => { statusDiv.innerHTML = "✅ Sistema OK"; }, 2000);
         }
 
-        // ARRANQUE
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
     </script>
