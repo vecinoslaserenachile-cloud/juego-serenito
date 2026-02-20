@@ -7,14 +7,14 @@
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
-        #renderCanvas { width: 100vw; height: 100vh; display: block; }
-        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 10; font-family: sans-serif; }
+        #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 8px; z-index: 10; font-family: sans-serif; border: 2px solid #ffd700; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <b>ESTADO:</b> <span id="st">Cargando...</span><br>
-        <small>Si no ves nada, gira la cámara.</small>
+        <b style="color:#ffd700">MODO CIUDAD ACTIVO</b><br>
+        <small id="st">Esperando orden de movimiento...</small>
     </div>
     <canvas id="renderCanvas"></canvas>
 
@@ -22,11 +22,11 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         
-        // --- CONFIGURACIÓN DE ESCALA (Ajusta aquí) ---
-        const ESCALA_SERENITO = 15.0;  // Lo subí de 3 a 15 para que sea grande y nítido
-        const ESCALA_MUNI = 120.0;     // Tamaño del edificio
-        const ALTURA_MUNI = 40.0;      // <--- AUMENTA ESTO si sigue bajo el suelo
-        // --------------------------------------------
+        // --- 🕹️ AJUSTES DE PRECISIÓN ---
+        const ESCALA_SERENITO = 12.0; 
+        const ESCALA_MUNI = 110.0;     
+        let MUNI_ALTURA = 0.5; // <--- BAJÉ ESTO PARA QUE TOQUE EL SUELO
+        // ------------------------------
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
@@ -34,59 +34,87 @@
             scene.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
+            light.intensity = 2.5;
 
-            // Cámara enfocada de cerca para evitar lo "borroso"
-            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 100, BABYLON.Vector3.Zero(), scene);
+            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 120, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.wheelPrecision = 50;
+            camera.lowerRadiusLimit = 30; // No acercarse demasiado
+            camera.upperRadiusLimit = 250; // No alejarse demasiado
 
-            // SUELO
+            // EL MAPA (SUELO)
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2000, height: 2000}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
+            let personaje, animCaminar, destinoFinal = null;
+
             // CARGA MUNICIPALIDAD
             BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
                 const muni = meshes[0];
-                
-                // Forzar escala y altura
                 const bound = muni.getHierarchyBoundingVectors(true);
                 const size = bound.max.subtract(bound.min);
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const factor = ESCALA_MUNI / maxDim;
+                const factor = ESCALA_MUNI / Math.max(size.x, size.y, size.z);
                 
                 muni.scaling = new BABYLON.Vector3(factor, factor, factor);
-                muni.position = new BABYLON.Vector3(100, ALTURA_MUNI, 100); 
+                // Posición: 0 en Y es el nivel del suelo exacto
+                muni.position = new BABYLON.Vector3(120, MUNI_ALTURA, 120); 
 
                 meshes.forEach(m => {
                     m.checkCollisions = true;
                     if (m.material) m.material.backFaceCulling = false;
                 });
-                document.getElementById("st").innerText = "Muni OK";
             });
 
             // CARGA SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-                const p = meshes[0];
-                // Multiplicamos por factor negativo para el espejo si es necesario
-                p.scaling = new BABYLON.Vector3(ESCALA_SERENITO, ESCALA_SERENITO, ESCALA_SERENITO);
-                p.position = new BABYLON.Vector3(0, 5, 0);
-                camera.lockedTarget = p; // La cámara lo sigue a él
+                personaje = meshes[0];
+                personaje.scaling = new BABYLON.Vector3(ESCALA_SERENITO, ESCALA_SERENITO, ESCALA_SERENITO);
+                personaje.position = new BABYLON.Vector3(0, 0, 0);
+                personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2); // Volumen para no atravesar paredes
                 
-                document.getElementById("st").innerText = "Todo OK";
+                camera.lockedTarget = personaje;
                 
-                // Movimiento básico al click
+                if (anims && anims.length > 0) {
+                    animCaminar = anims[0]; 
+                    animCaminar.stop();
+                }
+
+                // DETECTAR CLIC PARA MOVERSE
                 scene.onPointerDown = function (evt, pickResult) {
                     if (pickResult.hit && pickResult.pickedMesh === suelo) {
-                        const target = pickResult.pickedPoint;
-                        p.lookAt(target);
-                        // Simple movimiento para probar
-                        BABYLON.Animation.CreateAndStopAnimation("walk", p, "position", 30, 60, p.position, target, 0);
+                        destinoFinal = pickResult.pickedPoint;
+                        document.getElementById("st").innerText = "Caminando a la ubicación...";
                     }
                 };
+
+                // LÓGICA DE MOVIMIENTO CUADRO POR CUADRO
+                scene.onBeforeRenderObservable.add(() => {
+                    if (!personaje || !destinoFinal) return;
+
+                    let direccion = destinoFinal.subtract(personaje.position);
+                    direccion.y = 0; // No volar
+                    let distancia = direccion.length();
+
+                    if (distancia > 1.5) { // Si falta para llegar
+                        direccion.normalize();
+                        
+                        // Rotar suavemente hacia el destino
+                        let anguloDeseado = Math.atan2(direccion.x, direccion.z);
+                        personaje.rotation.y = anguloDeseado;
+
+                        // AVANZAR
+                        personaje.moveWithCollisions(direccion.scale(1.2));
+                        
+                        if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                    } else {
+                        // DETENERSE
+                        destinoFinal = null;
+                        if (animCaminar) animCaminar.stop();
+                        document.getElementById("st").innerText = "Llegamos a destino.";
+                    }
+                });
             });
 
             return scene;
