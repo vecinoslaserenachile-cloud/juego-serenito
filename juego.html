@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - Proyecto Vecinos</title>
+    <title>LA❤️SERENA - LS Galaxy Pro</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -38,7 +38,7 @@
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">📡 RECONECTANDO CON SERENITO...</div>
+        <div id="estado">🎮 USA FLECHAS PARA MOVER Y ESPACIO PARA SALTAR</div>
     </div>
 
     <div id="botones">
@@ -56,6 +56,7 @@
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, personaje, animCaminar, destino;
         let moviendoTactil = false;
+        let saltando = false;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
@@ -66,12 +67,12 @@
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // VISTA INICIAL PANORÁMICA (Sin zoom a Tesorería)
+            // VISTA INICIAL PANORÁMICA
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.2, 85, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
+            light.intensity = 2.2;
 
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
@@ -83,33 +84,25 @@
             // CARGA DE SERENITO (15MB)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                
-                // --- POSICIONAMIENTO FORZADO SEGURO ---
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
-                // Forzamos altura de 1.5 para que el pivote de la cabeza no lo entierre
-                personaje.position = new BABYLON.Vector3(0, 1.5, 0);
+                personaje.position = new BABYLON.Vector3(0, 1.5, 0); // Altura de seguridad forzada
                 
-                meshes.forEach(m => { 
-                    m.isVisible = true; 
-                    m.setEnabled(true); 
-                    m.checkCollisions = true; 
-                });
-                
+                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); m.checkCollisions = true; });
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO RECUPERADO";
+                document.getElementById("estado").innerHTML = "✅ SERENITO LISTO PARA LA ACCIÓN";
                 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // CONTROLES HÍBRIDOS (PC + MÓVIL)
+                // CONTROLES HÍBRIDOS
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
-                // Doble toque para móviles
+                // DOBLE CLIC PARA MÓVILES
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -118,16 +111,40 @@
                 });
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.5; let mov = false; let rot = personaje.rotation.y;
+                    let vel = 0.52; let mov = false; let rot = personaje.rotation.y;
                     const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
                     
+                    // LÓGICA DE SALTO (MARIO GALAXY STYLE)
+                    if (inputMap[" "] && !saltando) {
+                        saltando = true;
+                        let frameActual = 0;
+                        const duracionSalto = 30; // Frames
+                        const alturaSalto = 4.5;
+                        
+                        const loopSalto = setInterval(() => {
+                            frameActual++;
+                            // Parábola de salto
+                            let offset = Math.sin((frameActual / duracionSalto) * Math.PI) * alturaSalto;
+                            personaje.position.y = 1.5 + offset;
+                            
+                            if (frameActual >= duracionSalto) {
+                                clearInterval(loopSalto);
+                                saltando = false;
+                                personaje.position.y = 1.5;
+                            }
+                        }, 20);
+                    }
+
+                    // MOVIMIENTO TECLADO
                     if (keys.some(k => inputMap[k])) {
                         moviendoTactil = false; mov = true;
                         if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; }
                         if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; }
                         if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI/2; }
                         if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI/2; }
-                    } else if (moviendoTactil && destino) {
+                    } 
+                    // MOVIMIENTO TÁCTIL
+                    else if (moviendoTactil && destino) {
                         const d = destino.subtract(personaje.position); d.y = 0;
                         if (d.length() > 0.8) {
                             d.normalize(); personaje.moveWithCollisions(d.scale(vel));
@@ -159,10 +176,10 @@
 
         window.setCam = function(t) {
             if (!camera) return; camera.lockedTarget = null;
-            if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
+            if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 16; }
             if (t==2) { camera.lockedTarget = personaje; camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
             if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 55; }
-            if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 80; }
+            if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 85; }
         }
 
         crearEscena();
