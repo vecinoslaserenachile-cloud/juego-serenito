@@ -1,289 +1,163 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
     <meta charset="UTF-8">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LA❤️SERENA - LS Galaxy Edition</title>
-
     
-
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
-
-
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-
     
-
     <style>
-
-        body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial Black', sans-serif; }
-
-        #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-
+        /* AJUSTE PARA MÓVILES: Ocupar 100% real de pantalla */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial Black', sans-serif; }
+        #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; outline: none; }
         
-
         #ui {
-
-            position: absolute; top: 15px; left: 15px; color: white;
-
-            background: rgba(0, 0, 0, 0.9); padding: 25px; border-radius: 15px; 
-
-            border: 4px solid #bc13fe; pointer-events: none; min-width: 310px;
-
-            box-shadow: 0 4px 25px rgba(188, 19, 254, 0.4);
-
+            position: absolute; top: 10px; left: 10px; color: white;
+            background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
+            border: 3px solid #bc13fe; pointer-events: none; width: 260px;
+            box-shadow: 0 4px 20px rgba(188, 19, 254, 0.4);
+            z-index: 10;
         }
-
-        .linea1 { color: #ffd700; font-size: 28px; display: block; text-align: center; }
-
-        .linea2 { color: #ff3333; font-size: 20px; display: block; text-align: center; margin-top: 5px; }
-
-        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
-
+        .linea1 { color: #ffd700; font-size: 22px; display: block; text-align: center; }
+        .linea2 { color: #ff3333; font-size: 16px; display: block; text-align: center; margin-top: 5px; }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; text-align: center; font-size: 12px; }
         
-
         #cam-selector {
-
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
-
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; width: 95%;
+            z-index: 10;
         }
-
         .btn {
-
-            background: #ffd700; color: black; border: none; padding: 12px 16px;
-
+            background: #ffd700; color: black; border: none; padding: 10px 12px;
             border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;
-
-            font-size: 11px; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
-
+            font-size: 10px; box-shadow: 0 3px 0 #b39700; transition: 0.1s;
         }
+        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 3px 0 #990000; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
 
-        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
-
-        .btn:active { transform: translateY(4px); box-shadow: none; }
-
+        /* Ajuste para pantallas pequeñas */
+        @media (max-width: 600px) {
+            #ui { width: 200px; padding: 10px; }
+            .linea1 { font-size: 18px; }
+            .linea2 { font-size: 14px; }
+        }
     </style>
-
 </head>
-
 <body>
-
     <div id="ui">
-
         <span class="linea1">LA❤️SERENA</span>
-
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-
         <div id="estado">📡 INICIANDO GALAXY CORE...</div>
-
     </div>
-
-
 
     <div id="cam-selector">
-
-        <button id="btnRescate" class="btn btn-rescate" onclick="rescatarSerenito()" style="display:none;">🚀 RESCATAR SERENITO</button>
-
+        <button id="btnRescate" class="btn btn-rescate" onclick="rescatarSerenito()" style="display:none;">🚀 RESCATE</button>
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
-
         <button class="btn" onclick="setCam(2)">👤 Frontal</button>
-
         <button class="btn" onclick="setCam(3)">🦅 Cenital</button>
-
         <button class="btn" onclick="setCam(4)">🏙️ Panorámica</button>
-
     </div>
-
-
 
     <canvas id="renderCanvas"></canvas>
 
-
-
     <script>
-
         const canvas = document.getElementById("renderCanvas");
-
         const engine = new BABYLON.Engine(canvas, true);
-
         let scene, camera, personaje, animCaminar;
 
-
-
         const crearEscena = function () {
-
             scene = new BABYLON.Scene(engine);
-
             scene.clearColor = new BABYLON.Color3(0.3, 0.4, 0.7);
-
             scene.collisionsEnabled = true;
 
-
-
-            // VISTA INICIAL PANORÁMICA (Adiós al zoom de Tesorería)
-
+            // TU VISTA PANORÁMICA PROTEGIDA
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.2, 85, new BABYLON.Vector3(0, 0, 0), scene);
-
             camera.attachControl(canvas, true);
 
-
-
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-
             light.intensity = 2.0;
 
-
-
-            // EL MAPA
-
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
-
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
-
             suelo.material = matSuelo;
-
             suelo.checkCollisions = true;
 
-
-
-            // CARGA DE SERENITO
-
+            // TU LÓGICA DE CARGA QUE FUNCIONA (NO TOCAR)
             document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA...";
-
             
-
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-
                 personaje = meshes[0];
-
                 
-
-                // --- ARREGLO DE ALTURA AUTOMÁTICO ---
-
+                // --- FIX MODO ESPEJO: Escala X Negativa ---
+                // Mantenemos tus valores de escala 1.7 pero invertimos X para que el texto se lea bien
+                personaje.scaling = new BABYLON.Vector3(-1.7, 1.7, 1.7);
+                
+                // --- TU FÓRMULA DE ALTURA ORIGINAL ---
                 const bInfo = meshes[0].getHierarchyBoundingVectors();
-
                 const minY = bInfo.min.y;
-
-                
-
-                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
-
-                // Si el pivote está en la cabeza, esta fórmula lo saca del suelo automáticamente
-
                 personaje.position = new BABYLON.Vector3(0, (-minY * 1.7) + 0.1, 0);
-
                 
-
                 meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); m.checkCollisions = true; });
-
                 
-
-                document.getElementById("estado").innerHTML = "✅ ¡SERENITO EN PANTALLA!";
-
-                document.getElementById("btnRescate").style.display = "block"; // Solo aparece cuando carga
-
+                document.getElementById("estado").innerHTML = "✅ ¡SERENITO LISTO! USA FLECHAS";
+                document.getElementById("btnRescate").style.display = "block";
                 
-
                 if (anims && anims.length > 0) {
-
                     animCaminar = anims[0];
-
-                    animCaminar.play(true);
-
+                    animCaminar.stop();
                 }
 
-
-
-                // MOVIMIENTO
-
+                // CONTROLES HABLITADOS DENTRO DE TU ESTRUCTURA
                 const inputMap = {};
-
                 scene.actionManager = new BABYLON.ActionManager(scene);
-
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
-
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
-
-
                 scene.onBeforeRenderObservable.add(() => {
+                    let vel = 0.52; let mov = false; let rot = personaje.rotation.y;
+                    const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
 
-                    let vel = 0.5; let mov = false; let rot = personaje.rotation.y;
-
-                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; mov = true; }
-
-                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; mov = true; }
-
-                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; mov = true; }
-
-                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; mov = true; }
+                    if (keys.some(k => inputMap[k])) {
+                        mov = true;
+                        // Ajuste de rotación compensando la escala X negativa
+                        if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = 0; }
+                        if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = Math.PI; }
+                        if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = Math.PI / 2; }
+                        if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = -Math.PI / 2; }
+                    }
 
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.2);
-
+                    if (animCaminar) { if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } else { animCaminar.stop(); } }
                 });
-
             });
 
-
-
             return scene;
-
         };
-
-
 
         window.rescatarSerenito = function() {
-
             if (!personaje) return;
-
-            personaje.position = new BABYLON.Vector3(0, 2, 0);
-
+            const bInfo = personaje.getHierarchyBoundingVectors();
+            personaje.position = new BABYLON.Vector3(0, (-bInfo.min.y * 1.7) + 0.1, 0);
             camera.lockedTarget = personaje;
-
-            document.getElementById("estado").innerHTML = "🚀 ¡RESCATADO!";
-
         };
 
-
-
         window.setCam = function(t) {
-
-            if (!camera) return;
-
-            camera.lockedTarget = null;
-
-            if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
-
+            if (!camera) return; camera.lockedTarget = null;
+            if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 16; }
             if (t==2) { camera.lockedTarget = personaje; camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
-
-            if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 50; }
-
+            if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 55; }
             if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 85; }
-
         }
 
-
-
         crearEscena();
-
         engine.runRenderLoop(() => { if (scene) scene.render(); });
-
         window.addEventListener("resize", () => engine.resize());
-
     </script>
-
 </body>
-
 </html>
