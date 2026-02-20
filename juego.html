@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Mobile Pro</title>
+    <title>LA❤️SERENA - Escala Real</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,18 +18,12 @@
             background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
             border: 3px solid #bc13fe; pointer-events: none; width: 220px; z-index: 10;
         }
-        #botones { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
-        .btn { background: #ffd700; color: black; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
     <div id="ui">
         <b style="color:#ffd700">LA❤️SERENA</b><br>
-        <small id="info-dispositivo">Detectando escala...</small>
-    </div>
-    <div id="botones">
-        <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
-        <button class="btn" onclick="setCam(4)">🏙️ Ciudad</button>
+        <small id="status">Asegurando nivel del suelo...</small>
     </div>
     <canvas id="renderCanvas"></canvas>
 
@@ -40,19 +34,22 @@
         let destinoFinal = null;
         let baseHeight = 0;
 
-        // --- DETECCIÓN DE MÓVIL ---
+        // --- NUEVAS ESCALAS DE "VISIBILIDAD TOTAL" ---
         const esMovil = window.innerWidth < 600;
-        const factorEscala = esMovil ? 3.5 : 1.7; // Si es móvil, Serenito es el doble de grande
+        const factorEscala = esMovil ? 5.5 : 2.8; // Crecimiento masivo para presencia real
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 0.9);
 
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 60 : 100, BABYLON.Vector3.Zero(), scene);
+            // CÁMARA BLINDADA CONTRA EL "MUNDO AZUL"
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 45 : 80, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.upperBetaLimit = Math.PI / 2.2;
-            camera.lowerRadiusLimit = 15;
-            camera.upperRadiusLimit = 400;
+            
+            // Freno de seguridad: La cámara se detiene antes de tocar el piso
+            camera.upperBetaLimit = Math.PI / 2.3; // Más estricto para no bajar del horizonte
+            camera.lowerRadiusLimit = esMovil ? 12 : 20; // No entrar al modelo
+            camera.upperRadiusLimit = 300;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
@@ -62,29 +59,20 @@
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             suelo.material = matSuelo;
 
-            // --- 1. EL EDIFICIO MUNICIPAL (HACK FOTOGRÁFICO) ---
-            // Creamos un bloque con las proporciones de la municipalidad
-            const muniBox = BABYLON.MeshBuilder.CreateBox("muni", {width: 40, height: 25, depth: 30}, scene);
-            muniBox.position = new BABYLON.Vector3(60, 12.5, 60); // Ajusta según tu mapa
-            const matMuni = new BABYLON.StandardMaterial("matMuni", scene);
-            // Aquí usarás tu foto. Si no la has subido, se verá gris, pero con volumen.
-            matMuni.diffuseTexture = new BABYLON.Texture("municipalidad_foto.jpg", scene); 
-            muniBox.material = matMuni;
-            muniBox.checkCollisions = true;
-
-            // --- 2. CARGA DE SERENITO CON ESCALA RESPONSIVE ---
+            // CARGA DE SERENITO CON ANCLAJE AL SUELO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                
-                // Aplicamos el factor de escala según el dispositivo
                 personaje.scaling = new BABYLON.Vector3(-factorEscala, factorEscala, factorEscala);
                 
                 const bInfo = meshes[0].getHierarchyBoundingVectors(true);
-                baseHeight = (-bInfo.min.y * factorEscala) + 0.1;
+                // Cálculo matemático para que los pies toquen exactamente el Y=0
+                baseHeight = (-bInfo.min.y * factorEscala);
                 personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
                 
-                document.getElementById("info-dispositivo").innerHTML = esMovil ? "📱 Modo Móvil: Escala Max" : "💻 Modo Escritorio: Escala Normal";
-                
+                // La cámara ahora sigue el pecho de Serenito, no sus pies, para que el zoom no baje del suelo
+                camera.setTarget(new BABYLON.Vector3(0, baseHeight + 2, 0));
+                camera.lockedTarget = personaje;
+
                 meshes.forEach(m => { m.isVisible = true; });
 
                 if (anims && anims.length > 0) {
@@ -92,7 +80,7 @@
                     animCaminar.stop();
                 }
 
-                // NAVEGACIÓN POR CLIC
+                // NAVEGACIÓN POR CLIC (FLUIDEZ MÁXIMA)
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -102,13 +90,13 @@
 
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje) return;
-                    let vel = esMovil ? 1.2 : 0.85; // Más rápido en móvil para que se note el avance
+                    let vel = esMovil ? 1.4 : 0.95; // Velocidad ajustada a la nueva escala
                     let moviendo = false;
 
                     if (destinoFinal) {
                         const diff = destinoFinal.subtract(personaje.position);
                         diff.y = 0;
-                        if (diff.length() > 2.0) {
+                        if (diff.length() > 2.5) {
                             moviendo = true;
                             diff.normalize();
                             personaje.moveWithCollisions(diff.scale(vel));
@@ -126,16 +114,9 @@
             return scene;
         };
 
-        window.setCam = function(t) {
-            if (!camera || !personaje) return;
-            camera.lockedTarget = null;
-            if (t==1) { camera.lockedTarget = personaje; camera.radius = esMovil ? 40 : 60; }
-            if (t==4) { camera.radius = esMovil ? 150 : 250; camera.beta = Math.PI/4; }
-        }
-
         crearEscena();
         engine.runRenderLoop(() => { if (scene) scene.render(); });
-        window.addEventListener("resize", () => { engine.resize(); location.reload(); });
+        window.addEventListener("resize", () => { engine.resize(); });
     </script>
 </body>
 </html>
