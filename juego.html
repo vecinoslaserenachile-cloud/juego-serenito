@@ -9,23 +9,28 @@
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* INTERFAZ SOLICITADA */
+        /* INTERFAZ DE CAMPAÑA MEJORADA */
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
-            font-family: 'Arial Black', Gadget, sans-serif; background: rgba(0, 0, 0, 0.95);
-            padding: 25px; border-radius: 15px; border: 4px solid #ffd700;
-            pointer-events: none; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); min-width: 320px;
+            font-family: 'Arial Black', sans-serif; background: rgba(0, 0, 0, 0.9);
+            padding: 25px; border-radius: 15px; border: 4px solid #bc13fe;
+            pointer-events: none; box-shadow: 0 4px 25px rgba(0,0,0,0.7); min-width: 320px;
         }
-        .linea1 { color: #ffd700; font-size: 32px; display: block; text-align: center; margin-bottom: 5px; }
-        @keyframes latido { 
-            0%, 100% { transform: scale(1); filter: brightness(1); } 
-            50% { transform: scale(1.08); filter: brightness(1.5); } 
+        .marca-texto { color: #ffd700; font-size: 32px; font-weight: 900; display: block; text-align: center; }
+        
+        @keyframes latido {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.06); filter: brightness(1.3); }
+            100% { transform: scale(1); filter: brightness(1); }
         }
-        .linea2 { 
-            color: #ff3333; font-size: 24px; display: block; text-align: center;
-            animation: latido 1.2s infinite ease-in-out; text-transform: uppercase; font-weight: 900;
+        .slogan-animado { 
+            color: #ff3333; font-size: 24px; font-weight: 900; 
+            display: block; text-align: center; margin-top: 10px;
+            animation: latido 1.2s infinite ease-in-out;
+            text-transform: uppercase; line-height: 1.1;
         }
         
+        /* SELECTOR DE 5 CÁMARAS PROFESIONALES */
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
@@ -36,14 +41,14 @@
             font-size: 13px; transition: 0.2s; box-shadow: 0 4px 0 #b39700;
         }
         .btn-cam:hover { background: #fff; transform: translateY(-2px); }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-family: sans-serif; }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <span class="linea1">LA❤️SERENA</span>
-        <span class="linea2">LA SERENA ¡SE LEVANTA!</span>
-        <div id="estado">⏳ REANUDANDO MISIÓN SERENITO...</div>
+        <span class="marca-texto">LA❤️SERENA</span>
+        <span class="slogan-animado">LA SERENA ¡SE LEVANTA!</span>
+        <div id="estado">📡 Sincronizando Serenito...</div>
     </div>
 
     <div id="cam-selector">
@@ -67,12 +72,12 @@
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
             scene.collisionsEnabled = true;
 
-            // CONFIGURACIÓN DRACO PARA ARCHIVO DE 15MB
+            // CONFIGURACIÓN DRACO PARA ARCHIVOS DE 15MB
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // 1. CÁMARA (Configuración fija)
+            // 1. CÁMARA ARC ROTATE (Configuración Rígida)
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
@@ -80,7 +85,7 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 1.8;
 
-            // 2. ESCENARIO (Mapa)
+            // 2. EL MAPA (Escenario)
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -89,26 +94,24 @@
             suelo.checkCollisions = true;
             suelo.position.y = -0.05;
 
-            // 3. CARGA DEL PROTAGONISTA (Serenito 15MB)
-            document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA...";
-            
+            // 3. CARGA DE SERENITO - PRIORIDAD ALFA
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // Corrección de escala y posición (Pies en la calle Prat)
+                // ESCALA POSITIVA PARA EVITAR ESPEJO: Se leerá bien LA❤️SERENA
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
-                personaje.position = new BABYLON.Vector3(0, 0.9, 0); 
+                personaje.position = new BABYLON.Vector3(0, 0.9, 0); // Pies en el asfalto
                 personaje.checkCollisions = true;
                 personaje.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO EN ESCENA";
-
-                // Animación articulada (Brazos y piernas)
+                document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN POSICIÓN";
+                
+                // Movimiento articulado (Animaciones)
                 animCaminar = anims[0];
                 if (animCaminar) animCaminar.stop();
 
-                // Movimiento por doble clic
+                // DOBLE CLIC PARA CAMINAR
                 scene.onPointerObservable.add((pointerInfo) => {
                     if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -116,18 +119,18 @@
                     }
                 });
 
-                // Lógica de Movimiento y Perspectiva Fija
+                // LÓGICA DE MOVIMIENTO Y PERSPECTIVA FIJA
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.42;
+                    const vel = 0.42;
                     let mov = false;
                     let rot = personaje.rotation.y;
 
-                    // Desactivar giro de mouse si estamos caminando
+                    // BLOQUEO DE CÁMARA: El mouse no mueve la cámara mientras caminas
                     const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
                     if (keys.some(k => inputMap[k])) {
                         camera.detachControl(canvas);
@@ -183,14 +186,14 @@
             return scene;
         };
 
-        // 5 CÁMARAS FIJAS
+        // 5 CÁMARAS PROFESIONALES FIJAS
         function setCam(t) {
             if (!camera) return;
             switch(t) {
                 case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
                 case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
                 case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; // Cenital
-                case 4: camera.alpha = -Math.PI/2.8; camera.beta = Math.PI/3.5; camera.radius = 55; break; // General
+                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // Gral.
                 case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
             }
         }
