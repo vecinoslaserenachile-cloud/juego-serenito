@@ -3,27 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Serenito y sus vecinos</title>
+    <title>LA❤️SERENA - Proyecto Vecinos</title>
     
-    <link rel="icon" type="image/png" href="ls-favicon.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
     <style>
-        body {
-            margin: 0;
-            overflow: hidden; /* Elimina barras de desplazamiento */
-            background-color: #333;
-        }
-        canvas {
-            display: block;
-            background-color: #87CEEB; /* El Celeste Cielo original */
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
+        #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
+        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
+        #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b39700; }
+        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
     </style>
 </head>
 <body>
 
-    <canvas id="gameCanvas"></canvas>
+    <div id="ui-status">Ajustando diagonales y rotaciones...</div>
 
-    <script src="juego.js"></script>
+    <div id="toolbar">
+        <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
+        <button class="btn" onclick="camaraAerea()">🚁 Vista Aérea</button>
+        <button class="btn btn-rescate" onclick="rescatar()">🚨 RESCATE</button>
+    </div>
 
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        const statusDiv = document.getElementById("ui-status");
+
+        let scene, camera, personaje, animCaminar;
+        let destinoFinal = null;
+        
+        // --- 📍 AJUSTES DE PRECISIÓN ---
+        // Edificio Blanco y Rojo (Muni)
+        const MUNI_X = 550;      
+        const MUNI_Z = 200;
+        const MUNI_ROTACION = 1.57; // 90 grados a la izquierda exactos respecto a la versión anterior
+
+        // Intendencia (Diagonal Izquierda y Frente)
+        const INTEN_X = -100;    // Desplazado a la izquierda (negativo para diagonal)
+        const INTEN_Z = 600;     // Cuadra de enfrente
+        const INTEN_SIZE = 240;
+        const INTEN_ROTACION = 1.57; // Orientación inicial para ajustar
+        // -----------------------------------------
+
+        const crearEscena = function () {
+            scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+            scene.collisionsEnabled = true;
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 2.0;
+
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.checkCollisions = true;
+
+            return scene;
+        };
+
+        scene = crearEscena();
+
+        // 2. CARGAR MAPA
+        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
+        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+        suelo.material = matSuelo;
+        suelo.checkCollisions = true;
+
+        // 3. CARGAR MUNICIPALIDAD (BISTURÍ: 90° a la izquierda)
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            const muni = meshes[0];
+            const bound = muni.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 240 / Math.max(size.x, size.y, size.z);
+            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
+            const nivelSuelo = -bound.min.y * factor; 
+            muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
+            muni.rotation.y = MUNI_ROTACION; 
+
+            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
+            statusDiv.innerHTML = "✅ Muni: Giro 90° OK";
+        });
+
+        // 4. CARGAR INTENDENCIA (DIAGONAL IZQUIERDA)
+        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
+            const inten = meshes[0];
+            const bound = inten.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = INTEN_SIZE / Math.max(size.x, size.y, size.z);
+            inten.scaling = new BABYLON.Vector3(factor, factor, factor);
+            const nivelSueloInten = -bound.min.y * factor; 
+            inten.position = new BABYLON.Vector3(INTEN_X, nivelSueloInten, INTEN_Z);
+            inten.rotation.y = INTEN_ROTACION;
+
+            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
+            statusDiv.innerHTML += "<br>✅ Intendencia: Diagonal OK";
+        });
+
+        // 5. SERENITO Y MOVIMIENTO
+        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+            personaje = meshes[0];
+            personaje.scaling = new BABYLON.Vector3(10, 10, 10);
+            personaje.position = new BABYLON.Vector3(0, 0, 0); 
+            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
+            camera.lockedTarget = personaje;
+            if (anims && anims.length > 0) animCaminar = anims[0];
+        });
+
+        scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+
+        scene.onBeforeRenderObservable.add(() => {
+            if (!personaje || !destinoFinal) return;
+            let diff = destinoFinal.subtract(personaje.position);
+            diff.y = 0;
+            if (diff.length() > 1.5) {
+                personaje.rotation.y = Math.atan2(diff.x, diff.z);
+                personaje.moveWithCollisions(diff.normalize().scale(1.2));
+                if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+            } else { if (animCaminar) animCaminar.stop(); destinoFinal = null; }
+        });
+
+        window.camaraSerenito = function() { camera.lockedTarget = personaje; camera.radius = 120; }
+        window.camaraAerea = function() {
+            camera.lockedTarget = null;
+            camera.setPosition(new BABYLON.Vector3(200, 500, 800));
+            camera.setTarget(new BABYLON.Vector3(200, 0, 400));
+        }
+        window.rescatar = function() { if(personaje) { personaje.position = new BABYLON.Vector3(0, 0, 0); camaraSerenito(); } }
+
+        engine.runRenderLoop(() => { scene.render(); });
+        window.addEventListener("resize", () => { engine.resize(); });
+    </script>
 </body>
 </html>
