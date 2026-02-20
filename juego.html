@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - LA❤️SERENA</title>
+    <title>Vecinos La Serena 3D - Proyecto Galaxia</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
@@ -14,19 +14,19 @@
             position: absolute; top: 15px; left: 15px; color: white;
             font-family: 'Segoe UI', Tahoma, sans-serif; background: rgba(0, 0, 0, 0.9);
             padding: 25px; border-radius: 15px; border: 3px solid #ffd700;
-            pointer-events: none; box-shadow: 0 4px 25px rgba(0,0,0,0.7); min-width: 300px;
+            pointer-events: none; box-shadow: 0 4px 25px rgba(0,0,0,0.7); min-width: 320px;
         }
         .marca-texto { color: #ffd700; font-size: 32px; font-weight: 900; display: block; text-align: center; }
         
         @keyframes latido {
             0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.05); filter: brightness(1.3); }
+            50% { transform: scale(1.06); filter: brightness(1.3); color: #ff0000; }
             100% { transform: scale(1); filter: brightness(1); }
         }
         .slogan-accion { 
             color: #ff3333; font-size: 24px; font-weight: 900; 
             display: block; text-align: center; margin-top: 10px;
-            animation: latido 1.5s infinite ease-in-out;
+            animation: latido 1.2s infinite ease-in-out;
             text-transform: uppercase; line-height: 1.2;
         }
         
@@ -48,7 +48,7 @@
     <div id="ui">
         <span class="marca-texto">LA❤️SERENA</span>
         <span class="slogan-accion">¡La Serena se levanta!</span>
-        <div id="estado">⏳ Buscando a Serenito...</div>
+        <div id="estado">📡 Sincronizando Serenito...</div>
     </div>
 
     <div id="cam-selector">
@@ -69,25 +69,21 @@
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
+            scene.clearColor = new BABYLON.Color3(0.1, 0.1, 0.2); // Cielo más oscuro tipo Galaxy
             scene.collisionsEnabled = true;
 
-            // CONFIGURACIÓN DRACO
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // 1. CÁMARA (Fija por defecto)
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 14, BABYLON.Vector3.Zero(), scene);
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
 
-            // 2. LUZ (Resalta logo LA❤️SERENA)
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.7;
+            light.intensity = 1.8;
 
-            // 3. SUELO (MAPA)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 500, height: 500}, scene);
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
@@ -95,21 +91,23 @@
             suelo.checkCollisions = true;
             suelo.position.y = -0.05;
 
-            // 4. CARGA DE SERENITO
+            // CARGA DE SERENITO CON CORRECCIÓN DE ESPEJO Y ALTURA
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                personaje.scaling = new BABYLON.Vector3(1.6, 1.6, 1.6);
-                personaje.position = new BABYLON.Vector3(0, 0.85, 0); // Pies en el suelo
+                // ESCALA POSITIVA: Para que el logo LA❤️SERENA se lea bien
+                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
+                // ALTURA: Para que no aparezca cortado (Pies en el suelo)
+                personaje.position = new BABYLON.Vector3(0, 0.9, 0); 
                 personaje.checkCollisions = true;
                 personaje.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5);
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO LISTO";
+                document.getElementById("estado").innerHTML = "✅ SERENITO EN POSICIÓN";
                 
                 animCaminar = anims[0];
                 if (animCaminar) animCaminar.stop();
 
-                // 5. MOVIMIENTO POR DOBLE CLIC
+                // NAVEGACIÓN POR DOBLE CLIC
                 scene.onPointerObservable.add((pointerInfo) => {
                     if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                         const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => mesh === suelo);
@@ -120,18 +118,18 @@
                     }
                 });
 
-                // 6. BUCLE DE MOVIMIENTO Y PERSPECTIVA
+                // LÓGICA DE MOVIMIENTO Y PERSPECTIVA FIJA
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    const vel = 0.38;
+                    const vel = 0.42;
                     let moviendo = false;
                     let rotDestino = personaje.rotation.y;
 
-                    // Bloqueo de cámara manual al caminar
+                    // Perspectiva rígida mientras caminas
                     const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
                     if (keys.some(k => inputMap[k])) {
                         camera.detachControl(canvas);
@@ -141,59 +139,53 @@
                         camera.attachControl(canvas, true);
                     }
 
-                    // A. Movimiento por Teclado
+                    // Movimiento Teclado
                     if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rotDestino = Math.PI; }
                     if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rotDestino = 0; }
                     if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rotDestino = -Math.PI / 2; }
                     if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rotDestino = Math.PI / 2; }
 
-                    // B. Movimiento por Doble Clic
+                    // Movimiento Doble Clic
                     if (moviendoPorClick && destinoFinal) {
-                        const direccion = destinoFinal.subtract(personaje.position);
-                        direccion.y = 0;
-                        if (direccion.length() > 0.5) {
-                            direccion.normalize();
-                            personaje.moveWithCollisions(direccion.scale(vel));
-                            rotDestino = Math.atan2(direccion.x, direccion.z) + Math.PI;
+                        const dir = destinoFinal.subtract(personaje.position);
+                        dir.y = 0;
+                        if (dir.length() > 0.6) {
+                            dir.normalize();
+                            personaje.moveWithCollisions(dir.scale(vel));
+                            rotDestino = Math.atan2(dir.x, dir.z) + Math.PI;
                             moviendo = true;
-                        } else {
-                            moviendoPorClick = false;
-                        }
+                        } else { moviendoPorClick = false; }
                     }
 
-                    // Rotación suave y Animación
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rotDestino, 0.18);
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
                     }
+
+                    // --- DETECTOR DE ZONAS (Minijuegos) ---
+                    // Ejemplo Estadio La Portada (Coordenadas de prueba)
+                    if (BABYLON.Vector3.Distance(personaje.position, new BABYLON.Vector3(60, 0.9, 40)) < 3) {
+                        document.getElementById("estado").innerHTML = "⚽ Presiona 'E' para jugar Voleibol";
+                    }
+                    // Ejemplo Observatorio
+                    if (BABYLON.Vector3.Distance(personaje.position, new BABYLON.Vector3(-80, 0.9, -50)) < 3) {
+                        document.getElementById("estado").innerHTML = "🔭 Doble clic para ver la Galaxia";
+                    }
                 });
             });
-
-            // EDIFICIOS SÓLIDOS
-            function crearEdif(n, x, z, w, h, d) {
-                const b = BABYLON.MeshBuilder.CreateBox(n, {width: w, height: h, depth: d}, scene);
-                b.position = new BABYLON.Vector3(x, h/2, z);
-                b.checkCollisions = true;
-                const m = new BABYLON.StandardMaterial("m"+n, scene);
-                m.diffuseColor = new BABYLON.Color3(0.8, 0.7, 0.6);
-                b.material = m;
-            }
-            crearEdif("Gore", -45, -30, 24, 12, 34);
-            crearEdif("Catedral", 0, -60, 30, 22, 45);
 
             return scene;
         };
 
-        // 5 CÁMARAS FIJAS PROFESIONALES
         function setCam(t) {
             if (!camera) return;
             switch(t) {
-                case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
-                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
-                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 38; break; // Cenital
-                case 4: camera.alpha = -Math.PI/2.5; camera.beta = Math.PI/3.5; camera.radius = 45; break; // Plano Gral
-                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
+                case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; 
+                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break;
+                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 40; break;
+                case 4: camera.alpha = -Math.PI/2.8; camera.beta = Math.PI/3.2; camera.radius = 55; break;
+                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break;
             }
         }
 
