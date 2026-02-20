@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - Identidad Real</title>
+    <title>LA❤️SERENA - Identidad Total</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -38,7 +38,7 @@
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">🎮 USA LAS FLECHAS PARA CAMINAR</div>
+        <div id="estado">📡 RECONECTANDO IDENTIDAD...</div>
     </div>
 
     <div id="botones">
@@ -57,7 +57,7 @@
         let scene, camera, personaje, animCaminar, destino;
         let moviendoTactil = false;
         let saltando = false;
-        let baseHeight = 0;
+        let baseHeight = 1.5; // Altura de seguridad por defecto
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
@@ -68,11 +68,12 @@
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
+            // VISTA INICIAL PANORÁMICA
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.2, 85, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.2;
+            light.intensity = 2.5;
 
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
@@ -81,34 +82,38 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO CON CORRECCIÓN DE ESPEJO
+            // CARGA DE SERENITO (15MB)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // 1. CORRECCIÓN DE MODO ESPEJO: Escala positiva absoluta
+                // 1. CORRECCIÓN ESPEJO (Escala Positiva)
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
                 
-                // 2. ALTURA DE SEGURIDAD
+                // 2. ESCÁNER DE ALTURA BLINDADO
                 const bInfo = meshes[0].getHierarchyBoundingVectors(true);
-                baseHeight = (-bInfo.min.y * 1.7) + 0.1;
+                baseHeight = (-bInfo.min.y * 1.7) + 0.2; 
                 personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
                 
-                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); m.checkCollisions = true; });
+                meshes.forEach(m => { 
+                    m.isVisible = true; 
+                    m.setEnabled(true); 
+                    m.checkCollisions = true; 
+                });
+                
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ IDENTIDAD REAL CARGADA";
+                document.getElementById("estado").innerHTML = "✅ IDENTIDAD LS❤️ CARGADA";
                 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // SISTEMA DE CONTROLES
+                // CONTROLES HÍBRIDOS
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
-                // DOBLE CLIC PARA MÓVILES
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -132,15 +137,14 @@
                         }, 20);
                     }
 
-                    // MOVIMIENTO TECLADO (FLECHA ADELANTE / W)
+                    // MOVIMIENTO TECLADO (FLECHAS ACTIVADAS)
                     if (keys.some(k => inputMap[k])) {
                         moviendoTactil = false; mov = true;
                         if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; }
                         if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; }
-                        if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; }
-                        if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; }
-                    } 
-                    else if (moviendoTactil && destino) {
+                        if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI/2; }
+                        if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI/2; }
+                    } else if (moviendoTactil && destino) {
                         const d = destino.subtract(personaje.position); d.y = 0;
                         if (d.length() > 0.8) {
                             d.normalize(); personaje.moveWithCollisions(d.scale(vel));
@@ -149,15 +153,23 @@
                     }
 
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.18);
-                    if (animCaminar) { if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } else { animCaminar.stop(); } }
+                    if (animCaminar) { 
+                        if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
+                        else { animCaminar.stop(); } 
+                    }
                 });
+            }, (evt) => {
+                if (evt.lengthComputable) {
+                    let p = (evt.loaded * 100 / evt.total).toFixed();
+                    document.getElementById("estado").innerHTML = "📥 CARGANDO: " + p + "%";
+                }
             });
             return scene;
         };
 
         window.rescatar = function() {
             if (!personaje) return;
-            personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
+            personaje.position = new BABYLON.Vector3(0, baseHeight + 1, 0);
             camera.lockedTarget = personaje;
         };
 
