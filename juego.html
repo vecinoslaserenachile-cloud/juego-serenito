@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - Final</title>
+    <title>Vecinos La Serena 3D - Detective</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
@@ -14,16 +14,17 @@
             color: white; font-family: sans-serif;
             background: rgba(0, 0, 0, 0.8);
             padding: 15px; border-radius: 8px;
-            border-left: 5px solid #ffd700;
-            pointer-events: none;
+            border-left: 5px solid #ffd700; pointer-events: none;
         }
+        /* ESTILO PARA EL MENSAJE DE ERROR */
+        #debug-msg { margin-top: 10px; font-weight: bold; color: #00ff00; }
     </style>
 </head>
 <body>
     <div id="ui">
         <h3 style="margin:0; color:#ffd700;">La Serena 3D</h3>
-        <p>📍 Plaza de Armas</p>
-        <p>🎮 Mover: WASD o Flechas</p>
+        <p>🎮 WASD o Flechas</p>
+        <div id="debug-msg">⏳ Intentando cargar a Serenito...</div>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -31,65 +32,68 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
+        const debugText = document.getElementById("debug-msg");
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.5, 0.6, 0.7); // Cielo azulado
+            scene.clearColor = new BABYLON.Color3(0.5, 0.6, 0.7);
 
-            // 1. ACTIVAR LECTOR DRACO (Indispensable para tu archivo liviano)
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // 2. CÁMARA
             const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 8, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.lowerRadiusLimit = 3;
-            camera.upperRadiusLimit = 25;
+            camera.lowerRadiusLimit = 3; camera.upperRadiusLimit = 25;
 
-            // 3. ILUMINACIÓN (Sin brillo excesivo)
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 1.1;
 
-            // 4. EL SUELO (MAPA)
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 150, height: 150}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-            
-            // Truco anti-cache: Agregamos un número random para forzar la carga
-            const textura = new BABYLON.Texture("mapa.jpg?v=" + Math.random(), scene);
-            
-            matSuelo.diffuseTexture = textura;
-            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0); // ¡ESTO QUITA EL DESTELLO BLANCO!
+            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg?v=" + Math.random(), scene);
+            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
-            // 5. CARGAR A SERENITO (Versión Draco)
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Math.random(), scene, function (meshes, ps, sk, anims) {
-                const personaje = meshes[0];
-                
-                // Ajustes
-                personaje.scaling = new BABYLON.Vector3(-1.5, 1.5, 1.5); // Espejo para leer bien
-                personaje.position.y = 0; 
-                camera.lockedTarget = personaje; // La cámara lo sigue
+            // --- CARGADOR DETECTIVE ---
+            BABYLON.SceneLoader.ImportMesh(
+                "", 
+                "./", 
+                "serenito.glb?v=" + Math.random(), // Busca este nombre exacto
+                scene, 
+                // SI TIENE ÉXITO:
+                function (meshes, ps, sk, anims) {
+                    debugText.innerHTML = "✅ ¡ÉXITO! Serenito está en escena.";
+                    debugText.style.color = "#00ff00"; // Verde
+                    
+                    const personaje = meshes[0];
+                    personaje.scaling = new BABYLON.Vector3(-1.5, 1.5, 1.5);
+                    personaje.position.y = 0;
+                    camera.lockedTarget = personaje;
 
-                // Activar animación automáticamente
-                if (anims && anims.length > 0) {
-                    anims[0].play(true);
+                    if (anims && anims.length > 0) anims[0].play(true);
+
+                    const inputMap = {};
+                    scene.actionManager = new BABYLON.ActionManager(scene);
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
+                    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
+
+                    scene.onBeforeRenderObservable.add(() => {
+                        const vel = 0.2;
+                        if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; }
+                        if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; }
+                        if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; }
+                        if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; }
+                    });
+                },
+                null, // Progreso (ignorar)
+                // SI FALLA (Aquí está la clave):
+                function (scene, message, exception) {
+                    debugText.innerHTML = "❌ ERROR CRÍTICO:<br>" + message;
+                    debugText.style.color = "red";
+                    console.error(message);
                 }
-
-                // 6. CONTROLES
-                const inputMap = {};
-                scene.actionManager = new BABYLON.ActionManager(scene);
-                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
-                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
-
-                scene.onBeforeRenderObservable.add(() => {
-                    const vel = 0.2;
-                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; }
-                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; }
-                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; }
-                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; }
-                });
-            });
+            );
 
             return scene;
         };
