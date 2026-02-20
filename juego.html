@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - Proyecto Protagonista</title>
+    <title>LA❤️SERENA - ¡EL REGRESO!</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
 
@@ -41,7 +41,7 @@
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">📡 SINCRONIZANDO SISTEMAS...</div>
+        <div id="estado">📡 SINCRONIZANDO SERENITO...</div>
     </div>
 
     <div id="cam-selector">
@@ -57,15 +57,14 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let scene, camera, personaje, animCaminar, destino;
-        let moviendoPorClick = false;
+        let scene, camera, personaje, animCaminar;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
             scene.collisionsEnabled = true;
 
-            // CONFIGURACIÓN DRACO (VITAL PARA ARCHIVOS DE 15MB)
+            // CONFIGURACIÓN DRACO (VITAL)
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
@@ -75,7 +74,7 @@
             camera.checkCollisions = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
+            light.intensity = 2.2;
 
             // EL MAPA
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
@@ -85,24 +84,27 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO CON PROTOCOLO DE RECUPERACIÓN
+            // PROTOCOLO DE APARICIÓN FORZADA
             const urlModelo = "serenito.glb?v=" + Date.now();
-            document.getElementById("estado").innerHTML = "📥 DESCARGANDO A SERENITO (15MB)...";
+            document.getElementById("estado").innerHTML = "📥 DESCARGANDO PROTAGONISTA (15MB)...";
             
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-                // Si llegamos aquí, el archivo fue leído. Ahora hay que hacerlo visible.
+                // Seleccionamos la raíz y forzamos visibilidad en toda la jerarquía
                 personaje = meshes[0];
+                meshes.forEach(m => {
+                    m.setEnabled(true);
+                    m.isVisible = true;
+                });
                 
-                // ESCALA Y ALTURA: Corrección de efecto espejo y pies hundidos
-                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
-                personaje.position = new BABYLON.Vector3(0, 1.2, 0); // Lo subo un poco más para asegurar visibilidad
+                // AJUSTES DE POSICIÓN
+                personaje.scaling = new BABYLON.Vector3(1.8, 1.8, 1.8); 
+                personaje.position = new BABYLON.Vector3(0, 0.95, 0); 
                 personaje.checkCollisions = true;
-                personaje.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN POSICIÓN";
+                document.getElementById("estado").innerHTML = "✅ SERENITO EN ESCENA";
                 
-                // Animación articulada
+                // Activar animación de caminata si existe
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
@@ -115,17 +117,16 @@
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.4;
+                    let vel = 0.45;
                     let mov = false;
                     let rot = personaje.rotation.y;
 
-                    // Teclado
                     if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; mov = true; }
                     if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; mov = true; }
                     if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; mov = true; }
                     if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; mov = true; }
 
-                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.18);
+                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.2);
                     if (animCaminar) {
                         if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
@@ -146,7 +147,7 @@
             switch(t) {
                 case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; 
                 case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break;
-                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break;
+                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 45; break;
                 case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break;
                 case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break;
             }
