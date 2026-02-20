@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Plaza de Armas Virtual</title>
+    <title>LA❤️SERENA - Centro Histórico</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -14,7 +14,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
         
-        /* INTERFAZ LIMPIA PARA EL USUARIO */
+        /* INTERFAZ USUARIO */
         #ui-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
@@ -29,7 +29,7 @@
 </head>
 <body>
 
-    <div id="ui-status">📍 La Serena: Centro Histórico</div>
+    <div id="ui-status">📍 La Serena: Plaza de Armas</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Caminar</button>
@@ -42,19 +42,20 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const statusDiv = document.getElementById("ui-status");
 
-        // --- 📍 COORDENADAS MAESTRAS (FIJAS) ---
+        // --- 📍 AJUSTES DE ARQUITECTURA ---
         
-        // 1. MUNICIPALIDAD
+        // 1. MUNICIPALIDAD (Ajustes aplicados: Rotación 180 y Escala reducida)
         const MUNI_X = 757;
         const MUNI_Z = 187;
-        const MUNI_ROT = 0; // Girado 180 respecto a la captura anterior (0 radianes)
+        const MUNI_ROT = Math.PI; // Math.PI es 180 grados exactos (Media vuelta)
+        const MUNI_SIZE = 160;    // Reducido de 240 a 160 para igualar a la intendencia
 
         // 2. INTENDENCIA
         const INT_X = 455;
         const INT_Z = 386;
-        const INT_ROT = 0; // 0 Grados
+        const INT_ROT = 0;        
+        const INT_SIZE = 160;     // Tamaño estándar para ambos edificios
 
         // ----------------------------------------
 
@@ -66,20 +67,17 @@
             scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); 
             scene.collisionsEnabled = true;
 
-            // ILUMINACIÓN
             const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-            hemiLight.intensity = 0.7; // Un poco más brillante para que se vea bien
+            hemiLight.intensity = 0.7;
 
             const dirLight = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
             dirLight.position = new BABYLON.Vector3(200, 400, 200);
             dirLight.intensity = 1.2;
 
-            // SOMBRAS
             shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
-            shadowGenerator.useBlurExponentialShadowMap = true;
+            shadowGenerator.useBlurExponentialShadowMap = true; 
             shadowGenerator.blurKernel = 32;
 
-            // CÁMARA
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
@@ -91,7 +89,7 @@
 
         scene = crearEscena();
 
-        // 1. SUELO (MAPA)
+        // 1. SUELO
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 3000, height: 3000}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -121,18 +119,21 @@
             }
         });
 
-        // 3. CARGAR MUNICIPALIDAD
+        // 3. CARGAR MUNICIPALIDAD (GIRADA 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
             const bound = muni.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
-            const factor = 240 / Math.max(size.x, size.y, size.z);
+            
+            // Usamos MUNI_SIZE (160) para que sea más pequeño
+            const factor = MUNI_SIZE / Math.max(size.x, size.y, size.z);
             
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // Posición fija
             const nivelSuelo = -bound.min.y * factor;
             muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
+            
+            // APLICAMOS EL GIRO
             muni.rotation.y = MUNI_ROT;
 
             meshes.forEach(m => {
@@ -143,22 +144,19 @@
             });
         });
 
-        // 4. CARGAR INTENDENCIA (CON CORRECCIÓN DE ALTURA)
+        // 4. CARGAR INTENDENCIA (TAMAÑO IGUALADO)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             const intendencia = meshes[0];
-            
-            // Cálculo de escala (ligeramente más pequeña que la muni para variedad)
             const bound = intendencia.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
-            const factor = 200 / Math.max(size.x, size.y, size.z);
+            
+            // Usamos INT_SIZE (160) para igualar a la muni
+            const factor = INT_SIZE / Math.max(size.x, size.y, size.z);
             
             intendencia.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // --- CÁLCULO ANTI-HUNDIMIENTO ---
-            // Calcula exactamente cuánto hay que subirlo para que la base toque el suelo (Y=0)
             const nivelSuelo = -bound.min.y * factor;
-            
-            intendencia.position = new BABYLON.Vector3(INT_X, nivelSuelo + 0.5, INT_Z); // +0.5 seguridad
+            intendencia.position = new BABYLON.Vector3(INT_X, nivelSuelo + 0.2, INT_Z);
             intendencia.rotation.y = INT_ROT;
 
             meshes.forEach(m => {
@@ -167,10 +165,10 @@
                 m.receiveShadows = true;
                 if(m.material) m.material.backFaceCulling = false;
             });
-        }, function() { console.log("Intendencia no encontrada, verificar nombre archivo"); });
+        }, function() { console.log("Error cargando intendencia"); });
 
 
-        // 5. SISTEMA DE MOVIMIENTO (CLICK)
+        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh && pick.pickedMesh.name === "suelo") {
                 destinoFinal = pick.pickedPoint;
@@ -212,7 +210,7 @@
             }
         });
 
-        // 6. CONTROL CÁMARA
+        // 6. FUNCIONES UI
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
@@ -222,9 +220,9 @@
 
         window.camaraAerea = function() {
             camera.lockedTarget = null;
-            // Cámara centrada entre los dos edificios para ver todo
-            camera.setPosition(new BABYLON.Vector3(600, 700, 700)); 
-            camera.setTarget(new BABYLON.Vector3(500, 0, 200));
+            // Cámara ajustada para ver ambos edificios
+            camera.setPosition(new BABYLON.Vector3(600, 600, 600)); 
+            camera.setTarget(new BABYLON.Vector3(600, 0, 300));
         }
 
         window.rescatar = function() {
@@ -234,7 +232,6 @@
             camaraSerenito();
         }
 
-        // 7. INICIO
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
     </script>
