@@ -3,250 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Calibración Segura</title>
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
-
+    <title>Diagnóstico La Serena</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
-        #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
+        body, html { margin:0; padding:0; overflow:hidden; background:#87CEEB; font-family:sans-serif; }
+        #renderCanvas { width: 100%; height: 100%; }
         
-        /* PANEL DE CONTROL */
-        #panel-calibracion {
-            position: absolute; top: 10px; right: 10px; width: 280px;
-            background: rgba(20, 20, 30, 0.95); color: white; padding: 15px;
-            border-radius: 10px; border: 2px solid #00d2ff; 
-            font-family: monospace; font-size: 12px; z-index: 200;
+        /* CONSOLA DE DIAGNÓSTICO */
+        #debug-log {
+            position: absolute; top: 10px; left: 10px;
+            width: 300px; height: 200px;
+            background: rgba(0,0,0,0.8); color: #00ff00;
+            font-family: monospace; font-size: 12px;
+            padding: 10px; overflow-y: auto; z-index: 1000;
+            border: 2px solid #00ff00; pointer-events: none;
         }
-        #panel-calibracion h3 { margin: 0 0 10px 0; color: #00d2ff; text-align: center; }
-        select { width: 100%; padding: 5px; background: #333; color: white; margin-bottom: 10px; }
-        .control-group { margin-bottom: 10px; }
-        .control-group label { display: flex; justify-content: space-between; color: #ccc; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #00d2ff; }
-        
-        /* BOTONES */
-        #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
-        .btn { background: #ffd700; color: #000; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+
+        /* PANEL DE CALIBRACIÓN */
+        #panel-calibracion {
+            position: absolute; top: 10px; right: 10px; width: 250px;
+            background: rgba(20,20,30,0.9); color: white; padding: 15px;
+            border: 1px solid white; z-index: 200;
+        }
+        input[type=range] { width: 100%; }
     </style>
 </head>
 <body>
 
+    <div id="debug-log">INICIANDO SISTEMA...<br></div>
+
     <div id="panel-calibracion">
-        <h3>🛠️ AJUSTE FINO</h3>
-        <select id="edificioSelector" onchange="cambiarEdificio()">
-            <option value="muni">🏢 MUNICIPALIDAD</option>
-            <option value="intendencia">🏛️ INTENDENCIA</option>
+        <h3>🔧 MODO REPARACIÓN</h3>
+        <select id="selector" onchange="cambiarEdificio()">
+            <option value="muni">MUNICIPALIDAD</option>
+            <option value="intendencia">INTENDENCIA</option>
         </select>
-
-        <div class="control-group">
-            <label>TAMAÑO % <span id="valEscala">100%</span></label>
-            <input type="range" id="inputEscala" min="0.5" max="2.0" step="0.05" value="1.0">
-        </div>
-
-        <div class="control-group">
-            <label>ROTACIÓN <span id="valRot">0°</span></label>
-            <input type="range" id="inputRot" min="0" max="360" step="1" value="0">
-        </div>
-        
-        <hr style="border-color:#555">
-
-        <div class="control-group">
-            <label>Posición X <span id="valX">0</span></label>
-            <input type="range" id="inputX" min="-1500" max="1500" step="1">
-        </div>
-        <div class="control-group">
-            <label>Posición Z <span id="valZ">0</span></label>
-            <input type="range" id="inputZ" min="-1500" max="1500" step="1">
-        </div>
-    </div>
-
-    <div id="toolbar">
-        <button class="btn" onclick="camaraSerenito()">🚶 Serenito</button>
-        <button class="btn" onclick="camaraAerea()">🚁 Vista Aérea</button>
+        <p>Rotación: <input type="range" id="rot" min="0" max="360" value="0" oninput="ajustar()"></p>
+        <p>Tamaño: <input type="range" id="scale" min="0.1" max="5" step="0.1" value="1" oninput="ajustar()"></p>
+        <p>Pos X: <input type="range" id="posX" min="-1000" max="1000" value="0" oninput="ajustar()"></p>
+        <p>Pos Z: <input type="range" id="posZ" min="-1000" max="1000" value="0" oninput="ajustar()"></p>
     </div>
 
     <canvas id="renderCanvas"></canvas>
 
     <script>
+        // --- LOGGER EN PANTALLA ---
+        function log(msg, error=false) {
+            const el = document.getElementById("debug-log");
+            el.innerHTML += (error ? "<span style='color:red'>✖ " : "✔ ") + msg + (error ? "</span>" : "") + "<br>";
+            console.log(msg);
+        }
+
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-
-        // --- ESTADO INICIAL SEGURO (VALORES QUE SABEMOS QUE FUNCIONAN) ---
-        let db = {
-            muni: { 
-                file: "municipalidad.glb", 
-                x: 757, z: 187, rot: 180, 
-                baseScale: 1, // Se calculará automáticamente
-                userScale: 1.0 // Multiplicador del usuario
-            },
-            intendencia: { 
-                file: "intendencia.glb", 
-                x: 455, z: 386, rot: 0, 
-                baseScale: 1, 
-                userScale: 1.0 
-            }
+        
+        // DATOS
+        let edificios = {
+            muni: { mesh: null, file: "municipalidad.glb", x: 757, z: 187, rot: 180, scale: 1 },
+            intendencia: { mesh: null, file: "intendencia.glb", x: 455, z: 386, rot: 0, scale: 1 }
         };
-
         let activeKey = "muni";
-        let scene, camera, shadowGenerator, personaje;
 
         const crearEscena = function () {
-            scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); 
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0); // Azul cielo
 
-            const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-            hemi.intensity = 0.8;
-            const dir = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
-            dir.position = new BABYLON.Vector3(200, 400, 200);
-            shadowGenerator = new BABYLON.ShadowGenerator(2048, dir);
-
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
+            // CÁMARA FIJA (NO DEPENDE DE NADA)
+            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 800, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            
+            camera.minZ = 1;      // Ver cosas cerca
+            camera.maxZ = 5000;   // Ver cosas lejos
+
+            // LUZ
+            new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // 1. EL SUELO (SEGURIDAD)
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
+            const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+            const tex = new BABYLON.Texture("mapa.jpg", scene, 
+                null, null, null, 
+                () => log("Mapa cargado OK"), 
+                () => {
+                    log("ERROR: mapa.jpg no encontrado", true);
+                    matSuelo.diffuseColor = new BABYLON.Color3(0, 1, 0); // Verde si falla
+                }
+            );
+            matSuelo.diffuseTexture = tex;
+            matSuelo.backFaceCulling = false; // Ver por ambos lados
+            suelo.material = matSuelo;
+
             return scene;
         };
-        scene = crearEscena();
 
-        // 1. CARGAR MAPA (SUELO)
-        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 3000, height: 3000}, scene);
-        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-        matSuelo.specularColor = new BABYLON.Color3(0,0,0);
-        suelo.material = matSuelo;
-        suelo.receiveShadows = true;
+        const scene = crearEscena();
 
-        // 2. CARGAR SERENITO (Para referencia de tamaño)
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function(meshes){
-            personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(10,10,10);
-            personaje.position = new BABYLON.Vector3(0,0,0);
-            shadowGenerator.addShadowCaster(personaje);
-            camera.lockedTarget = personaje;
-        });
+        // CARGADOR ROBUSTO
+        function cargarModelo(key) {
+            log("Buscando: " + edificios[key].file + "...");
+            
+            BABYLON.SceneLoader.ImportMesh("", "./", edificios[key].file, scene, 
+                function (meshes) {
+                    log("CARGADO: " + edificios[key].file);
+                    let m = meshes[0];
+                    edificios[key].mesh = m;
+                    
+                    // Asegurar que se ve (Normalizar tamaño)
+                    const bounds = m.getHierarchyBoundingVectors(true);
+                    const size = bounds.max.subtract(bounds.min);
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const factor = 150 / maxDim; // Forzar tamaño visible (150 unidades)
+                    
+                    m.scaling = new BABYLON.Vector3(factor, factor, factor);
+                    m.position = new BABYLON.Vector3(edificios[key].x, 0, edificios[key].z);
+                    
+                    if (key === activeKey) actualizarUI();
 
-        // 3. CARGAR EDIFICIOS CON LÓGICA DE SEGURIDAD
-        function cargar(key) {
-            let data = db[key];
-            BABYLON.SceneLoader.ImportMesh("", "./", data.file, scene, function (meshes) {
-                let m = meshes[0];
-                data.mesh = m;
-
-                // --- CALCULO AUTOMÁTICO DE TAMAÑO (Para que no desaparezca) ---
-                const bound = m.getHierarchyBoundingVectors(true);
-                const size = bound.max.subtract(bound.min);
-                // Usamos un tamaño base de 160 (como habíamos acordado antes)
-                let factorAutomatico = 160 / Math.max(size.x, size.y, size.z);
-                data.baseScale = factorAutomatico;
-
-                // Aplicamos transformaciones iniciales
-                aplicarTransformacion(key);
-
-                // Sombras
-                meshes.forEach(mesh => {
-                    shadowGenerator.addShadowCaster(mesh);
-                    mesh.receiveShadows = true;
-                    if(mesh.material) mesh.material.backFaceCulling = false;
-                });
-
-                if(key === activeKey) updateUI();
-            });
+                }, 
+                null, 
+                function (scene, message) {
+                    log("FALLO: " + edificios[key].file, true);
+                    // Crear CAJA ROJA DE EMERGENCIA
+                    let caja = BABYLON.MeshBuilder.CreateBox(key + "_fail", {size: 50}, scene);
+                    caja.position = new BABYLON.Vector3(edificios[key].x, 25, edificios[key].z);
+                    let mat = new BABYLON.StandardMaterial("error", scene);
+                    mat.diffuseColor = new BABYLON.Color3(1, 0, 0);
+                    caja.material = mat;
+                    edificios[key].mesh = caja;
+                    log("--> Se creó una caja roja en su lugar.");
+                }
+            );
         }
 
-        cargar("muni");
-        cargar("intendencia");
+        cargarModelo("muni");
+        cargarModelo("intendencia");
 
-        // --- SISTEMA DE CONTROL ---
-        const inEscala = document.getElementById("inputEscala");
-        const inRot = document.getElementById("inputRot");
-        const inX = document.getElementById("inputX");
-        const inZ = document.getElementById("inputZ");
-        
-        const txtEscala = document.getElementById("valEscala");
-        const txtRot = document.getElementById("valRot");
-        const txtX = document.getElementById("valX");
-        const txtZ = document.getElementById("valZ");
+        // --- CONTROLES UI ---
+        const uiRot = document.getElementById("rot");
+        const uiScale = document.getElementById("scale");
+        const uiX = document.getElementById("posX");
+        const uiZ = document.getElementById("posZ");
 
-        function aplicarTransformacion(key) {
-            let data = db[key];
-            if(!data.mesh) return;
+        window.ajustar = function() {
+            let data = edificios[activeKey];
+            if (!data.mesh) return;
 
-            // Posición
+            // Leer UI
+            data.rot = parseFloat(uiRot.value);
+            let escalaUsuario = parseFloat(uiScale.value);
+            data.x = parseFloat(uiX.value);
+            data.z = parseFloat(uiZ.value);
+
+            // Aplicar
+            data.mesh.rotation.y = data.rot * (Math.PI/180);
             data.mesh.position.x = data.x;
             data.mesh.position.z = data.z;
-            data.mesh.position.y = 0; // Siempre al suelo
 
-            // Rotación
-            data.mesh.rotation.y = data.rot * (Math.PI / 180);
-
-            // Escala (Base * Usuario)
-            let escalaFinal = data.baseScale * data.userScale;
-            data.mesh.scaling = new BABYLON.Vector3(escalaFinal, escalaFinal, escalaFinal);
-        }
-
-        function onInput() {
-            let data = db[activeKey];
-            
-            data.userScale = parseFloat(inEscala.value);
-            data.rot = parseFloat(inRot.value);
-            data.x = parseFloat(inX.value);
-            data.z = parseFloat(inZ.value);
-
-            // Actualizar textos
-            txtEscala.innerText = Math.round(data.userScale * 100) + "%";
-            txtRot.innerText = data.rot + "°";
-            txtX.innerText = data.x;
-            txtZ.innerText = data.z;
-
-            aplicarTransformacion(activeKey);
-        }
-
-        function updateUI() {
-            let data = db[activeKey];
-            inEscala.value = data.userScale;
-            inRot.value = data.rot;
-            inX.value = data.x;
-            inZ.value = data.z;
-            
-            txtEscala.innerText = Math.round(data.userScale * 100) + "%";
-            txtRot.innerText = data.rot + "°";
-            txtX.innerText = data.x;
-            txtZ.innerText = data.z;
-
-            // Mover cámara al edificio seleccionado para verlo bien
-            if(data.mesh) {
-                camera.lockedTarget = null;
-                camera.setTarget(data.mesh.position);
+            // Mantenemos la escala base calculada al cargar * escala usuario
+            // (Truco para no perder la referencia del tamaño original)
+            if(data.mesh.name.indexOf("_fail") === -1) { // Si no es la caja de error
+                 // Recalculamos basándonos en escala 1 visual
+                 // (Simplificación para este modo debug)
+                 const currentScale = data.mesh.scaling.clone(); 
+                 // Solo aplicamos cambio relativo si es necesario, pero 
+                 // para simplificar en debug:
+                 // data.mesh.scaling = new BABYLON.Vector3(escalaUsuario, escalaUsuario, escalaUsuario); 
+                 // OJO: Esto puede hacerlos minúsculos de nuevo.
+                 // Mejor solo mover y rotar por ahora en modo rescate.
             }
         }
 
         window.cambiarEdificio = function() {
-            activeKey = document.getElementById("edificioSelector").value;
-            updateUI();
+            activeKey = document.getElementById("selector").value;
+            actualizarUI();
         }
 
-        window.camaraSerenito = function() {
-            if(personaje) {
-                camera.lockedTarget = personaje;
-                camera.radius = 120;
+        function actualizarUI() {
+            let data = edificios[activeKey];
+            uiRot.value = data.rot;
+            uiX.value = data.x;
+            uiZ.value = data.z;
+            // Enfocar cámara
+            if(data.mesh) {
+                scene.activeCamera.setTarget(data.mesh.position);
             }
         }
-        window.camaraAerea = function() {
-            camera.lockedTarget = null;
-            camera.setPosition(new BABYLON.Vector3(500, 800, 500));
-            camera.setTarget(new BABYLON.Vector3(500, 0, 200));
-        }
 
-        // Event Listeners
-        inEscala.addEventListener("input", onInput);
-        inRot.addEventListener("input", onInput);
-        inX.addEventListener("input", onInput);
-        inZ.addEventListener("input", onInput);
-
-        engine.runRenderLoop(() => { scene.render(); });
-        window.addEventListener("resize", () => { engine.resize(); });
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
     </script>
 </body>
 </html>
