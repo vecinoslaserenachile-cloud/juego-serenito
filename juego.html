@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Horizonte Real</title>
+    <title>LA❤️SERENA - Movimiento 360</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -16,18 +16,18 @@
         #ui {
             position: absolute; top: 10px; left: 10px; color: white;
             background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
-            border: 3px solid #bc13fe; pointer-events: none; width: 240px; z-index: 10;
+            border: 3px solid #bc13fe; pointer-events: none; width: 220px; z-index: 10;
         }
-        .linea1 { color: #ffd700; font-size: 18px; display: block; text-align: center; }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; text-align: center; font-size: 11px; }
+        .linea1 { color: #ffd700; font-size: 16px; display: block; text-align: center; }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 5px; text-align: center; font-size: 10px; }
         #botones { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10; }
-        .btn { background: #ffd700; color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; }
+        .btn { background: #ffd700; color: black; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 10px; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
-        <div id="estado">📡 SISTEMA DE HORIZONTE ACTIVO</div>
+        <div id="estado">🎮 MODO 360 ACTIVADO</div>
     </div>
     <div id="botones">
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
@@ -40,72 +40,57 @@
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, personaje, animCaminar, suelo;
         let destinoFinal = null;
+        let saltando = false;
+        let baseHeight = 0;
         const inputMap = {};
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // Azul cielo Serena
+            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
 
-            // --- 1. CÁMARA BLINDADA (Límites de Zoom y Ángulo) ---
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.5, 80, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             
-            // Bloqueos para evitar el "mundo azul"
-            camera.lowerBetaLimit = 0.1; // No ver directo desde arriba
-            camera.upperBetaLimit = Math.PI / 2.15; // ¡DETRÉN: No bajar del nivel del suelo!
-            camera.lowerRadiusLimit = 10; // Zoom máximo (no entrar al cuerpo)
-            camera.upperRadiusLimit = 120; // Zoom mínimo (no perderse en el espacio)
+            // LÍMITES DE SEGURIDAD
+            camera.lowerBetaLimit = 0.1;
+            camera.upperBetaLimit = Math.PI / 2.15;
+            camera.lowerRadiusLimit = 10;
+            camera.upperRadiusLimit = 150;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.2;
 
-            // EL MAPA
             suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
-            // --- 2. EL HORIZONTE: MAR Y MONTAÑAS ---
-            // Niebla para suavizar el borde del mundo
-            scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
-            scene.fogColor = new BABYLON.Color3(0.5, 0.7, 0.9);
-            scene.fogDensity = 0.002;
+            // HORIZONTE DE LA SERENA
+            const montañas = BABYLON.MeshBuilder.CreateBox("andes", {width: 2500, height: 300, depth: 50}, scene);
+            montañas.position = new BABYLON.Vector3(0, 100, 600);
+            const mar = BABYLON.MeshBuilder.CreateGround("pacifico", {width: 2500, height: 1200}, scene);
+            mar.position = new BABYLON.Vector3(0, -2, -700);
 
-            // Cordillera (Este)
-            const montañas = BABYLON.MeshBuilder.CreateBox("andes", {width: 2000, height: 250, depth: 50}, scene);
-            montañas.position = new BABYLON.Vector3(0, 80, 500); 
-            const matAndes = new BABYLON.StandardMaterial("matAndes", scene);
-            matAndes.diffuseColor = new BABYLON.Color3(0.3, 0.2, 0.1); // Color tierra cordillera
-            montañas.material = matAndes;
-
-            // Pacífico (Oeste)
-            const mar = BABYLON.MeshBuilder.CreateGround("pacifico", {width: 2000, height: 1000}, scene);
-            mar.position = new BABYLON.Vector3(0, -1, -600);
-            const matMar = new BABYLON.StandardMaterial("matMar", scene);
-            matMar.diffuseColor = new BABYLON.Color3(0.1, 0.3, 0.6); // Azul Pacífico
-            mar.material = matMar;
-
-            // CARGA DE SERENITO
+            // CARGA DE SERENITO CON FÓRMULA DE ÉXITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                personaje.scaling = new BABYLON.Vector3(-1.7, 1.7, 1.7); // Identidad real
+                personaje.scaling = new BABYLON.Vector3(-1.7, 1.7, 1.7);
                 
                 const bInfo = meshes[0].getHierarchyBoundingVectors();
-                const baseHeight = (-bInfo.min.y * 1.7) + 0.1;
+                baseHeight = (-bInfo.min.y * 1.7) + 0.1;
                 personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
                 
-                meshes.forEach(m => { m.isVisible = true; });
-                document.getElementById("estado").innerHTML = "✅ VISTA PROTEGIDA ACTIVA";
+                meshes.forEach(m => { m.isVisible = true; m.checkCollisions = true; });
                 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // CONTROLES HÍBRIDOS
-                scene.onPointerObservable.add((pointerInfo) => {
-                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                // LISTENERS
+                scene.onPointerObservable.add((pi) => {
+                    if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
                         if (pick.hit) { destinoFinal = pick.pickedPoint; }
                     }
@@ -116,26 +101,49 @@
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.6; let moviendo = false; let targetRot = personaje.rotation.y;
-                    const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
+                    let vel = 0.6;
+                    let movVector = new BABYLON.Vector3(0, 0, 0);
+                    let moviendo = false;
 
-                    if (keys.some(k => inputMap[k])) {
-                        destinoFinal = null; moviendo = true;
-                        if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; targetRot = 0; }
-                        if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; targetRot = Math.PI; }
-                        if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; targetRot = Math.PI / 2; }
-                        if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; targetRot = -Math.PI / 2; }
+                    // 1. SALTO (ESPACIO)
+                    if (inputMap[" "] && !saltando) {
+                        saltando = true;
+                        let f = 0;
+                        const j = setInterval(() => {
+                            f++;
+                            personaje.position.y = baseHeight + (Math.sin((f/25)*Math.PI) * 4);
+                            if (f>=25) { clearInterval(j); saltando = false; personaje.position.y = baseHeight; }
+                        }, 20);
+                    }
+
+                    // 2. LÓGICA DE MOVIMIENTO DIAGONAL (Teclado)
+                    if (inputMap["w"] || inputMap["arrowup"]) movVector.z -= 1;
+                    if (inputMap["s"] || inputMap["arrowdown"]) movVector.z += 1;
+                    if (inputMap["a"] || inputMap["arrowleft"]) movVector.x -= 1;
+                    if (inputMap["d"] || inputMap["arrowright"]) movVector.x += 1;
+
+                    if (movVector.length() > 0) {
+                        destinoFinal = null;
+                        moviendo = true;
+                        movVector.normalize(); // Evita que la diagonal sea más rápida
+                        personaje.moveWithCollisions(movVector.scale(vel));
+                        // Calculamos la rotación exacta según el vector de movimiento
+                        let targetRot = Math.atan2(movVector.x, movVector.z);
+                        personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.15);
                     } 
+                    // 3. MOVIMIENTO POR CLIC
                     else if (destinoFinal) {
-                        const diff = destinoFinal.subtract(personaje.position); diff.y = 0;
-                        if (diff.length() > 1.0) {
-                            moviendo = true; diff.normalize();
-                            personaje.position.addInPlace(diff.scale(vel));
-                            targetRot = Math.atan2(diff.x, diff.z);
+                        const diff = destinoFinal.subtract(personaje.position);
+                        diff.y = 0;
+                        if (diff.length() > 1.2) {
+                            moviendo = true;
+                            diff.normalize();
+                            personaje.moveWithCollisions(diff.scale(vel));
+                            personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, Math.atan2(diff.x, diff.z), 0.15);
                         } else { destinoFinal = null; }
                     }
 
-                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.15);
+                    // CONTROL DE ANIMACIÓN
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
@@ -147,7 +155,7 @@
 
         window.setCam = function(t) {
             if (!camera) return; camera.lockedTarget = null;
-            if (t==1) { camera.lockedTarget = personaje; camera.radius = 22; }
+            if (t==1) { camera.lockedTarget = personaje; camera.radius = 25; }
             if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.5; camera.radius = 85; }
         }
 
