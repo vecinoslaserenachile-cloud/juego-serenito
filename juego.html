@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Centro Histórico</title>
+    <title>LA❤️SERENA - Plaza de Armas</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -14,7 +14,6 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
         
-        /* INTERFAZ LIMPIA (SOLO BOTONES) */
         #ui-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
@@ -29,7 +28,7 @@
 </head>
 <body>
 
-    <div id="ui-status">📍 La Serena: Plaza de Armas</div>
+    <div id="ui-status">📍 La Serena: Centro Histórico</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Caminar</button>
@@ -43,19 +42,20 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
-        // --- 📍 COORDENADAS MAESTRAS (LAS QUE FUNCIONABAN BIEN) ---
+        // --- 📍 PARÁMETROS DE UBICACIÓN ---
         
-        // 1. MUNICIPALIDAD (Datos de tu captura)
+        // 1. MUNICIPALIDAD (ROTACIÓN 90 GRADOS)
         const MUNI_X = 757;
         const MUNI_Z = 187;
-        const MUNI_ROT = Math.PI; // 180 Grados
-        const MUNI_TAMANO = 150;  // Tamaño estandarizado
+        // Math.PI / 2 es igual a 90 grados. Si queda al revés, prueba con -Math.PI / 2
+        const MUNI_ROT = Math.PI / 2; 
+        const MUNI_TAMANO = 150;
 
-        // 2. INTENDENCIA (Datos de tu captura)
+        // 2. INTENDENCIA
         const INT_X = 455;
         const INT_Z = 386;
         const INT_ROT = 0;        
-        const INT_TAMANO = 150;   // Igualado a la Muni
+        const INT_TAMANO = 150;
 
         // ----------------------------------------
 
@@ -125,23 +125,23 @@
             const size = bound.max.subtract(bound.min);
             const maxDim = Math.max(size.x, size.y, size.z);
             
-            // Calculamos la escala exacta
             const factor = tamanoObjetivo / maxDim;
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // Bajamos el edificio lo necesario para que toque Y=0
+            // Corrección de altura automática
             const correccionAltura = -bound.min.y * factor;
             return { scale: factor, y: correccionAltura };
         }
 
-        // 3. CARGAR MUNICIPALIDAD
+        // 3. CARGAR MUNICIPALIDAD (CON ROTACIÓN 90°)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
             
-            // Ajuste automático de escala y piso
             const datos = anclarAlSuelo(muni, MUNI_TAMANO);
             
             muni.position = new BABYLON.Vector3(MUNI_X, datos.y, MUNI_Z);
+            
+            // APLICAMOS ROTACIÓN 90 GRADOS
             muni.rotation.y = MUNI_ROT;
 
             meshes.forEach(m => {
@@ -156,7 +156,6 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             const intendencia = meshes[0];
             
-            // Ajuste automático de escala y piso
             const datos = anclarAlSuelo(intendencia, INT_TAMANO);
             
             intendencia.position = new BABYLON.Vector3(INT_X, datos.y, INT_Z);
@@ -213,7 +212,7 @@
             }
         });
 
-        // 6. FUNCIONES UI
+        // 6. CÁMARAS
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
