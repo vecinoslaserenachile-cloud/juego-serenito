@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - ¡PROTAGONISTA RECUPERADO!</title>
+    <title>LA❤️SERENA - Proyecto Protagonista</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
 
@@ -15,34 +15,34 @@
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
             background: rgba(0, 0, 0, 0.92); padding: 25px; border-radius: 15px; 
-            border: 4px solid #bc13fe; pointer-events: none; min-width: 320px;
+            border: 4px solid #bc13fe; pointer-events: none; min-width: 310px;
             box-shadow: 0 4px 30px rgba(188, 19, 254, 0.6);
         }
-        .linea1 { color: #ffd700; font-size: 34px; display: block; text-align: center; }
-        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        .linea1 { color: #ffd700; font-size: 32px; display: block; text-align: center; }
+        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         .linea2 { 
             color: #ff3333; font-size: 24px; display: block; text-align: center;
             animation: latido 1.3s infinite ease-in-out; text-transform: uppercase; margin-top: 5px;
         }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 15px; }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
         
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 95%;
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
         }
         .btn-cam {
-            background: #ffd700; color: black; border: none; padding: 14px 20px;
+            background: #ffd700; color: black; border: none; padding: 12px 18px;
             border-radius: 10px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            font-size: 13px; box-shadow: 0 5px 0 #b39700; transition: 0.1s;
+            font-size: 12px; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
         }
-        .btn-cam:active { transform: translateY(5px); box-shadow: none; }
+        .btn-cam:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
 <body>
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">📡 REESTRUCTURANDO DE 0 A 100...</div>
+        <div id="estado">📡 DETECTANDO ORIGEN DE SERENITO...</div>
     </div>
 
     <div id="cam-selector">
@@ -65,53 +65,51 @@
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
             scene.collisionsEnabled = true;
 
-            // CONFIGURACIÓN DRACO PROFESIONAL
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // Cámara ajustada al tamaño real del modelo
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 18, BABYLON.Vector3.Zero(), scene);
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 16, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
 
-            // EL MAPA DE LA SERENA
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
+            // EL MAPA
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO (15MB) CON CORRECCIÓN DE PIVOTE
-            document.getElementById("estado").innerHTML = "📥 RECUPERANDO PROTAGONISTA...";
-            
+            // CARGA Y AUTO-AJUSTE DE SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-                // Seleccionamos el nodo raíz
                 personaje = meshes[0];
                 
-                // CORRECCIÓN SEGÚN TU HALLAZGO EN EL VISOR:
-                // Si el origen está en la cabeza, lo subimos mucho más (3.2 unidades) 
-                // para que los pies toquen el mapa y no esté enterrado.
-                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
-                personaje.position = new BABYLON.Vector3(0, 3.2, 0); 
+                // --- ARREGLO DE PIVOTE (Lo que viste en el visor) ---
+                // Calculamos el punto más bajo del modelo para sacarlo del subsuelo
+                const hierarchyInfo = meshes[0].getHierarchyBoundingVectors();
+                const minY = hierarchyInfo.min.y;
                 
-                // Forzamos visibilidad de cada pieza del archivo
-                meshes.forEach(m => { m.isVisible = true; m.checkCollisions = true; });
+                // Aplicamos escala y compensamos el pivote enterrado
+                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
+                personaje.position.y = -minY * 1.7 + 0.1; // Saca los pies del suelo automáticamente
+                
+                // Forzamos visibilidad total
+                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); });
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO EN LAS CALLES";
+                document.getElementById("estado").innerHTML = "✅ SERENITO EN POSICIÓN";
                 
-                // Animación de brazos y piernas (Articulada como ayer)
+                // Animación articulada (Brazos y piernas)
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // Lógica de Movimiento (Flechas y WASD)
+                // Lógica de Movimiento
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
@@ -136,7 +134,7 @@
             }, (evt) => {
                 if (evt.lengthComputable) {
                     let p = (evt.loaded * 100 / evt.total).toFixed();
-                    document.getElementById("estado").innerHTML = "📥 CARGANDO: " + p + "%";
+                    document.getElementById("estado").innerHTML = "📥 RECUPERANDO PJ: " + p + "%";
                 }
             });
 
@@ -146,11 +144,11 @@
         window.setCam = function(t) {
             if (!camera) return;
             switch(t) {
-                case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; break; 
-                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; break;
-                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 50; break;
-                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 65; break;
-                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 20; break;
+                case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 14; break; 
+                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 11; break;
+                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 45; break;
+                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 60; break;
+                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break;
             }
         }
 
