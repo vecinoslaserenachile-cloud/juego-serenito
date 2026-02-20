@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Navegación Pura</title>
+    <title>LA❤️SERENA - Mobile Pro</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -11,27 +11,25 @@
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Arial Black', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; outline: none; }
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
-            background: rgba(0, 0, 0, 0.85); padding: 20px; border-radius: 15px; 
-            border: 3px solid #bc13fe; pointer-events: none; width: 260px; z-index: 10;
+            background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
+            border: 3px solid #bc13fe; pointer-events: none; width: 220px; z-index: 10;
         }
-        .linea1 { color: #ffd700; font-size: 20px; display: block; text-align: center; }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; text-align: center; font-size: 11px; }
         #botones { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
-        .btn { background: #ffd700; color: black; border: none; padding: 14px 18px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 0 #b39700; }
+        .btn { background: #ffd700; color: black; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <span class="linea1">LA❤️SERENA</span>
-        <div id="estado">📡 TOCA CUALQUIER PUNTO DEL MAPA</div>
+        <b style="color:#ffd700">LA❤️SERENA</b><br>
+        <small id="info-dispositivo">Detectando escala...</small>
     </div>
     <div id="botones">
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
-        <button class="btn" onclick="setCam(4)">🏙️ Panorámica</button>
+        <button class="btn" onclick="setCam(4)">🏙️ Ciudad</button>
     </div>
     <canvas id="renderCanvas"></canvas>
 
@@ -42,77 +40,82 @@
         let destinoFinal = null;
         let baseHeight = 0;
 
+        // --- DETECCIÓN DE MÓVIL ---
+        const esMovil = window.innerWidth < 600;
+        const factorEscala = esMovil ? 3.5 : 1.7; // Si es móvil, Serenito es el doble de grande
+
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 0.9);
 
-            // CÁMARA CON PERSPECTIVA ÉPICA
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.2, 100, BABYLON.Vector3.Zero(), scene);
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 60 : 100, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            
-            // Freno para no ver el vacío
             camera.upperBetaLimit = Math.PI / 2.2;
-            camera.lowerRadiusLimit = 20; 
-            camera.upperRadiusLimit = 350; // ¡Perspectiva máxima para ver toda la ciudad!
+            camera.lowerRadiusLimit = 15;
+            camera.upperRadiusLimit = 400;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
 
-            // EL MAPA
             suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1200, height: 1200}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
-            // CARGA DE SERENITO CON FÓRMULA DE ÉXITO
+            // --- 1. EL EDIFICIO MUNICIPAL (HACK FOTOGRÁFICO) ---
+            // Creamos un bloque con las proporciones de la municipalidad
+            const muniBox = BABYLON.MeshBuilder.CreateBox("muni", {width: 40, height: 25, depth: 30}, scene);
+            muniBox.position = new BABYLON.Vector3(60, 12.5, 60); // Ajusta según tu mapa
+            const matMuni = new BABYLON.StandardMaterial("matMuni", scene);
+            // Aquí usarás tu foto. Si no la has subido, se verá gris, pero con volumen.
+            matMuni.diffuseTexture = new BABYLON.Texture("municipalidad_foto.jpg", scene); 
+            muniBox.material = matMuni;
+            muniBox.checkCollisions = true;
+
+            // --- 2. CARGA DE SERENITO CON ESCALA RESPONSIVE ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                personaje.scaling = new BABYLON.Vector3(-1.7, 1.7, 1.7); // Ropa correcta
+                
+                // Aplicamos el factor de escala según el dispositivo
+                personaje.scaling = new BABYLON.Vector3(-factorEscala, factorEscala, factorEscala);
                 
                 const bInfo = meshes[0].getHierarchyBoundingVectors(true);
-                baseHeight = (-bInfo.min.y * 1.7) + 0.1;
+                baseHeight = (-bInfo.min.y * factorEscala) + 0.1;
                 personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
                 
-                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); });
-                document.getElementById("estado").innerHTML = "✅ MOTOR DE CLIC ACTIVO";
+                document.getElementById("info-dispositivo").innerHTML = esMovil ? "📱 Modo Móvil: Escala Max" : "💻 Modo Escritorio: Escala Normal";
+                
+                meshes.forEach(m => { m.isVisible = true; });
 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // --- LÓGICA DE CLIC / TOQUE (ÚNICO CONTROL) ---
+                // NAVEGACIÓN POR CLIC
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
-                        if (pick.hit) {
-                            destinoFinal = pick.pickedPoint; // Nuevo destino instantáneo
-                        }
+                        if (pick.hit) { destinoFinal = pick.pickedPoint; }
                     }
                 });
 
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje) return;
-                    let vel = 0.85; // ¡VELOCIDAD AUMENTADA PARA FLUIDEZ!
+                    let vel = esMovil ? 1.2 : 0.85; // Más rápido en móvil para que se note el avance
                     let moviendo = false;
 
                     if (destinoFinal) {
                         const diff = destinoFinal.subtract(personaje.position);
                         diff.y = 0;
-                        
-                        if (diff.length() > 1.5) { // Mientras no llegue al punto...
+                        if (diff.length() > 2.0) {
                             moviendo = true;
                             diff.normalize();
                             personaje.moveWithCollisions(diff.scale(vel));
-                            // Giro instantáneo hacia el clic
                             personaje.rotation.y = Math.atan2(diff.x, diff.z);
-                        } else {
-                            destinoFinal = null; // Llegó
-                        }
+                        } else { destinoFinal = null; }
                     }
 
-                    // Control de animación
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
@@ -124,14 +127,15 @@
         };
 
         window.setCam = function(t) {
-            if (!camera) return; camera.lockedTarget = null;
-            if (t==1) { camera.lockedTarget = personaje; camera.radius = 40; }
-            if (t==4) { camera.alpha = -Math.PI/2; camera.beta = Math.PI/4; camera.radius = 150; }
+            if (!camera || !personaje) return;
+            camera.lockedTarget = null;
+            if (t==1) { camera.lockedTarget = personaje; camera.radius = esMovil ? 40 : 60; }
+            if (t==4) { camera.radius = esMovil ? 150 : 250; camera.beta = Math.PI/4; }
         }
 
         crearEscena();
         engine.runRenderLoop(() => { if (scene) scene.render(); });
-        window.addEventListener("resize", () => engine.resize());
+        window.addEventListener("resize", () => { engine.resize(); location.reload(); });
     </script>
 </body>
 </html>
