@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - Ciudad en Construcción</title>
+    <title>Vecinos La Serena 3D - LA❤️SERENA</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
@@ -22,14 +22,14 @@
             background: #ffd700; color: black; border: none; padding: 10px 15px;
             border-radius: 5px; font-weight: bold; cursor: pointer; pointer-events: auto;
         }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; }
+        #estado { color: #ffff00; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="ui">
         <h2 style="margin:0; color:#ffd700;">Vecinos La Serena</h2>
         <p style="margin: 5px 0;">¡LA❤️SERENA se levanta!</p>
-        <div id="estado">📡 Buscando a Serenito...</div>
+        <div id="estado">📡 Conectando con Serenito...</div>
     </div>
 
     <div id="cam-selector">
@@ -49,60 +49,66 @@
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
 
-            // 1. CONFIGURACIÓN DRACO ROBUSTA (Indispensable para archivos comprimidos)
+            // 1. CONFIGURACIÓN DRACO ULTRA-ROBUSTA
             BABYLON.DracoCompression.Configuration = {
-                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
+                decoder: {
+                    wasmUrl: "https://cdn.babylonjs.com/draco_wasm_wrapper_gltf.js",
+                    wasmBinaryUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.wasm",
+                    fallbackUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.js"
+                }
             };
 
-            // 2. CÁMARA ARC ROTATE (Zoom y Giro)
+            // 2. CÁMARA
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.wheelPrecision = 60;
+            camera.lowerRadiusLimit = 4;
+            camera.upperRadiusLimit = 45;
 
-            // 3. ILUMINACIÓN (Para resaltar el logo LA❤️SERENA)
+            // 3. LUZ (Fuerte para resaltar el logo LA❤️SERENA)
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.4;
+            light.intensity = 1.5;
 
-            // 4. EL MAPA (Suelo)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 280, height: 280}, scene);
+            // 4. EL MAPA
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 250, height: 250}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg?v=" + Date.now(), scene);
+            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
-            suelo.position.y = -0.1; // Ajuste para que los pies no se hundan
+            suelo.position.y = -0.01;
 
-            // 5. CARGA DE SERENITO
+            // 5. CARGA DE SERENITO (Con truco para saltar el caché)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
+                
+                // --- SOLUCIÓN AL "MEDIO CUERPO" ---
+                // Ajustamos la escala y lo subimos un poco sobre el mapa
                 personaje.scaling = new BABYLON.Vector3(1.6, 1.6, 1.6);
-                personaje.position = new BABYLON.Vector3(0, 0, 0); // Posición inicial: Plaza de Armas
+                personaje.position = new BABYLON.Vector3(0, 0.05, 0); 
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ ¡CARGADO!";
+                document.getElementById("estado").innerHTML = "✅ ¡LISTO! Haz clic para mover.";
+                document.getElementById("estado").style.color = "#00ff00";
                 
                 animCaminar = anims[0];
                 if (animCaminar) animCaminar.stop();
 
-                // 6. LÓGICA DE MOVIMIENTO
+                // 6. LÓGICA DE MOVIMIENTO NATURAL
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    const vel = 0.38;
+                    const vel = 0.35;
                     let moviendo = false;
                     let rot = personaje.rotation.y;
-
-                    // Desactivar zoom automático al mover
-                    if (Object.values(inputMap).some(v => v)) camera.detachControl(canvas);
-                    else camera.attachControl(canvas, true);
 
                     if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; rot = Math.PI; moviendo = true; }
                     if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; rot = 0; moviendo = true; }
                     if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; rot = -Math.PI / 2; moviendo = true; }
                     if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; rot = Math.PI / 2; moviendo = true; }
 
+                    // Giro suave del personaje
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.15);
 
                     if (animCaminar) {
@@ -110,24 +116,28 @@
                         else { animCaminar.stop(); }
                     }
                 });
+            }, function (evt) {
+                if (evt.lengthComputable) {
+                    let p = (evt.loaded * 100 / evt.total).toFixed();
+                    document.getElementById("estado").innerHTML = "📥 Descargando: " + p + "%";
+                }
             });
 
-            // 7. --- FUNCIÓN PARA AGREGAR EDIFICIOS ---
-            function agregarEdificio(nombre, x, z, ancho, alto, largo) {
-                const edificio = BABYLON.MeshBuilder.CreateBox(nombre, {width: ancho, height: alto, depth: largo}, scene);
-                edificio.position = new BABYLON.Vector3(x, alto / 2, z);
-                const mat = new BABYLON.StandardMaterial("mat" + nombre, scene);
-                mat.diffuseColor = new BABYLON.Color3(0.8, 0.7, 0.6); // Color piedra/colonial
-                edificio.material = mat;
-                return edificio;
+            // 7. --- ZONA DE CONSTRUCCIÓN DE EDIFICIOS ---
+            function crearBloque(nombre, x, z, w, h, d, color) {
+                const box = BABYLON.MeshBuilder.CreateBox(nombre, {width: w, height: h, depth: d}, scene);
+                box.position = new BABYLON.Vector3(x, h/2, z);
+                const mat = new BABYLON.StandardMaterial("mat"+nombre, scene);
+                mat.diffuseColor = color;
+                box.material = mat;
+                return box;
             }
 
-            // Ejemplo: Intendencia (Gobierno Regional)
-            // Coordenadas aproximadas según tu mapa
-            agregarEdificio("GobiernoRegional", -35, -25, 20, 15, 30);
+            // Ejemplo: Lugar donde estaría la Intendencia / Gobierno Regional
+            crearBloque("GoreLaSerena", -35, -25, 20, 15, 30, new BABYLON.Color3(0.8, 0.7, 0.6));
             
-            // Ejemplo: Municipalidad
-            agregarEdificio("Municipalidad", 40, -30, 15, 10, 20);
+            // Ejemplo: Lugar de la Catedral
+            crearBloque("Catedral", 0, -50, 25, 25, 40, new BABYLON.Color3(0.9, 0.9, 0.8));
 
             return scene;
         };
