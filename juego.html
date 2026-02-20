@@ -13,104 +13,128 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        #monitor { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 12px; border-radius: 8px; z-index: 100; font-size: 12px; border: 1px solid #ffd700; pointer-events: none; }
+        
+        /* PANEL DE BOTONES */
+        #controles { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 14px; }
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b39700; }
+        .btn-rojo { background: #ff4d4d; color: white; box-shadow: 0 4px 0 #b30000; }
+        
+        #monitor { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 8px; font-size: 11px; border: 1px solid gold; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div id="monitor">
-        <b style="color:yellow">SISTEMA DE MONITOREO LS</b><br>
-        <div id="log">Iniciando motores...</div>
+    <div id="monitor">🏙️ <b>LA SERENA 3D</b><br>Esquina Prat / Carrera</div>
+    
+    <div id="controles">
+        <button class="btn" onclick="vistaPanoramica()">🏙️ Vista Panorámica</button>
+        <button class="btn" onclick="seguirSerenito()">🚶 Seguir a Serenito</button>
+        <button class="btn btn-rojo" onclick="rescatarSerenito()">🚨 Rescatar a Serenito</button>
     </div>
+
     <canvas id="renderCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const log = document.getElementById("log");
-
-        // --- AJUSTES DE POSICIÓN ---
-        const MUNI_X = 250;      // Esquina Prat
-        const MUNI_Z = 200;      // Esquina Los Carrera
-        const MUNI_ESCALA = 220; 
-        // ---------------------------
+        let scene, camera, personaje, destinoFinal;
 
         const crearEscena = function () {
-            const scene = new BABYLON.Scene(engine);
+            scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
 
-            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 180, BABYLON.Vector3.Zero(), scene);
+            // Cámara inicial
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
+            camera.lowerRadiusLimit = 20;
+            camera.upperRadiusLimit = 500;
             camera.checkCollisions = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
-            // SUELO (MAPA)
+            // MAPA
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
-            log.innerHTML += "<br>✅ Mapa cargado";
 
-            // CARGA MUNICIPALIDAD
+            // MUNICIPALIDAD CON PROTECCIÓN
             BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
                 const muni = meshes[0];
-                
-                // MAGIA: Cálculo para que el edificio NUNCA vuele ni se entierre
                 const boundingBox = muni.getHierarchyBoundingVectors(true);
                 const size = boundingBox.max.subtract(boundingBox.min);
-                const factor = MUNI_ESCALA / Math.max(size.x, size.y, size.z);
+                const factor = 230 / Math.max(size.x, size.y, size.z);
                 
                 muni.scaling = new BABYLON.Vector3(factor, factor, factor);
-                
-                // Alineamos la base (min.y) con el suelo (0)
-                const offsetSuelo = -boundingBox.min.y * factor;
-                muni.position = new BABYLON.Vector3(MUNI_X, offsetSuelo, MUNI_Z);
-                muni.rotation.y = 1.57; // Rotación para la esquina
+                const offsetSuelo = -boundingBox.min.y * factor + 0.5; // El 0.5 es para evitar el parpadeo del suelo
+                muni.position = new BABYLON.Vector3(280, offsetSuelo, 200);
+                muni.rotation.y = 1.57;
 
                 meshes.forEach(m => {
-                    m.checkCollisions = true;
+                    m.checkCollisions = true; // Activa muros físicos
                     if (m.material) m.material.backFaceCulling = false;
                 });
-                log.innerHTML += "<br>✅ Municipalidad en esquina";
-            }, null, (s, e) => {
-                log.innerHTML += "<br>❌ ERROR MUNI: " + e;
             });
 
-            // CARGA SERENITO
-            let personaje, destinoFinal;
+            // SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 0, 0);
-                camera.lockedTarget = personaje;
+                personaje.position = new BABYLON.Vector3(0, 0, 0); // Inicio seguro en el centro
+                personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2); // Volumen de Serenito para que no atraviese paredes
                 
-                log.innerHTML += "<br>✅ Serenito listo";
-
+                camera.lockedTarget = personaje;
                 const animCaminar = (anims && anims.length > 0) ? anims[0] : null;
 
                 scene.onPointerDown = (evt, pick) => {
-                    if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint;
+                    if (pick.hit && pick.pickedMesh === suelo) {
+                        destinoFinal = pick.pickedPoint;
+                    }
                 };
 
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje || !destinoFinal) return;
                     let diff = destinoFinal.subtract(personaje.position);
                     diff.y = 0;
-                    if (diff.length() > 1) {
+                    if (diff.length() > 1.2) {
                         personaje.rotation.y = Math.atan2(diff.x, diff.z);
                         personaje.moveWithCollisions(diff.normalize().scale(1.2));
                         if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     } else {
                         if (animCaminar) animCaminar.stop();
+                        destinoFinal = null;
                     }
                 });
             });
 
             return scene;
         };
+
+        // --- FUNCIONES DE BOTONES ---
+        function vistaPanoramica() {
+            camera.lockedTarget = null;
+            camera.setPosition(new BABYLON.Vector3(400, 300, 400));
+            camera.setTarget(BABYLON.Vector3.Zero());
+        }
+
+        function seguirSerenito() {
+            if (personaje) {
+                camera.lockedTarget = personaje;
+                camera.radius = 120;
+            }
+        }
+
+        function rescatarSerenito() {
+            if (personaje) {
+                destinoFinal = null;
+                personaje.position = new BABYLON.Vector3(0, 5, 0); // Lo eleva un poco y lo pone al centro
+                camera.lockedTarget = personaje;
+                console.log("Serenito rescatado al punto de origen");
+            }
+        }
 
         const scene = crearEscena();
         engine.runRenderLoop(() => { scene.render(); });
