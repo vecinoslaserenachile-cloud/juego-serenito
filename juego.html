@@ -2,35 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vecinos La Serena - El Juego de Serenito</title>
-    
+    <title>Serenito 3D - Vecinos La Serena</title>
     <style>
-        html, body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-        }
-        #renderCanvas {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a0a2e; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; }
+        #instrucciones { position: absolute; top: 10px; left: 10px; color: white; font-family: sans-serif; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; pointer-events: none; }
     </style>
-
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    
-    <script src="https://preview.babylonjs.com/draco_transcoder.js"></script>
 </head>
 <body>
-
+    <div id="instrucciones">Usa las flechas o WASD para mover a Serenito</div>
     <canvas id="renderCanvas"></canvas>
-
     <script src="mi_juego.js"></script>
-
 </body>
 </html>
