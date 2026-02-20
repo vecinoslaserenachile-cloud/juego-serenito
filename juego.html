@@ -32,8 +32,7 @@
             border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;
             font-size: 11px; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
         }
-        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; animation: pulso 1s infinite; }
-        @keyframes pulso { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
         .btn:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
@@ -45,7 +44,7 @@
     </div>
 
     <div id="cam-selector">
-        <button class="btn btn-rescate" onclick="rescatarSerenito()">🚀 RESCATAR SERENITO</button>
+        <button id="btnRescate" class="btn btn-rescate" onclick="rescatarSerenito()" style="display:none;">🚀 RESCATAR SERENITO</button>
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
         <button class="btn" onclick="setCam(2)">👤 Frontal</button>
         <button class="btn" onclick="setCam(3)">🦅 Cenital</button>
@@ -57,31 +56,21 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let scene, camera, personaje, animCaminar, luzSeguimiento;
+        let scene, camera, personaje, animCaminar;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.3, 0.4, 0.7);
             scene.collisionsEnabled = true;
 
-            BABYLON.DracoCompression.Configuration = {
-                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
-            };
-
-            // --- 1. VISTA INICIAL PANORÁMICA (Como pediste en image_e01f2c.jpg) ---
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.5, Math.PI/3.5, 75, new BABYLON.Vector3(0, 0, 0), scene);
+            // VISTA INICIAL PANORÁMICA (Adiós al zoom de Tesorería)
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.2, 85, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
-            camera.lowerRadiusLimit = 5;
-            camera.upperRadiusLimit = 150;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
-            // Luz tipo "Galaxy" para que Serenito brille
-            luzSeguimiento = new BABYLON.SpotLight("spot", new BABYLON.Vector3(0, 30, 0), new BABYLON.Vector3(0, -1, 0), Math.PI/3, 2, scene);
-            luzSeguimiento.intensity = 0; // Apagada hasta que aparezca
-
-            // 2. EL MAPA
+            // EL MAPA
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -89,31 +78,31 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // 3. CARGA DE SERENITO (Blindada)
+            // CARGA DE SERENITO
             document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA...";
             
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // Forzar visibilidad y posición segura (Cerca de Iglesia Sto Domingo)
-                personaje.scaling = new BABYLON.Vector3(1.8, 1.8, 1.8);
-                personaje.position = new BABYLON.Vector3(10, 2, 10);
+                // --- ARREGLO DE ALTURA AUTOMÁTICO ---
+                const bInfo = meshes[0].getHierarchyBoundingVectors();
+                const minY = bInfo.min.y;
                 
-                meshes.forEach(m => { 
-                    m.isVisible = true; 
-                    m.setEnabled(true);
-                    m.checkCollisions = true;
-                });
+                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
+                // Si el pivote está en la cabeza, esta fórmula lo saca del suelo automáticamente
+                personaje.position = new BABYLON.Vector3(0, (-minY * 1.7) + 0.1, 0);
+                
+                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); m.checkCollisions = true; });
                 
                 document.getElementById("estado").innerHTML = "✅ ¡SERENITO EN PANTALLA!";
-                luzSeguimiento.intensity = 3; // ¡Encender luz!
+                document.getElementById("btnRescate").style.display = "block"; // Solo aparece cuando carga
                 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.play(true);
                 }
 
-                // LOOP DE MOVIMIENTO
+                // MOVIMIENTO
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
@@ -125,36 +114,18 @@
                     if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; mov = true; }
                     if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; mov = true; }
                     if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; mov = true; }
-                    
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.2);
-                    luzSeguimiento.position = personaje.position.clone().add(new BABYLON.Vector3(0, 15, 0));
-                    luzSeguimiento.setDirectionToTarget(personaje.position);
                 });
-            }, (evt) => {
-                if (evt.lengthComputable) {
-                    let p = (evt.loaded * 100 / evt.total).toFixed();
-                    document.getElementById("estado").innerHTML = "📥 RECUPERANDO PJ: " + p + "%";
-                }
             });
 
             return scene;
         };
 
-        // FUNCIÓN DE RESCATE (Mario Galaxy Style)
         window.rescatarSerenito = function() {
-            if (!personaje) {
-                alert("El archivo serenito.glb aún no termina de descargar. Espera al 100%.");
-                return;
-            }
-            // Teletransportar al centro de la cámara
-            const ray = camera.getForwardRay();
-            const targetPos = ray.origin.add(ray.direction.scale(10));
-            targetPos.y = 2;
-            
-            personaje.position = targetPos;
+            if (!personaje) return;
+            personaje.position = new BABYLON.Vector3(0, 2, 0);
             camera.lockedTarget = personaje;
-            luzSeguimiento.intensity = 5;
-            document.getElementById("estado").innerHTML = "🚀 ¡SERENITO RESCATADO!";
+            document.getElementById("estado").innerHTML = "🚀 ¡RESCATADO!";
         };
 
         window.setCam = function(t) {
@@ -163,7 +134,7 @@
             if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
             if (t==2) { camera.lockedTarget = personaje; camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
             if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 50; }
-            if (t==4) { camera.alpha = -Math.PI/2.5; camera.beta = Math.PI/3.5; camera.radius = 80; }
+            if (t==4) { camera.alpha = -Math.PI/2.2; camera.beta = Math.PI/3.2; camera.radius = 85; }
         }
 
         crearEscena();
