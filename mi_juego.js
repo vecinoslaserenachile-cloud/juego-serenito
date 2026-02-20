@@ -1,79 +1,140 @@
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
+let camera, personaje, animCaminar, destinoFinal;
+let moviendoPorClick = false;
 
 const crearEscena = function () {
     const scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.2, 1);
+    scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
+    scene.collisionsEnabled = true;
 
-    // 1. CONFIGURACIÓN DRACO (Indispensable para archivos de Vectary)
+    // Configuración Draco para el archivo de 15MB
     BABYLON.DracoCompression.Configuration = {
         decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
     };
 
-    // 2. CÁMARA Y LUCES (Iluminación frontal para la cara)
-    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.8, 10, BABYLON.Vector3.Zero(), scene);
+    // 1. CÁMARA ARC ROTATE (Configuración Inicial)
+    camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 14, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
-    
-    const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 1.0;
+    camera.checkCollisions = true;
 
-    const lightFront = new BABYLON.PointLight("lightFront", new BABYLON.Vector3(0, 5, -5), scene);
-    lightFront.intensity = 0.5;
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 1.8;
 
-    // 3. EL ESCENARIO REAL (Mapa de La Serena)
-    const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 150, height: 150}, scene);
-    const matMapa = new BABYLON.StandardMaterial("matMapa", scene);
-    
-    // Aquí usamos una captura real de las calles. Puedes cambiar este link por tu propia imagen de satélite
-    matMapa.diffuseTexture = new BABYLON.Texture("https://tile.openstreetmap.org/16/21612/38584.png", scene); // Ejemplo Plaza de Armas
-    matMapa.diffuseTexture.uScale = 10; // Repetir para que parezca una ciudad grande
-    matMapa.diffuseTexture.vScale = 10;
-    suelo.material = matMapa;
+    // 2. EL MAPA (Suelo)
+    const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
+    const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+    matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+    matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
+    suelo.material = matSuelo;
+    suelo.checkCollisions = true;
+    suelo.position.y = -0.05;
 
-    // 4. CARGAR A SERENITO (Consolidado)
-    BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-        const personaje = meshes[0];
+    // 3. CARGA DE SERENITO (Prioridad 1)
+    BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
+        personaje = meshes[0];
+        
+        // ESCALA Y ALTURA: Corrección de efecto espejo y pies en el suelo
+        personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
+        personaje.position = new BABYLON.Vector3(0, 0.9, 0); 
+        personaje.checkCollisions = true;
+        personaje.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5);
+        
+        camera.lockedTarget = personaje;
+        document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN POSICIÓN";
+        
+        // Animación articulada (Mueve brazos y piernas)
+        animCaminar = anims[0];
+        if (animCaminar) animCaminar.stop();
 
-        // --- FIX DE PIES: Subimos el modelo para que pise el mapa ---
-        personaje.position.y = 2.2; 
-
-        // --- FIX DE TEXTO: Escalado negativo en X para que no esté al revés ---
-        personaje.scaling = new BABYLON.Vector3(-1.8, 1.8, 1.8); 
-
-        // --- FIX DE TRANSPARENCIA: Corregir caras al espejar ---
-        meshes.forEach(m => {
-            if (m.material) { m.material.sideOrientation = BABYLON.Orientation.CW; }
+        // Movimiento por Doble Clic
+        scene.onPointerObservable.add((pointerInfo) => {
+            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
+                const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
+                if (pick.hit) { destinoFinal = pick.pickedPoint; moviendoPorClick = true; }
+            }
         });
 
-        camera.lockedTarget = personaje;
-
-        // Caminata Mixamo automática
-        if (anims && anims.length > 0) {
-            anims[0].play(true);
-        }
-
-        // 5. MOVIMIENTO SUAVE
+        // Bucle de Movimiento y Cámaras Fijas
         const inputMap = {};
         scene.actionManager = new BABYLON.ActionManager(scene);
-        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (evt) => {
-            inputMap[evt.sourceEvent.key.toLowerCase()] = true;
-        }));
-        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (evt) => {
-            inputMap[evt.sourceEvent.key.toLowerCase()] = false;
-        }));
+        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
+        scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
         scene.onBeforeRenderObservable.add(() => {
-            const vel = 0.15;
-            if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; }
-            if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; }
-            if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; }
-            if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; }
+            const vel = 0.4;
+            let moviendo = false;
+            let rot = personaje.rotation.y;
+
+            // PERSPECTIVA FIJA: Si caminas, el mouse NO mueve la cámara sola
+            const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
+            if (keys.some(k => inputMap[k])) {
+                camera.detachControl(canvas);
+                moviendoPorClick = false;
+                moviendo = true;
+            } else if (!moviendoPorClick) {
+                camera.attachControl(canvas, true);
+            }
+
+            // Teclado
+            if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; }
+            if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; }
+            if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; }
+            if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; }
+
+            // Doble Clic
+            if (moviendoPorClick && destinoFinal) {
+                const d = destinoFinal.subtract(personaje.position);
+                d.y = 0;
+                if (d.length() > 0.6) {
+                    d.normalize();
+                    personaje.moveWithCollisions(d.scale(vel));
+                    rot = Math.atan2(d.x, d.z) + Math.PI;
+                    moviendo = true;
+                } else { moviendoPorClick = false; }
+            }
+
+            personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.18);
+            if (animCaminar) {
+                if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
+                else { animCaminar.stop(); }
+            }
         });
+    }, (evt) => {
+        if (evt.lengthComputable) {
+            let p = (evt.loaded * 100 / evt.total).toFixed();
+            document.getElementById("estado").innerHTML = "📥 RECUPERANDO PROTAGONISTA: " + p + "%";
+        }
     });
+
+    // EDIFICIOS (Barreras para no atravesar paredes)
+    function edif(n, x, z, w, h, d) {
+        const b = BABYLON.MeshBuilder.CreateBox(n, {width: w, height: h, depth: d}, scene);
+        b.position = new BABYLON.Vector3(x, h/2, z);
+        b.checkCollisions = true;
+        const m = new BABYLON.StandardMaterial("m"+n, scene);
+        m.diffuseColor = new BABYLON.Color3(0.8, 0.7, 0.6);
+        b.material = m;
+    }
+    edif("Gore", -45, -30, 24, 12, 34);
+    edif("Catedral", 0, -60, 30, 22, 45);
 
     return scene;
 };
 
+// 5 CÁMARAS FIJAS PROFESIONALES
+function setCam(t) {
+    if (!camera) return;
+    switch(t) {
+        case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
+        case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
+        case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; // Cenital
+        case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // Gral.
+        case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
+    }
+}
+
 const scene = crearEscena();
 engine.runRenderLoop(() => scene.render());
 window.addEventListener("resize", () => engine.resize());
+window.addEventListener("click", () => canvas.focus());
