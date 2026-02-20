@@ -2,41 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Serenito en La Serena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Serenito y sus vecinos</title>
+    
     <link rel="icon" type="image/png" href="ls-favicon.png">
+
     <style>
-        body { margin: 0; overflow: hidden; background-color: #333; }
-        
-        /* El Canvas Principal (El mapa de La Serena) */
-        #gameCanvas { display: block; background-color: #87CEEB; }
-
-        /* NUEVO: El Contenedor del Minijuego (Estilo Retro) */
-        #minigame-overlay {
-            display: none; /* Oculto por defecto */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 400px;
-            background: #000;
-            border: 5px solid #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            z-index: 100; /* Para que quede encima de todo */
-            text-align: center;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
+        body {
+            margin: 0;
+            overflow: hidden; /* Elimina barras de desplazamiento */
+            background-color: #333;
         }
-
-        #pongCanvas { background: #000; display: block; margin: 0 auto; }
-        
-        .btn-salir {
-            margin-top: 10px;
-            padding: 5px 10px;
-            background: red;
-            color: white;
-            border: none;
-            cursor: pointer;
+        canvas {
+            display: block;
+            background-color: #87CEEB; /* El Celeste Cielo original */
         }
     </style>
 </head>
@@ -44,14 +23,7 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <div id="minigame-overlay">
-        <h3>🏓 PONG MUNICIPAL 🏓</h3>
-        <canvas id="pongCanvas" width="500" height="300"></canvas>
-        <p>Usa el mouse para mover la paleta</p>
-        <button class="btn-salir" onclick="cerrarMinijuego()">Volver a La Serena</button>
-    </div>
+    <script src="juego.js"></script>
 
-    <script src="juego_maestro.js"></script>
 </body>
 </html>
-
