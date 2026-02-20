@@ -2,45 +2,52 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LA❤️SERENA - Proyecto Vecinos</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2250%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22central%22>LS</text></svg>">
+
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; }
-        #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; }
-        #ui { position: absolute; top: 15px; left: 15px; color: white; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 10px; border: 2px solid #ffd700; z-index: 10; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
+        #renderCanvas { width: 100vw; height: 100vh; display: block; touch-action: none; outline: none; }
+        #ui { position: absolute; top: 15px; left: 15px; color: white; background: rgba(0,0,0,0.85); padding: 15px; border-radius: 12px; border: 3px solid #bc13fe; pointer-events: none; z-index: 10; width: 220px; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <b style="color:#ffd700; font-size: 1.2em;">LA SERENA 3D</b><br>
-        <small id="st">Haz clic en el mapa para caminar</small>
+        <b style="color:#ffd700; font-size: 1.2em;">LA❤️SERENA 3D</b><br>
+        <span id="st" style="color:#00ff00">Ajustando Escalas...</span>
     </div>
     <canvas id="renderCanvas"></canvas>
 
     <script>
+        // ==========================================
+        // 🕹️ PANEL DE CONTROL (Ajustado según foto)
+        // ==========================================
+        const MUNI_ESCALA = 220;     // ¡Más grande para que parezca ciudad!
+        const MUNI_ALTURA = 8.5;     // BAJADO: Antes estaba en 40, ahora casi al ras.
+        const ESCALA_SERENITO = 9.0; // Un poco más pequeño para que calce con la escala.
+        // ==========================================
+
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-
-        // --- ⚙️ VARIABLES DE AJUSTE (Toca aquí si es necesario) ---
-        const ESCALA_SERENITO = 14.0; 
-        const ESCALA_MUNI = 130.0;    
-        // Si el edificio sigue cortado, sube este número:
-        const OFFSET_ALTURA_MUNI = 35.0; 
-        // -------------------------------------------------------
+        let scene, camera, personaje, animCaminar, destinoFinal = null;
 
         const crearEscena = function () {
-            const scene = new BABYLON.Scene(engine);
+            scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
 
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.2;
-
-            const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 130, BABYLON.Vector3.Zero(), scene);
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.lowerRadiusLimit = 40;
+            camera.lowerRadiusLimit = 30;
             camera.checkCollisions = true;
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 2.5;
 
             // EL MAPA
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
@@ -49,24 +56,24 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            let personaje, animCaminar, destinoFinal = null;
-
-            // --- CARGA DE MUNICIPALIDAD (SOLUCIÓN PISO CORTADO) ---
+            // --- CARGA DE MUNICIPALIDAD ---
             BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
                 const muni = meshes[0];
                 const bound = muni.getHierarchyBoundingVectors(true);
                 const size = bound.max.subtract(bound.min);
-                const factor = ESCALA_MUNI / Math.max(size.x, size.y, size.z);
+                const factor = MUNI_ESCALA / Math.max(size.x, size.y, size.z);
                 
                 muni.scaling = new BABYLON.Vector3(factor, factor, factor);
-                
-                // Aquí está el truco: usamos OFFSET_ALTURA_MUNI para sacarlo del subsuelo
-                muni.position = new BABYLON.Vector3(150, OFFSET_ALTURA_MUNI, 150); 
+                muni.position = new BABYLON.Vector3(150, MUNI_ALTURA, 150); 
 
                 meshes.forEach(m => {
                     m.checkCollisions = true;
-                    if (m.material) m.material.backFaceCulling = false;
+                    if (m.material) {
+                        m.material.backFaceCulling = false;
+                        m.material.emissiveColor = new BABYLON.Color3(0, 0, 0); // Quita el brillo rojo
+                    }
                 });
+                document.getElementById("st").innerText = "Ciudad Lista";
             });
 
             // --- CARGA DE SERENITO (FLUIDEZ 360) ---
@@ -74,41 +81,32 @@
                 personaje = meshes[0];
                 personaje.scaling = new BABYLON.Vector3(ESCALA_SERENITO, ESCALA_SERENITO, ESCALA_SERENITO);
                 personaje.position = new BABYLON.Vector3(0, 0, 0);
-                personaje.ellipsoid = new BABYLON.Vector3(2, 5, 2);
+                personaje.ellipsoid = new BABYLON.Vector3(1.5, 4, 1.5);
                 
                 camera.lockedTarget = personaje;
                 if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
 
-                // Lógica de click
                 scene.onPointerDown = (evt, pickResult) => {
                     if (pickResult.hit && pickResult.pickedMesh === suelo) {
                         destinoFinal = pickResult.pickedPoint;
                     }
                 };
 
-                // Bucle de renderizado para movimiento natural
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje || !destinoFinal) return;
-
                     let diff = destinoFinal.subtract(personaje.position);
                     diff.y = 0;
-                    let distancia = diff.length();
-
-                    if (distancia > 1.0) {
+                    if (diff.length() > 0.8) {
                         diff.normalize();
                         
-                        // ROTACIÓN FLUIDA 360:
+                        // Rotación suave 360
                         let anguloDeseado = Math.atan2(diff.x, diff.z);
-                        // Interpolación suave para que no gire de golpe
-                        let suavizado = 0.15; 
-                        let diferenciaAngulo = anguloDeseado - personaje.rotation.y;
-                        while (diferenciaAngulo < -Math.PI) diferenciaAngulo += Math.PI * 2;
-                        while (diferenciaAngulo > Math.PI) diferenciaAngulo -= Math.PI * 2;
-                        personaje.rotation.y += diferenciaAngulo * suavizado;
+                        let diffAngulo = anguloDeseado - personaje.rotation.y;
+                        while (diffAngulo < -Math.PI) diffAngulo += Math.PI * 2;
+                        while (diffAngulo > Math.PI) diffAngulo -= Math.PI * 2;
+                        personaje.rotation.y += diffAngulo * 0.15;
 
-                        // MOVIMIENTO
-                        personaje.moveWithCollisions(diff.scale(1.3));
-                        
+                        personaje.moveWithCollisions(diff.scale(1.1));
                         if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     } else {
                         if (animCaminar) animCaminar.stop();
