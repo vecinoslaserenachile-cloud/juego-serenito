@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Precisión Total</title>
+    <title>LA❤️SERENA - Proyecto Vecinos</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,12 +18,18 @@
             background: rgba(0, 0, 0, 0.85); padding: 15px; border-radius: 12px; 
             border: 3px solid #bc13fe; pointer-events: none; width: 220px; z-index: 10;
         }
+        #botones { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
+        .btn { background: #ffd700; color: black; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 0 #b39700; }
     </style>
 </head>
 <body>
     <div id="ui">
         <b style="color:#ffd700; font-size: 18px;">LA❤️SERENA</b><br>
-        <small id="status" style="color:#00ff00">🎯 PRECISIÓN RECUPERADA</small>
+        <small id="status" style="color:#00ff00">🏛️ TEST DE PATRIMONIO ACTIVO</small>
+    </div>
+    <div id="botones">
+        <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
+        <button class="btn" onclick="setCam(4)">🏙️ Vista Ciudad</button>
     </div>
     <canvas id="renderCanvas"></canvas>
 
@@ -35,30 +41,48 @@
         let baseHeight = 0;
 
         const esMovil = window.innerWidth < 600;
-        const factorEscala = esMovil ? 5.5 : 2.8;
+        const factorEscala = esMovil ? 6.5 : 3.0; 
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 0.9);
+            scene.collisionsEnabled = true; // Activa las leyes físicas
 
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 60 : 100, BABYLON.Vector3.Zero(), scene);
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 50 : 90, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.upperBetaLimit = Math.PI / 2.3;
-            camera.lowerRadiusLimit = 20;
-            camera.upperRadiusLimit = 350;
+            camera.upperBetaLimit = Math.PI / 2.2;
+            camera.checkCollisions = true; // La cámara no atraviesa edificios
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
 
+            // EL MAPA
             suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1500, height: 1500}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             suelo.material = matSuelo;
+            suelo.checkCollisions = true;
 
+            // --- CARGA DE TU MODELO DE LA MUNICIPALIDAD ---
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+                const muni = meshes[0];
+                
+                // AJUSTES DE UBICACIÓN (Cámbialos si no la ves)
+                muni.position = new BABYLON.Vector3(50, 0, 50); // X, Y, Z
+                muni.scaling = new BABYLON.Vector3(15, 15, 15); // Tamaño del edificio
+                
+                // Hacer que el edificio sea sólido
+                meshes.forEach(m => {
+                    m.checkCollisions = true;
+                });
+                console.log("Municipalidad cargada con éxito");
+            });
+
+            // --- CARGA DE SERENITO ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                // ESCALA X POSITIVA PARA EVITAR CONFLICTOS DE ROTACIÓN
-                personaje.scaling = new BABYLON.Vector3(factorEscala, factorEscala, factorEscala);
+                personaje.scaling = new BABYLON.Vector3(-factorEscala, factorEscala, factorEscala);
+                personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1); // "Escudo" para colisiones
                 
                 const bInfo = meshes[0].getHierarchyBoundingVectors(true);
                 baseHeight = (-bInfo.min.y * factorEscala);
@@ -66,46 +90,29 @@
                 
                 camera.lockedTarget = personaje;
                 meshes.forEach(m => { m.isVisible = true; });
+                if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
 
-                if (anims && anims.length > 0) { 
-                    animCaminar = anims[0]; 
-                    animCaminar.stop(); 
-                }
-
-                // CLICK / TOQUE PARA CAMINAR
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
-                        if (pick.hit) {
-                            destinoFinal = pick.pickedPoint;
-                        }
+                        if (pick.hit) { destinoFinal = pick.pickedPoint; }
                     }
                 });
 
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje || !destinoFinal) return;
-
                     let diff = destinoFinal.subtract(personaje.position);
                     diff.y = 0;
                     let distancia = diff.length();
+                    let velMax = esMovil ? 1.6 : 1.1;
+                    let velActual = (distancia < 12) ? BABYLON.Scalar.Lerp(0.2, velMax, distancia / 12) : velMax;
 
-                    if (distancia > 0.5) { 
-                        let vel = esMovil ? 1.3 : 0.9;
-                        // Desaceleración suave al llegar
-                        if (distancia < 10) vel *= (distancia / 10);
-                        if (vel < 0.2) vel = 0.2; // Velocidad mínima de empuje
-
+                    if (distancia > 0.6) { 
                         diff.normalize();
-                        personaje.moveWithCollisions(diff.scale(vel));
-                        
-                        // --- CORRECCIÓN DE GIRO ---
-                        // Usamos atan2 y ajustamos el ángulo para que siempre mire al frente del clic
-                        let targetRot = Math.atan2(diff.x, diff.z);
-                        personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.15);
-                        
+                        personaje.moveWithCollisions(diff.scale(velActual));
+                        personaje.rotation.y = Math.atan2(diff.x, diff.z);
                         if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     } else {
-                        // LLEGADA EXACTA
                         personaje.position.x = destinoFinal.x;
                         personaje.position.z = destinoFinal.z;
                         destinoFinal = null; 
@@ -116,6 +123,13 @@
 
             return scene;
         };
+
+        window.setCam = function(t) {
+            if (!camera || !personaje) return;
+            camera.lockedTarget = null;
+            if (t==1) { camera.lockedTarget = personaje; camera.radius = esMovil ? 45 : 75; }
+            if (t==4) { camera.radius = esMovil ? 180 : 280; camera.beta = Math.PI/4; }
+        }
 
         crearEscena();
         engine.runRenderLoop(() => { if (scene) scene.render(); });
