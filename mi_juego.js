@@ -22,24 +22,20 @@ const zonaPong = { x: canvas.width - 150, y: canvas.height - 150, ancho: 100, al
    LÓGICA DEL BUCLE PRINCIPAL (Game Loop)
    ========================================= */
 function gameLoop() {
-    if (!enMinijuego) {
-        // 1. Limpiar pantalla principal
+    if (!enMinijuego) { 
+        // --- AQUÍ VA TU CÓDIGO ORIGINAL QUE YA TIENES ---
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 2. Dibujar Fondo, Suelo y la Municipalidad (CON LA ROTACIÓN QUE HICIMOS)
-        dibujarEscenario(); 
-
-        // 3. Mover y Dibujar a Serenito
-        moverSerenito(); // Tu función de movimiento existente
-        dibujarSerenito(); // Tu función de dibujo existente
-
-        // 4. NUEVO: Dibujar la zona del minijuego (para saber dónde pisar)
-        dibujarZonaActivacion();
-
-        // 5. NUEVO: Verificar si Serenito pisó la zona
-        verificarEntradaMinijuego();
-
-        requestAnimationFrame(gameLoop);
+        dibujarEscenario(); // Tus edificios bonitos
+        moverSerenito();    // Tu movimiento
+        dibujarSerenito();  // Tus sprites
+        
+        // --- AGREGA SOLO ESTO AL FINAL DEL IF ---
+        dibujarZonaActivacion(); // Para ver dónde pisar
+        verificarEntradaPong();  // Para detectar si entraste
+    } 
+    // No borres el requestAnimationFrame
+    requestAnimationFrame(gameLoop);
+};
     } else {
         // Si estamos en minijuego, el loop principal se "congela" visualmente
         // y el loop del Pong toma el control dentro del canvas pequeño.
@@ -168,3 +164,4 @@ function actualizarPong() {
 
 // INICIAR EL JUEGO AL CARGAR
 gameLoop();
+
