@@ -5,15 +5,12 @@
     <title>Vecinos La Serena 3D - LA❤️SERENA</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    
     <style>
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-        
-        /* Interfaz de Usuario de Campaña */
         #ui {
             position: absolute; top: 15px; left: 15px;
-            color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white; font-family: 'Segoe UI', sans-serif;
             background: rgba(0, 0, 0, 0.85); padding: 20px;
             border-radius: 12px; border: 2px solid #ffd700;
             pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -24,112 +21,95 @@
             padding: 2px 8px; margin: 2px; border-bottom: 2px solid #222;
             font-size: 12px; color: #ffd700;
         }
-        #estado-carga { color: #00ff00; font-weight: bold; margin-top: 10px; }
-        .logo-campana { color: #ff4d4d; font-weight: bold; }
+        #estado { color: #ffff00; font-weight: bold; margin-top: 10px; }
+        .logo { color: #ff4d4d; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="ui">
         <h2 style="margin:0 0 10px 0; color:#ffd700;">Vecinos La Serena</h2>
-        <p style="margin: 5px 0;">¡<span class="logo-campana">LA❤️SERENA</span> se levanta!</p>
+        <p style="margin: 5px 0;">¡<span class="logo">LA❤️SERENA</span> se levanta!</p>
         <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
-        <div>⌨️ <strong>MOVER:</strong> <span class="tecla">↑</span> <span class="tecla">↓</span> <span class="tecla">←</span> <span class="tecla">→</span></div>
+        <div>⌨️ <strong>MOVER:</strong> <span class="tecla">↑</span><span class="tecla">↓</span><span class="tecla">←</span><span class="tecla">→</span></div>
         <div style="margin-top:8px;">🖱️ <strong>GIRAR:</strong> Clic + Arrastrar</div>
-        <div style="margin-top:8px;">🔍 <strong>ZOOM:</strong> Rueda del mouse</div>
-        <div id="estado-carga">📡 Conectando con Serenito...</div>
+        <div style="margin-top:8px;">🔍 <strong>ZOOM:</strong> Rueda</div>
+        <div id="estado">📡 Buscando a Serenito...</div>
     </div>
-
     <canvas id="renderCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const textoCarga = document.getElementById("estado-carga");
+        const textoEstado = document.getElementById("estado");
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8); // Cielo azul
+            scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
 
-            // 1. CONFIGURACIÓN DRACO (Para el archivo de 15MB)
+            // --- 1. CONFIGURACIÓN DRACO PROFESIONAL (Indispensable) ---
             BABYLON.DracoCompression.Configuration = {
-                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
+                decoder: {
+                    wasmUrl: "https://cdn.babylonjs.com/draco_wasm_wrapper_gltf.js",
+                    wasmBinaryUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.wasm",
+                    fallbackUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.js"
+                }
             };
 
-            // 2. CÁMARA PROFESIONAL (Giro y Zoom)
+            // 2. CÁMARA ARC (Para girar y zoom)
             const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.wheelPrecision = 45; // Suavidad del zoom
-            camera.lowerRadiusLimit = 3; // Límite para ver de cerca el logo
-            camera.upperRadiusLimit = 45;
+            camera.lowerRadiusLimit = 3;
+            camera.upperRadiusLimit = 40;
 
-            // 3. ILUMINACIÓN (Especial para resaltar la camiseta)
+            // 3. LUZ (Para resaltar el logo de la camiseta)
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 1.3;
 
-            // 4. EL SUELO (Mapa real de La Serena)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 280, height: 280}, scene);
+            // 4. EL MAPA
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 250, height: 250}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-            // Anti-cache para mapa.jpg
-            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg?v=" + Date.now(), scene);
-            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0); // Quita el brillo blanco molesto
+            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+            matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
             // 5. CARGA DE SERENITO
-            // Usamos Date.now() para que siempre cargue la versión más nueva de GitHub
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+                textoEstado.innerHTML = "✅ ¡CARGADO! Haz clic para mover.";
+                textoEstado.style.color = "#00ff00";
+                
                 const personaje = meshes[0];
                 personaje.scaling = new BABYLON.Vector3(-1.5, 1.5, 1.5);
                 personaje.position = new BABYLON.Vector3(0, 0, 0);
-                
-                camera.lockedTarget = personaje; // La cámara sigue al protagonista
-                textoCarga.innerHTML = "✅ ¡CARGADO! Haz clic para iniciar.";
+                camera.lockedTarget = personaje;
 
-                // Control de Animación (Mixamo Walking)
+                // Empezar detenido para lucir el "LA❤️SERENA"
                 const animCaminar = anims[0];
-                if (animCaminar) animCaminar.stop(); // Empieza detenido para lucir la camiseta
+                if (animCaminar) animCaminar.stop();
 
-                // 6. LÓGICA DE MOVIMIENTO
+                // 6. CONTROLES DE MOVIMIENTO
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
-                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => {
-                    inputMap[e.sourceEvent.key.toLowerCase()] = true;
-                }));
-                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => {
-                    inputMap[e.sourceEvent.key.toLowerCase()] = false;
-                }));
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    const vel = 0.38; // Velocidad ajustada para el mapa
+                    const vel = 0.35;
                     let moviendo = false;
 
-                    if (inputMap["w"] || inputMap["arrowup"]) { 
-                        personaje.position.z -= vel; personaje.rotation.y = Math.PI; moviendo = true; 
-                    }
-                    if (inputMap["s"] || inputMap["arrowdown"]) { 
-                        personaje.position.z += vel; personaje.rotation.y = 0; moviendo = true; 
-                    }
-                    if (inputMap["a"] || inputMap["arrowleft"]) { 
-                        personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; moviendo = true; 
-                    }
-                    if (inputMap["d"] || inputMap["arrowright"]) { 
-                        personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; moviendo = true; 
-                    }
+                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; moviendo = true; }
+                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; moviendo = true; }
+                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; moviendo = true; }
+                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; moviendo = true; }
 
-                    // Activar/Desactivar caminata
                     if (animCaminar) {
-                        if (moviendo) {
-                            if (!animCaminar.isPlaying) animCaminar.play(true);
-                        } else {
-                            animCaminar.stop();
-                        }
+                        if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
+                        else { animCaminar.stop(); }
                     }
                 });
-            }, 
-            // Progreso de descarga
-            function (evt) {
+            }, function (evt) {
                 if (evt.lengthComputable) {
                     let p = (evt.loaded * 100 / evt.total).toFixed();
-                    textoCarga.innerHTML = "📥 Descargando: " + p + "%";
+                    textoEstado.innerHTML = "📥 Descargando Serenito: " + p + "%";
                 }
             });
 
@@ -139,11 +119,9 @@
         const scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => engine.resize());
-
-        // Activar el foco del teclado con el primer clic
         window.addEventListener("click", () => {
             canvas.focus();
-            if(textoCarga.innerHTML.includes("CARGADO")) textoCarga.style.display = "none";
+            if(textoEstado.innerHTML.includes("CARGADO")) textoEstado.style.display = "none";
         });
     </script>
 </body>
