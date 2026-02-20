@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Proyecto Vecinos (Modo Edición)</title>
+    <title>LA❤️SERENA - Calibración Segura</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -14,65 +14,58 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
         
-        /* --- PANEL DE CALIBRACIÓN (Arriba Derecha) --- */
+        /* PANEL DE CONTROL */
         #panel-calibracion {
-            position: absolute; top: 10px; right: 10px; width: 260px;
-            background: rgba(0, 0, 0, 0.85); color: white; padding: 15px;
-            border-radius: 10px; border: 2px solid #ff0055; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 200; font-family: monospace; font-size: 12px;
+            position: absolute; top: 10px; right: 10px; width: 280px;
+            background: rgba(20, 20, 30, 0.95); color: white; padding: 15px;
+            border-radius: 10px; border: 2px solid #00d2ff; 
+            font-family: monospace; font-size: 12px; z-index: 200;
         }
-        #panel-calibracion h3 { margin: 0 0 10px 0; font-size: 14px; color: #ff0055; text-align: center; text-transform: uppercase; }
-        select { width: 100%; padding: 5px; background: #333; color: white; border: 1px solid #555; margin-bottom: 15px; }
-        .control-group { margin-bottom: 8px; }
-        .control-group label { display: flex; justify-content: space-between; margin-bottom: 2px; color: #ccc; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #ff0055; }
-        .valor { color: #00ff00; font-weight: bold; }
-
-        /* --- INTERFAZ DEL JUEGO (Abajo) --- */
-        #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { background: #ffd700; color: #000; border: none; padding: 12px 24px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 14px; transition: all 0.2s; text-transform: uppercase; }
-        .btn:hover { background: #ffe44d; transform: translateY(-2px); }
-        .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #b39700; }
-        .btn-rescate { background: #ff4444; color: white; box-shadow: 0 4px 0 #990000; }
+        #panel-calibracion h3 { margin: 0 0 10px 0; color: #00d2ff; text-align: center; }
+        select { width: 100%; padding: 5px; background: #333; color: white; margin-bottom: 10px; }
+        .control-group { margin-bottom: 10px; }
+        .control-group label { display: flex; justify-content: space-between; color: #ccc; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #00d2ff; }
         
-        #ui-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none; border: 1px solid rgba(255,255,255,0.3); }
+        /* BOTONES */
+        #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">📍 Modo Edición: Ajusta los edificios</div>
-
     <div id="panel-calibracion">
-        <h3>🎛️ Calibrador</h3>
+        <h3>🛠️ AJUSTE FINO</h3>
         <select id="edificioSelector" onchange="cambiarEdificio()">
             <option value="muni">🏢 MUNICIPALIDAD</option>
             <option value="intendencia">🏛️ INTENDENCIA</option>
         </select>
 
         <div class="control-group">
-            <label>ESCALA (Tamaño) <span id="valEscala" class="valor">1.0</span></label>
-            <input type="range" id="inputEscala" min="0.1" max="25" step="0.1">
+            <label>TAMAÑO % <span id="valEscala">100%</span></label>
+            <input type="range" id="inputEscala" min="0.5" max="2.0" step="0.05" value="1.0">
         </div>
 
         <div class="control-group">
-            <label>ROTACIÓN <span id="valRot" class="valor">0°</span></label>
-            <input type="range" id="inputRot" min="0" max="360" step="1">
+            <label>ROTACIÓN <span id="valRot">0°</span></label>
+            <input type="range" id="inputRot" min="0" max="360" step="1" value="0">
         </div>
-        <hr style="border-color: #444;">
+        
+        <hr style="border-color:#555">
+
         <div class="control-group">
-            <label>Posición X <span id="valX" class="valor">0</span></label>
-            <input type="range" id="inputX" min="-1000" max="1000" step="1">
+            <label>Posición X <span id="valX">0</span></label>
+            <input type="range" id="inputX" min="-1500" max="1500" step="1">
         </div>
         <div class="control-group">
-            <label>Posición Z <span id="valZ" class="valor">0</span></label>
-            <input type="range" id="inputZ" min="-1000" max="1000" step="1">
+            <label>Posición Z <span id="valZ">0</span></label>
+            <input type="range" id="inputZ" min="-1500" max="1500" step="1">
         </div>
     </div>
 
     <div id="toolbar">
-        <button class="btn" onclick="camaraSerenito()">🚶 Caminar</button>
+        <button class="btn" onclick="camaraSerenito()">🚶 Serenito</button>
         <button class="btn" onclick="camaraAerea()">🚁 Vista Aérea</button>
-        <button class="btn btn-rescate" onclick="rescatar()">🚨 Rescate</button>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -80,235 +73,177 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const statusDiv = document.getElementById("ui-status");
 
-        // --- DATOS INICIALES (EDITABLES) ---
+        // --- ESTADO INICIAL SEGURO (VALORES QUE SABEMOS QUE FUNCIONAN) ---
         let db = {
             muni: { 
-                mesh: null, 
-                file: "municipalidad.glb",
-                x: 757, z: 187, rot: 180, scale: 10 // Ajusta scale con el slider
+                file: "municipalidad.glb", 
+                x: 757, z: 187, rot: 180, 
+                baseScale: 1, // Se calculará automáticamente
+                userScale: 1.0 // Multiplicador del usuario
             },
             intendencia: { 
-                mesh: null, 
-                file: "intendencia.glb",
-                x: 455, z: 386, rot: 0, scale: 10 // Ajusta scale con el slider
+                file: "intendencia.glb", 
+                x: 455, z: 386, rot: 0, 
+                baseScale: 1, 
+                userScale: 1.0 
             }
         };
 
         let activeKey = "muni";
-        let scene, camera, shadowGenerator, personaje, animCaminar;
-        let destinoFinal = null;
+        let scene, camera, shadowGenerator, personaje;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); 
-            scene.collisionsEnabled = true;
 
             const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-            hemi.intensity = 0.7;
-
+            hemi.intensity = 0.8;
             const dir = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
             dir.position = new BABYLON.Vector3(200, 400, 200);
-            dir.intensity = 1.2;
-
             shadowGenerator = new BABYLON.ShadowGenerator(2048, dir);
-            
+
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.checkCollisions = true;
-            camera.lowerRadiusLimit = 20;
-            camera.upperRadiusLimit = 1200;
-
+            
             return scene;
         };
-
         scene = crearEscena();
 
-        // 1. CARGAR MAPA
+        // 1. CARGAR MAPA (SUELO)
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 3000, height: 3000}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
         matSuelo.specularColor = new BABYLON.Color3(0,0,0);
         suelo.material = matSuelo;
-        suelo.checkCollisions = true;
         suelo.receiveShadows = true;
 
-        // 2. CARGAR SERENITO
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+        // 2. CARGAR SERENITO (Para referencia de tamaño)
+        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function(meshes){
             personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(10, 10, 10); 
-            personaje.position = new BABYLON.Vector3(0, 0, 0);
-            personaje.ellipsoid = new BABYLON.Vector3(2, 5, 2);
-
-            meshes.forEach(m => {
-                shadowGenerator.addShadowCaster(m);
-                m.receiveShadows = true;
-            });
+            personaje.scaling = new BABYLON.Vector3(10,10,10);
+            personaje.position = new BABYLON.Vector3(0,0,0);
+            shadowGenerator.addShadowCaster(personaje);
             camera.lockedTarget = personaje;
-            camera.radius = 120;
-            if (anims && anims.length > 0) animCaminar = anims[0];
         });
 
-        // 3. CARGAR EDIFICIOS (CON LÓGICA DE EDICIÓN)
-        function cargarModelo(key) {
+        // 3. CARGAR EDIFICIOS CON LÓGICA DE SEGURIDAD
+        function cargar(key) {
             let data = db[key];
             BABYLON.SceneLoader.ImportMesh("", "./", data.file, scene, function (meshes) {
                 let m = meshes[0];
                 data.mesh = m;
-                
-                // Configurar sombras y colisiones
+
+                // --- CALCULO AUTOMÁTICO DE TAMAÑO (Para que no desaparezca) ---
+                const bound = m.getHierarchyBoundingVectors(true);
+                const size = bound.max.subtract(bound.min);
+                // Usamos un tamaño base de 160 (como habíamos acordado antes)
+                let factorAutomatico = 160 / Math.max(size.x, size.y, size.z);
+                data.baseScale = factorAutomatico;
+
+                // Aplicamos transformaciones iniciales
+                aplicarTransformacion(key);
+
+                // Sombras
                 meshes.forEach(mesh => {
-                    mesh.checkCollisions = true;
                     shadowGenerator.addShadowCaster(mesh);
                     mesh.receiveShadows = true;
                     if(mesh.material) mesh.material.backFaceCulling = false;
                 });
 
-                // Aplicar transformación inicial
-                actualizarMesh(key);
-
-                // Si es el activo, actualizar UI
-                if (key === activeKey) updateSliders();
+                if(key === activeKey) updateUI();
             });
         }
 
-        cargarModelo("muni");
-        cargarModelo("intendencia");
+        cargar("muni");
+        cargar("intendencia");
 
-        // 4. LÓGICA DEL PANEL CALIBRADOR
+        // --- SISTEMA DE CONTROL ---
+        const inEscala = document.getElementById("inputEscala");
+        const inRot = document.getElementById("inputRot");
         const inX = document.getElementById("inputX");
         const inZ = document.getElementById("inputZ");
-        const inRot = document.getElementById("inputRot");
-        const inScale = document.getElementById("inputScale");
         
+        const txtEscala = document.getElementById("valEscala");
+        const txtRot = document.getElementById("valRot");
         const txtX = document.getElementById("valX");
         const txtZ = document.getElementById("valZ");
-        const txtRot = document.getElementById("valRot");
-        const txtScale = document.getElementById("valEscala");
+
+        function aplicarTransformacion(key) {
+            let data = db[key];
+            if(!data.mesh) return;
+
+            // Posición
+            data.mesh.position.x = data.x;
+            data.mesh.position.z = data.z;
+            data.mesh.position.y = 0; // Siempre al suelo
+
+            // Rotación
+            data.mesh.rotation.y = data.rot * (Math.PI / 180);
+
+            // Escala (Base * Usuario)
+            let escalaFinal = data.baseScale * data.userScale;
+            data.mesh.scaling = new BABYLON.Vector3(escalaFinal, escalaFinal, escalaFinal);
+        }
 
         function onInput() {
             let data = db[activeKey];
-            if(!data.mesh) return;
-
+            
+            data.userScale = parseFloat(inEscala.value);
+            data.rot = parseFloat(inRot.value);
             data.x = parseFloat(inX.value);
             data.z = parseFloat(inZ.value);
-            data.rot = parseFloat(inRot.value);
-            data.scale = parseFloat(inScale.value);
 
-            updateText();
-            actualizarMesh(activeKey);
-        }
-
-        function updateSliders() {
-            let data = db[activeKey];
-            inX.value = data.x;
-            inZ.value = data.z;
-            inRot.value = data.rot;
-            inScale.value = data.scale;
-            updateText();
-        }
-
-        function updateText() {
-            let data = db[activeKey];
+            // Actualizar textos
+            txtEscala.innerText = Math.round(data.userScale * 100) + "%";
+            txtRot.innerText = data.rot + "°";
             txtX.innerText = data.x;
             txtZ.innerText = data.z;
-            txtRot.innerText = data.rot + "°";
-            txtScale.innerText = data.scale.toFixed(1);
+
+            aplicarTransformacion(activeKey);
         }
 
-        function actualizarMesh(key) {
-            let data = db[key];
-            if (data.mesh) {
-                data.mesh.position.x = data.x;
-                data.mesh.position.z = data.z;
-                // Ajustamos Y a 0 para que no flote
-                data.mesh.position.y = 0; 
-                data.mesh.rotation.y = data.rot * (Math.PI / 180);
-                
-                // NOTA: Aquí usamos escala directa, no normalizada, para que tengas control total
-                data.mesh.scaling = new BABYLON.Vector3(data.scale, data.scale, data.scale);
+        function updateUI() {
+            let data = db[activeKey];
+            inEscala.value = data.userScale;
+            inRot.value = data.rot;
+            inX.value = data.x;
+            inZ.value = data.z;
+            
+            txtEscala.innerText = Math.round(data.userScale * 100) + "%";
+            txtRot.innerText = data.rot + "°";
+            txtX.innerText = data.x;
+            txtZ.innerText = data.z;
+
+            // Mover cámara al edificio seleccionado para verlo bien
+            if(data.mesh) {
+                camera.lockedTarget = null;
+                camera.setTarget(data.mesh.position);
             }
         }
 
         window.cambiarEdificio = function() {
             activeKey = document.getElementById("edificioSelector").value;
-            updateSliders();
-            // Enfocar cámara temporalmente en el edificio para verlo
-            if(db[activeKey].mesh) {
-                camera.lockedTarget = null;
-                camera.setTarget(db[activeKey].mesh.position);
-            }
+            updateUI();
         }
 
-        // Listeners para los sliders
-        inX.addEventListener("input", onInput);
-        inZ.addEventListener("input", onInput);
-        inRot.addEventListener("input", onInput);
-        inScale.addEventListener("input", onInput);
-
-
-        // 5. MOVIMIENTO (CLICK & WALK)
-        scene.onPointerDown = (evt, pick) => {
-            // Solo mover si clickeamos el SUELO (ignorar clics en el panel)
-            if (pick.hit && pick.pickedMesh && pick.pickedMesh.name === "suelo") {
-                destinoFinal = pick.pickedPoint;
-                crearPuntero(destinoFinal);
-            }
-        };
-
-        function crearPuntero(pos) {
-            const disco = BABYLON.MeshBuilder.CreateDisc("puntero", {radius: 3}, scene);
-            disco.position = new BABYLON.Vector3(pos.x, 0.5, pos.z);
-            disco.rotation.x = Math.PI / 2;
-            const mat = new BABYLON.StandardMaterial("matPunt", scene);
-            mat.diffuseColor = new BABYLON.Color3(1, 1, 0);
-            disco.material = mat;
-            const anim = new BABYLON.Animation("fade", "visibility", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-            anim.setKeys([{frame: 0, value: 1}, {frame: 20, value: 0}]);
-            disco.animations.push(anim);
-            scene.beginAnimation(disco, 0, 20, false, 1, () => disco.dispose());
-        }
-
-        scene.onBeforeRenderObservable.add(() => {
-            if (!personaje || !destinoFinal) return;
-            let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0;
-            if (diff.length() > 2) {
-                diff.normalize();
-                let angulo = Math.atan2(diff.x, diff.z);
-                let diffRot = angulo - personaje.rotation.y;
-                while (diffRot < -Math.PI) diffRot += Math.PI * 2;
-                while (diffRot > Math.PI) diffRot -= Math.PI * 2;
-                personaje.rotation.y += diffRot * 0.1;
-                personaje.moveWithCollisions(diff.scale(1.5));
-                if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-            } else {
-                if (animCaminar) animCaminar.stop();
-                destinoFinal = null;
-            }
-        });
-
-        // 6. FUNCIONES CÁMARA
         window.camaraSerenito = function() {
-            if(!personaje) return;
-            camera.lockedTarget = personaje;
-            camera.radius = 120;
-            camera.beta = Math.PI/3;
+            if(personaje) {
+                camera.lockedTarget = personaje;
+                camera.radius = 120;
+            }
         }
-
         window.camaraAerea = function() {
             camera.lockedTarget = null;
-            camera.setPosition(new BABYLON.Vector3(600, 800, 600));
+            camera.setPosition(new BABYLON.Vector3(500, 800, 500));
             camera.setTarget(new BABYLON.Vector3(500, 0, 200));
         }
 
-        window.rescatar = function() {
-            if(!personaje) return;
-            destinoFinal = null;
-            personaje.position = new BABYLON.Vector3(0, 0, 0);
-            camaraSerenito();
-        }
+        // Event Listeners
+        inEscala.addEventListener("input", onInput);
+        inRot.addEventListener("input", onInput);
+        inX.addEventListener("input", onInput);
+        inZ.addEventListener("input", onInput);
 
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
