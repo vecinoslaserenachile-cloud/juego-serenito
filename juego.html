@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>LA❤️SERENA - Proyecto Protagonista</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial Black', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* INTERFAZ DE CAMPAÑA */
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
             background: rgba(0, 0, 0, 0.9); padding: 25px; border-radius: 15px; 
@@ -24,7 +26,6 @@
         }
         #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
         
-        /* SELECTOR DE CÁMARAS */
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
@@ -34,14 +35,13 @@
             border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;
             font-size: 13px; transition: 0.1s; box-shadow: 0 4px 0 #b39700;
         }
-        .btn-cam:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
 <body>
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">📡 BUSCANDO A SERENITO...</div>
+        <div id="estado">📡 SINCRONIZANDO SISTEMAS...</div>
     </div>
 
     <div id="cam-selector">
@@ -65,97 +65,65 @@
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
             scene.collisionsEnabled = true;
 
-            // CONFIGURACIÓN DRACO PARA ARCHIVOS OPTIMIZADOS
+            // CONFIGURACIÓN DRACO (VITAL PARA ARCHIVOS DE 15MB)
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // 1. CÁMARA INICIAL
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.checkCollisions = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.8;
+            light.intensity = 2.0;
 
-            // 2. EL MAPA (Se carga siempre)
+            // EL MAPA
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
-            suelo.position.y = -0.05;
 
-            // 3. CARGA DE SERENITO (Prioridad Absoluta)
-            // Agregamos un número al final (?v=...) para que el navegador no use copias viejas
+            // CARGA DE SERENITO CON PROTOCOLO DE RECUPERACIÓN
             const urlModelo = "serenito.glb?v=" + Date.now();
             document.getElementById("estado").innerHTML = "📥 DESCARGANDO A SERENITO (15MB)...";
             
-            BABYLON.SceneLoader.ImportMesh("", "./", urlModelo, scene, function (meshes, ps, sk, anims) {
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+                // Si llegamos aquí, el archivo fue leído. Ahora hay que hacerlo visible.
                 personaje = meshes[0];
                 
-                // ESCALA POSITIVA PARA EVITAR ESPEJO
+                // ESCALA Y ALTURA: Corrección de efecto espejo y pies hundidos
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); 
-                personaje.position = new BABYLON.Vector3(0, 0.9, 0); // Pies sobre el asfalto
+                personaje.position = new BABYLON.Vector3(0, 1.2, 0); // Lo subo un poco más para asegurar visibilidad
                 personaje.checkCollisions = true;
                 personaje.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
                 
                 camera.lockedTarget = personaje;
                 document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN POSICIÓN";
                 
-                // Animación articulada (Mueve brazos y piernas)
+                // Animación articulada
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
                 }
 
-                // DOBLE CLIC PARA CAMINAR
-                scene.onPointerObservable.add((pi) => {
-                    if (pi.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
-                        const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
-                        if (pick.hit) { destino = pick.pickedPoint; moviendoPorClick = true; }
-                    }
-                });
-
-                // LÓGICA DE MOVIMIENTO Y PERSPECTIVA FIJA
+                // Lógica de Movimiento
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.42;
+                    let vel = 0.4;
                     let mov = false;
                     let rot = personaje.rotation.y;
 
-                    // Bloqueo de cámara manual al caminar
-                    const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
-                    if (keys.some(k => inputMap[k])) {
-                        camera.detachControl(canvas);
-                        moviendoPorClick = false;
-                        mov = true;
-                    } else if (!moviendoPorClick) {
-                        camera.attachControl(canvas, true);
-                    }
-
                     // Teclado
-                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; }
-                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; }
-                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; }
-                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; }
-
-                    // Doble Clic
-                    if (moviendoPorClick && destino) {
-                        const d = destino.subtract(personaje.position);
-                        d.y = 0;
-                        if (d.length() > 0.6) {
-                            d.normalize();
-                            personaje.moveWithCollisions(d.scale(vel));
-                            rot = Math.atan2(d.x, d.z) + Math.PI;
-                            mov = true;
-                        } else { moviendoPorClick = false; }
-                    }
+                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; mov = true; }
+                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; mov = true; }
+                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; mov = true; }
+                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; mov = true; }
 
                     personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.18);
                     if (animCaminar) {
@@ -166,29 +134,27 @@
             }, (evt) => {
                 if (evt.lengthComputable) {
                     let p = (evt.loaded * 100 / evt.total).toFixed();
-                    document.getElementById("estado").innerHTML = "📥 DESCARGANDO: " + p + "%";
+                    document.getElementById("estado").innerHTML = "📥 RECUPERANDO PJ: " + p + "%";
                 }
             });
 
             return scene;
         };
 
-        // 5 CÁMARAS PROFESIONALES FIJAS
         window.setCam = function(t) {
             if (!camera) return;
             switch(t) {
                 case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; 
-                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; 
-                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; 
-                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; 
-                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; 
+                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break;
+                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break;
+                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break;
+                case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break;
             }
         }
 
         crearEscena();
         engine.runRenderLoop(() => { if (scene) scene.render(); });
         window.addEventListener("resize", () => engine.resize());
-        window.addEventListener("click", () => canvas.focus());
     </script>
 </body>
 </html>
