@@ -14,7 +14,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
         
-        /* INTERFAZ LIMPIA */
+        /* INTERFAZ LIMPIA (SOLO BOTONES) */
         #ui-status { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.6); color: white; padding: 10px 20px; border-radius: 30px; font-size: 14px; pointer-events: none; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
@@ -43,19 +43,19 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
 
-        // --- 📍 AJUSTES FINALES MANUALES ---
+        // --- 📍 COORDENADAS MAESTRAS (LAS QUE FUNCIONABAN BIEN) ---
         
-        // 1. MUNICIPALIDAD (Más pequeña y rotada 90 grados)
+        // 1. MUNICIPALIDAD (Datos de tu captura)
         const MUNI_X = 757;
         const MUNI_Z = 187;
-        const MUNI_ROT = Math.PI / 2; // 90 Grados exactos
-        const MUNI_TAMANO_OBJETIVO = 130; // Valor bajo = Más pequeño
+        const MUNI_ROT = Math.PI; // 180 Grados
+        const MUNI_TAMANO = 150;  // Tamaño estandarizado
 
-        // 2. INTENDENCIA (Más grande)
+        // 2. INTENDENCIA (Datos de tu captura)
         const INT_X = 455;
         const INT_Z = 386;
         const INT_ROT = 0;        
-        const INT_TAMANO_OBJETIVO = 190; // Valor alto = Más grande
+        const INT_TAMANO = 150;   // Igualado a la Muni
 
         // ----------------------------------------
 
@@ -120,8 +120,6 @@
         });
 
         // --- FUNCIÓN MATEMÁTICA PARA PEGAR AL PISO ---
-        // Esta función calcula el punto más bajo del edificio y lo mueve
-        // para que ese punto toque exactamente el Y=0 (el suelo)
         function anclarAlSuelo(mesh, tamanoObjetivo) {
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
@@ -131,10 +129,8 @@
             const factor = tamanoObjetivo / maxDim;
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // Calculamos cuánto hay que bajar o subir para que toque el piso
-            // bound.min.y es la parte más baja del modelo original
+            // Bajamos el edificio lo necesario para que toque Y=0
             const correccionAltura = -bound.min.y * factor;
-            
             return { scale: factor, y: correccionAltura };
         }
 
@@ -142,11 +138,11 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
             
-            // Aplicamos la corrección automática de piso y tamaño
-            const datos = anclarAlSuelo(muni, MUNI_TAMANO_OBJETIVO);
+            // Ajuste automático de escala y piso
+            const datos = anclarAlSuelo(muni, MUNI_TAMANO);
             
             muni.position = new BABYLON.Vector3(MUNI_X, datos.y, MUNI_Z);
-            muni.rotation.y = MUNI_ROT; // 90 grados
+            muni.rotation.y = MUNI_ROT;
 
             meshes.forEach(m => {
                 m.checkCollisions = true;
@@ -160,8 +156,8 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             const intendencia = meshes[0];
             
-            // Aplicamos la corrección automática de piso y tamaño (Más grande)
-            const datos = anclarAlSuelo(intendencia, INT_TAMANO_OBJETIVO);
+            // Ajuste automático de escala y piso
+            const datos = anclarAlSuelo(intendencia, INT_TAMANO);
             
             intendencia.position = new BABYLON.Vector3(INT_X, datos.y, INT_Z);
             intendencia.rotation.y = INT_ROT;
