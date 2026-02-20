@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Movimiento 360</title>
+    <title>LA❤️SERENA - Control de Precisión</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -27,7 +27,7 @@
 <body>
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
-        <div id="estado">🎮 MODO 360 ACTIVADO</div>
+        <div id="estado">🎮 MODO PRECISIÓN ACTIVO</div>
     </div>
     <div id="botones">
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
@@ -51,7 +51,6 @@
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.2, Math.PI/3.5, 80, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             
-            // LÍMITES DE SEGURIDAD
             camera.lowerBetaLimit = 0.1;
             camera.upperBetaLimit = Math.PI / 2.15;
             camera.lowerRadiusLimit = 10;
@@ -66,13 +65,12 @@
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
 
-            // HORIZONTE DE LA SERENA
+            // HORIZONTE
             const montañas = BABYLON.MeshBuilder.CreateBox("andes", {width: 2500, height: 300, depth: 50}, scene);
             montañas.position = new BABYLON.Vector3(0, 100, 600);
             const mar = BABYLON.MeshBuilder.CreateGround("pacifico", {width: 2500, height: 1200}, scene);
             mar.position = new BABYLON.Vector3(0, -2, -700);
 
-            // CARGA DE SERENITO CON FÓRMULA DE ÉXITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 personaje.scaling = new BABYLON.Vector3(-1.7, 1.7, 1.7);
@@ -88,7 +86,6 @@
                     animCaminar.stop();
                 }
 
-                // LISTENERS
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -101,11 +98,11 @@
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.6;
+                    let vel = 0.58; // Velocidad ajustada para precisión
                     let movVector = new BABYLON.Vector3(0, 0, 0);
                     let moviendo = false;
 
-                    // 1. SALTO (ESPACIO)
+                    // SALTO
                     if (inputMap[" "] && !saltando) {
                         saltando = true;
                         let f = 0;
@@ -116,7 +113,7 @@
                         }, 20);
                     }
 
-                    // 2. LÓGICA DE MOVIMIENTO DIAGONAL (Teclado)
+                    // MOVIMIENTO 360 MEJORADO
                     if (inputMap["w"] || inputMap["arrowup"]) movVector.z -= 1;
                     if (inputMap["s"] || inputMap["arrowdown"]) movVector.z += 1;
                     if (inputMap["a"] || inputMap["arrowleft"]) movVector.x -= 1;
@@ -125,25 +122,23 @@
                     if (movVector.length() > 0) {
                         destinoFinal = null;
                         moviendo = true;
-                        movVector.normalize(); // Evita que la diagonal sea más rápida
+                        movVector.normalize();
                         personaje.moveWithCollisions(movVector.scale(vel));
-                        // Calculamos la rotación exacta según el vector de movimiento
                         let targetRot = Math.atan2(movVector.x, movVector.z);
-                        personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.15);
+                        // Giro más rápido (0.25) para mayor control
+                        personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.25);
                     } 
-                    // 3. MOVIMIENTO POR CLIC
                     else if (destinoFinal) {
                         const diff = destinoFinal.subtract(personaje.position);
                         diff.y = 0;
-                        if (diff.length() > 1.2) {
+                        if (diff.length() > 1.0) {
                             moviendo = true;
                             diff.normalize();
                             personaje.moveWithCollisions(diff.scale(vel));
-                            personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, Math.atan2(diff.x, diff.z), 0.15);
+                            personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, Math.atan2(diff.x, diff.z), 0.25);
                         } else { destinoFinal = null; }
                     }
 
-                    // CONTROL DE ANIMACIÓN
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
