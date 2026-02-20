@@ -105,7 +105,8 @@
         // 3. MUNICIPALIDAD (FORZADO A 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             // Usamos Math.PI para forzar los 180 grados
-            colocarEdificio(meshes[0], 745, 187, 0, 150);
+        // Bajamos de 757 a 735 para "empujarlo" hacia la calle Prat
+            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
         });
 
         // 4. INTENDENCIA
@@ -159,6 +160,7 @@
     </script>
 </body>
 </html>
+
 
 
 
