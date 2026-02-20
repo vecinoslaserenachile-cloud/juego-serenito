@@ -20,13 +20,12 @@
         }
         #botones { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; }
         .btn { background: #ffd700; color: black; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 0 #b39700; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
     </style>
 </head>
 <body>
     <div id="ui">
         <b style="color:#ffd700; font-size: 18px;">LA❤️SERENA</b><br>
-        <small id="status" style="color:#00ff00">📡 NAVEGACIÓN TÁCTIL ACTIVA</small>
+        <small id="status" style="color:#00ff00">🚀 MOVIMIENTO ORGÁNICO ACTIVO</small>
     </div>
     <div id="botones">
         <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
@@ -41,7 +40,6 @@
         let destinoFinal = null;
         let baseHeight = 0;
 
-        // AJUSTE DE ESCALA RESPONSIVE
         const esMovil = window.innerWidth < 600;
         const factorEscala = esMovil ? 5.5 : 2.8;
 
@@ -51,20 +49,18 @@
 
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3.5, esMovil ? 50 : 90, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.upperBetaLimit = Math.PI / 2.3; // Límite para no bajar del suelo
+            camera.upperBetaLimit = Math.PI / 2.3;
             camera.lowerRadiusLimit = 15;
             camera.upperRadiusLimit = 350;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
 
-            // EL MAPA
-            suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1200, height: 1200}, scene);
+            suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1500, height: 1500}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             suelo.material = matSuelo;
 
-            // CARGA DE SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 personaje.scaling = new BABYLON.Vector3(-factorEscala, factorEscala, factorEscala);
@@ -73,17 +69,12 @@
                 baseHeight = (-bInfo.min.y * factorEscala);
                 personaje.position = new BABYLON.Vector3(0, baseHeight, 0);
                 
-                camera.setTarget(new BABYLON.Vector3(0, baseHeight + 2, 0));
                 camera.lockedTarget = personaje;
 
                 meshes.forEach(m => { m.isVisible = true; });
+                if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
 
-                if (anims && anims.length > 0) {
-                    animCaminar = anims[0];
-                    animCaminar.stop();
-                }
-
-                // NAVEGACIÓN POR CLIC/TOQUE
+                // NAVEGACIÓN INTELIGENTE
                 scene.onPointerObservable.add((pi) => {
                     if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         const pick = scene.pick(scene.pointerX, scene.pointerY, (m) => m === suelo);
@@ -94,17 +85,27 @@
                 scene.onBeforeRenderObservable.add(() => {
                     if (!personaje || !destinoFinal) return;
 
-                    let vel = esMovil ? 1.4 : 0.95;
                     let diff = destinoFinal.subtract(personaje.position);
                     diff.y = 0;
+                    let distancia = diff.length();
 
-                    if (diff.length() > 0.5) { 
+                    // --- LÓGICA DE VELOCIDAD DINÁMICA (Aceleración y Frenado) ---
+                    let velMax = esMovil ? 1.5 : 1.0;
+                    let velMin = 0.2;
+                    // Desacelera cuando está a menos de 15 unidades del objetivo
+                    let velActual = (distancia < 15) ? BABYLON.Scalar.Lerp(velMin, velMax, distancia / 15) : velMax;
+
+                    if (distancia > 0.4) { 
                         diff.normalize();
-                        personaje.moveWithCollisions(diff.scale(vel));
-                        personaje.rotation.y = Math.atan2(diff.x, diff.z);
+                        personaje.moveWithCollisions(diff.scale(velActual));
+                        
+                        // GIRO SUAVE 360° (Para que no gire brusco al caminar hacia atrás)
+                        let targetRot = Math.atan2(diff.x, diff.z);
+                        personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, targetRot, 0.15);
+                        
                         if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     } else {
-                        // SNAPPING FINAL: Llega al punto exacto
+                        // SNAPPING FINAL
                         personaje.position.x = destinoFinal.x;
                         personaje.position.z = destinoFinal.z;
                         destinoFinal = null; 
