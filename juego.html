@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - Edición Pro</title>
+    <title>Vecinos La Serena 3D - LA❤️SERENA</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
@@ -16,30 +16,26 @@
         }
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 90%;
+            display: flex; gap: 10px;
         }
         .btn-cam {
-            background: #ffd700; color: black; border: none; padding: 8px 12px;
+            background: #ffd700; color: black; border: none; padding: 10px 15px;
             border-radius: 5px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            font-size: 12px; transition: 0.3s;
         }
-        .btn-cam:hover { background: #fff; transform: scale(1.05); }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; }
+        #estado { color: #ffff00; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <h2 style="margin:0; color:#ffd700; font-size: 18px;">Vecinos La Serena</h2>
-        <p style="margin: 5px 0; font-size: 14px;">¡LA❤️SERENA se levanta!</p>
-        <div id="estado">📡 Sincronizando...</div>
+        <h2 style="margin:0; color:#ffd700;">Vecinos La Serena</h2>
+        <p style="margin: 5px 0;">¡LA❤️SERENA se levanta!</p>
+        <div id="estado">📡 Conectando con Serenito...</div>
     </div>
 
     <div id="cam-selector">
         <button class="btn-cam" onclick="setCam(1)">🚶 Seguimiento</button>
         <button class="btn-cam" onclick="setCam(2)">🦅 Cenital</button>
-        <button class="btn-cam" onclick="setCam(3)">👤 Frontal</button>
-        <button class="btn-cam" onclick="setCam(4)">👈 Perfil Izq.</button>
-        <button class="btn-cam" onclick="setCam(5)">👉 Perfil Der.</button>
+        <button class="btn-cam" onclick="setCam(3)">👤 Frente</button>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -53,51 +49,50 @@
             const scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
 
-            // 1. ACTIVAR FÍSICA Y COLISIONES
-            scene.collisionsEnabled = true;
-
+            // 1. CONFIGURACIÓN DRACO ULTRA-ROBUSTA
             BABYLON.DracoCompression.Configuration = {
-                decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
+                decoder: {
+                    wasmUrl: "https://cdn.babylonjs.com/draco_wasm_wrapper_gltf.js",
+                    wasmBinaryUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.wasm",
+                    fallbackUrl: "https://cdn.babylonjs.com/draco_decoder_gltf.js"
+                }
             };
 
-            // 2. CÁMARA ARC ROTATE (Configuración fija)
+            // 2. CÁMARA
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.checkCollisions = true; // La cámara no atraviesa paredes
-            camera.wheelPrecision = 50;
+            camera.lowerRadiusLimit = 4;
+            camera.upperRadiusLimit = 45;
 
-            // 3. ILUMINACIÓN
+            // 3. LUZ (Fuerte para resaltar el logo LA❤️SERENA)
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.4;
+            light.intensity = 1.5;
 
-            // 4. EL MAPA (Suelo)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 400, height: 400}, scene);
+            // 4. EL MAPA
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 250, height: 250}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
-            suelo.checkCollisions = true;
+            suelo.position.y = -0.01;
 
-            // 5. CARGA DE SERENITO
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+            // 5. CARGA DE SERENITO (Con truco para saltar el caché)
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // AJUSTE DE ALTURA: Para que no aparezca cortado
-                // Si el modelo mide 2 metros, lo subimos 1 para que los pies toquen el suelo
-                personaje.position = new BABYLON.Vector3(0, 0.9, 0); 
+                // --- SOLUCIÓN AL "MEDIO CUERPO" ---
+                // Ajustamos la escala y lo subimos un poco sobre el mapa
                 personaje.scaling = new BABYLON.Vector3(1.6, 1.6, 1.6);
-                
-                // ACTIVAR COLISIONES EN SERENITO
-                personaje.checkCollisions = true;
-                personaje.ellipsoid = new BABYLON.Vector3(0.4, 0.9, 0.4); // "Escudo" invisible
+                personaje.position = new BABYLON.Vector3(0, 0.05, 0); 
                 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO LISTO";
+                document.getElementById("estado").innerHTML = "✅ ¡LISTO! Haz clic para mover.";
+                document.getElementById("estado").style.color = "#00ff00";
                 
                 animCaminar = anims[0];
                 if (animCaminar) animCaminar.stop();
 
-                // 6. LÓGICA DE MOVIMIENTO PROFESIONAL
+                // 6. LÓGICA DE MOVIMIENTO NATURAL
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
@@ -106,72 +101,52 @@
                 scene.onBeforeRenderObservable.add(() => {
                     const vel = 0.35;
                     let moviendo = false;
-                    let rotDestino = personaje.rotation.y;
+                    let rot = personaje.rotation.y;
 
-                    // Bloqueamos el control de la cámara si el usuario está caminando
-                    // Esto evita que la perspectiva se mueva sola mientras avanzas
-                    if (inputMap["w"] || inputMap["s"] || inputMap["a"] || inputMap["d"] || inputMap["arrowup"] || inputMap["arrowdown"] || inputMap["arrowleft"] || inputMap["arrowright"]) {
-                        camera.detachControl(canvas);
-                        moviendo = true;
-                    } else {
-                        camera.attachControl(canvas, true);
-                    }
+                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; rot = Math.PI; moviendo = true; }
+                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; rot = 0; moviendo = true; }
+                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; rot = -Math.PI / 2; moviendo = true; }
+                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; rot = Math.PI / 2; moviendo = true; }
 
-                    // Movimiento en los ejes correctos
-                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rotDestino = Math.PI; }
-                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rotDestino = 0; }
-                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rotDestino = -Math.PI / 2; }
-                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rotDestino = Math.PI / 2; }
-
-                    // Rotación suave (Lerp)
-                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rotDestino, 0.15);
+                    // Giro suave del personaje
+                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.15);
 
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
                     }
                 });
+            }, function (evt) {
+                if (evt.lengthComputable) {
+                    let p = (evt.loaded * 100 / evt.total).toFixed();
+                    document.getElementById("estado").innerHTML = "📥 Descargando: " + p + "%";
+                }
             });
 
-            // 7. --- CONSTRUCCIÓN DE EDIFICIOS CON COLISIONES ---
-            function crearEdificio(nombre, x, z, w, h, d) {
+            // 7. --- ZONA DE CONSTRUCCIÓN DE EDIFICIOS ---
+            function crearBloque(nombre, x, z, w, h, d, color) {
                 const box = BABYLON.MeshBuilder.CreateBox(nombre, {width: w, height: h, depth: d}, scene);
                 box.position = new BABYLON.Vector3(x, h/2, z);
-                box.checkCollisions = true; // Esto evita que Serenito pase por dentro
                 const mat = new BABYLON.StandardMaterial("mat"+nombre, scene);
-                mat.diffuseColor = new BABYLON.Color3(0.8, 0.7, 0.5);
+                mat.diffuseColor = color;
                 box.material = mat;
+                return box;
             }
 
-            // Ubicaciones aproximadas (Plaza de Armas)
-            crearEdificio("GobiernoRegional", -45, -30, 25, 12, 35);
-            crearEdificio("Catedral", 0, -60, 30, 20, 45);
-            crearEdificio("Municipalidad", 50, -35, 20, 10, 25);
-            crearEdificio("Correos", 50, 10, 20, 10, 25);
+            // Ejemplo: Lugar donde estaría la Intendencia / Gobierno Regional
+            crearBloque("GoreLaSerena", -35, -25, 20, 15, 30, new BABYLON.Color3(0.8, 0.7, 0.6));
+            
+            // Ejemplo: Lugar de la Catedral
+            crearBloque("Catedral", 0, -50, 25, 25, 40, new BABYLON.Color3(0.9, 0.9, 0.8));
 
             return scene;
         };
 
-        // GESTIÓN DE LAS 5 CÁMARAS
-        function setCam(tipo) {
+        function setCam(t) {
             if (!camera) return;
-            switch(tipo) {
-                case 1: // Seguimiento (Atrás)
-                    camera.alpha = -Math.PI / 2; camera.beta = Math.PI / 3; camera.radius = 12;
-                    break;
-                case 2: // Cenital (Desde el cielo)
-                    camera.alpha = -Math.PI / 2; camera.beta = 0.1; camera.radius = 35;
-                    break;
-                case 3: // Frontal (Cara a cara)
-                    camera.alpha = Math.PI / 2; camera.beta = Math.PI / 2.5; camera.radius = 10;
-                    break;
-                case 4: // Perfil Izquierdo
-                    camera.alpha = 0; camera.beta = Math.PI / 3; camera.radius = 15;
-                    break;
-                case 5: // Perfil Derecho
-                    camera.alpha = Math.PI; camera.beta = Math.PI / 3; camera.radius = 15;
-                    break;
-            }
+            if (t==1) { camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; }
+            if (t==2) { camera.alpha = -Math.PI/2; camera.beta = 0.1; camera.radius = 35; }
+            if (t==3) { camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 8; }
         }
 
         const scene = crearEscena();
