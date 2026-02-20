@@ -69,7 +69,6 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.5;
 
-            // EL MAPA (Se carga siempre)
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -77,22 +76,22 @@
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO CON AUTO-CENTRE DE PIES
+            // CARGA DE SERENITO CON AUTO-DETECCIÓN DE ALTURA
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
                 
-                // AUTO-POSICIONAMIENTO: Encontramos el punto más bajo (pies) y lo sacamos del suelo
+                // ESCANEO DE BORDES: Encuentra el punto más bajo del archivo de 15MB
                 const boundingInfo = meshes[0].getHierarchyBoundingVectors();
                 const minY = boundingInfo.min.y;
                 
                 personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
+                // Si el pivote está en la cabeza, esta fórmula lo sube automáticamente
                 personaje.position.y = (-minY * 1.7) + 0.1; 
                 
                 meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); });
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ PROTAGONISTA EN LAS CALLES";
+                document.getElementById("estado").innerHTML = "✅ SERENITO EN LAS CALLES";
                 
-                // Animación de brazos y piernas
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
                     animCaminar.stop();
