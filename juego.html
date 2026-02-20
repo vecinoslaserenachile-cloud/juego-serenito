@@ -2,42 +2,58 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Serenito en La Serena</title>
+    <title>Serenito en La Serena - Módulo Pong</title>
     <link rel="icon" type="image/png" href="ls-favicon.png">
     <style>
-        body { margin: 0; overflow: hidden; background-color: #333; }
+        /* ESTILOS (CSS) */
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #333; /* Color de fondo si el canvas falla */
+        }
         
-        /* El Canvas Principal (El mapa de La Serena) */
-        #gameCanvas { display: block; background-color: #87CEEB; }
+        /* El Canvas Principal (Donde vive Serenito) */
+        #gameCanvas { 
+            display: block; 
+            background-color: #87CEEB; /* Celeste cielo de La Serena */
+        }
 
-        /* NUEVO: El Contenedor del Minijuego (Estilo Retro) */
+        /* La Ventana del Minijuego (Oculta al principio) */
         #minigame-overlay {
-            display: none; /* Oculto por defecto */
+            display: none; /* Importante: Oculto por defecto */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: 600px;
-            height: 400px;
-            background: #000;
-            border: 5px solid #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            z-index: 100; /* Para que quede encima de todo */
+            height: 450px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #FFF;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 100;
             text-align: center;
             color: white;
             font-family: 'Courier New', Courier, monospace;
+            border-radius: 10px;
         }
 
-        #pongCanvas { background: #000; display: block; margin: 0 auto; }
+        #pongCanvas { 
+            background: #222; 
+            border: 2px solid #555;
+            display: block; 
+            margin: 20px auto; 
+        }
         
         .btn-salir {
-            margin-top: 10px;
-            padding: 5px 10px;
-            background: red;
+            padding: 10px 20px;
+            background: #ff4444;
             color: white;
             border: none;
             cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
         }
+        .btn-salir:hover { background: #cc0000; }
     </style>
 </head>
 <body>
@@ -45,12 +61,207 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="minigame-overlay">
-        <h3>🏓 PONG MUNICIPAL 🏓</h3>
+        <h2>🏓 PONG MUNICIPAL 🏓</h2>
         <canvas id="pongCanvas" width="500" height="300"></canvas>
-        <p>Usa el mouse para mover la paleta</p>
+        <p>Mueve el mouse para controlar la paleta verde</p>
         <button class="btn-salir" onclick="cerrarMinijuego()">Volver a La Serena</button>
     </div>
 
-    <script src="juego_maestro.js"></script>
+    <script>
+        // === CONFIGURACIÓN INICIAL ===
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Esta función asegura que el canvas ocupe TODA la pantalla
+        function redimensionarCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', redimensionarCanvas);
+        redimensionarCanvas(); // Llamada inicial vital
+
+        // === VARIABLES DEL JUEGO ===
+        let serenito = { x: 100, y: 300, ancho: 40, alto: 60, velocidad: 5 };
+        
+        // Estado del sistema
+        let enMinijuego = false;
+        
+        // Zona Mágica (Trigger) - Ubicada en la parte inferior derecha
+        let zonaPong = { x: 0, y: 0, ancho: 120, alto: 120 }; // Se calcula en el loop para ajustarse a la pantalla
+
+        // === VARIABLES DEL PONG ===
+        const pCanvas = document.getElementById('pongCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        let pelota = { x: 250, y: 150, dx: 4, dy: 4, radio: 8 };
+        let paleta = { x: 200, y: 280, ancho: 100, alto: 10 };
+        let pongLoopId; // Para controlar la animación del pong
+
+        // === CONTROLES (TECLADO PARA SERENITO) ===
+        let teclas = {};
+        window.addEventListener('keydown', (e) => teclas[e.key] = true);
+        window.addEventListener('keyup', (e) => teclas[e.key] = false);
+
+        // === CONTROLES (MOUSE PARA PONG) ===
+        pCanvas.addEventListener('mousemove', function(evt) {
+            let rect = pCanvas.getBoundingClientRect();
+            let mouseX = evt.clientX - rect.left;
+            paleta.x = mouseX - paleta.ancho / 2;
+        });
+
+        // ==========================================
+        //       BUCLE PRINCIPAL (LA SERENA)
+        // ==========================================
+        function gameLoop() {
+            if (!enMinijuego) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 1. Dibujar Escenario
+                dibujarEscenario();
+
+                // 2. Mover y Dibujar Serenito
+                moverSerenito();
+                dibujarSerenito();
+
+                // 3. Lógica del Trigger (Zona Pong)
+                actualizarPosicionZonaPong();
+                dibujarZonaPong();
+                verificarEntradaPong();
+
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function dibujarEscenario() {
+            // Suelo (Pasto)
+            ctx.fillStyle = "#4CAF50"; 
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+
+            // Municipalidad (Simple ejemplo visual)
+            ctx.fillStyle = "#DDD";
+            ctx.fillRect(canvas.width - 250, canvas.height - 300, 200, 200);
+            ctx.fillStyle = "#A00";
+            ctx.fillText("MUNICIPALIDAD", canvas.width - 230, canvas.height - 310);
+        }
+
+        function moverSerenito() {
+            if (teclas['ArrowRight']) serenito.x += serenito.velocidad;
+            if (teclas['ArrowLeft']) serenito.x -= serenito.velocidad;
+            // Límites de pantalla
+            if (serenito.x < 0) serenito.x = 0;
+            if (serenito.x > canvas.width - serenito.ancho) serenito.x = canvas.width - serenito.ancho;
+        }
+
+        function dibujarSerenito() {
+            ctx.fillStyle = "orange"; // Color de Serenito
+            ctx.fillRect(serenito.x, serenito.y, serenito.ancho, serenito.alto);
+            // Ojos
+            ctx.fillStyle = "black";
+            ctx.fillRect(serenito.x + 10, serenito.y + 10, 5, 5);
+            ctx.fillRect(serenito.x + 25, serenito.y + 10, 5, 5);
+        }
+
+        // ==========================================
+        //       SISTEMA DE TRIGGER (ZONA MÁGICA)
+        // ==========================================
+        function actualizarPosicionZonaPong() {
+            // Mantiene la zona siempre en la esquina inferior derecha
+            zonaPong.x = canvas.width - 200;
+            zonaPong.y = canvas.height - 100;
+        }
+
+        function dibujarZonaPong() {
+            // Dibujamos un "tapete" dorado en el suelo
+            ctx.fillStyle = "rgba(255, 215, 0, 0.4)"; // Oro transparente
+            ctx.fillRect(zonaPong.x, zonaPong.y, zonaPong.ancho, zonaPong.alto);
+            
+            ctx.fillStyle = "#FFF";
+            ctx.font = "16px Arial";
+            ctx.fillText("¡MiniJuego!", zonaPong.x + 10, zonaPong.y + 50);
+        }
+
+        function verificarEntradaPong() {
+            // Colisión simple: Si Serenito toca la zona dorada
+            if (serenito.x < zonaPong.x + zonaPong.ancho &&
+                serenito.x + serenito.ancho > zonaPong.x &&
+                serenito.y + serenito.alto > zonaPong.y) { // Simplificado para suelo
+                
+                abrirMinijuego();
+            }
+        }
+
+        function abrirMinijuego() {
+            enMinijuego = true;
+            document.getElementById('minigame-overlay').style.display = 'block';
+            
+            // Empujamos a Serenito atrás para que no quede atrapado en el bucle al salir
+            serenito.x -= 100; 
+            
+            iniciarPongLoop();
+        }
+
+        window.cerrarMinijuego = function() {
+            enMinijuego = false;
+            document.getElementById('minigame-overlay').style.display = 'none';
+            detenerPongLoop();
+            gameLoop(); // Reiniciamos el bucle principal
+        };
+
+        // ==========================================
+        //       LÓGICA DEL MINIJUEGO (PONG)
+        // ==========================================
+        function iniciarPongLoop() {
+            actualizarPong();
+        }
+
+        function detenerPongLoop() {
+            cancelAnimationFrame(pongLoopId);
+        }
+
+        function actualizarPong() {
+            if (!enMinijuego) return;
+
+            // Limpiar Pong
+            pCtx.fillStyle = '#000';
+            pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+
+            // Dibujar Pelota
+            pCtx.beginPath();
+            pCtx.arc(pelota.x, pelota.y, pelota.radio, 0, Math.PI*2);
+            pCtx.fillStyle = '#FFF';
+            pCtx.fill();
+            pCtx.closePath();
+
+            // Dibujar Paleta
+            pCtx.fillStyle = '#0F0';
+            pCtx.fillRect(paleta.x, paleta.y, paleta.ancho, paleta.alto);
+
+            // Físicas Pelota
+            pelota.x += pelota.dx;
+            pelota.y += pelota.dy;
+
+            // Rebote Paredes
+            if(pelota.x + pelota.radio > pCanvas.width || pelota.x - pelota.radio < 0) pelota.dx = -pelota.dx;
+            if(pelota.y - pelota.radio < 0) pelota.dy = -pelota.dy;
+
+            // Rebote Paleta
+            if(pelota.y + pelota.radio > paleta.y &&
+               pelota.x > paleta.x &&
+               pelota.x < paleta.x + paleta.ancho) {
+                pelota.dy = -Math.abs(pelota.dy); // Asegura que suba
+            }
+
+            // Game Over (Suelo) -> Reinicio simple
+            if(pelota.y > pCanvas.height) {
+                pelota.x = pCanvas.width/2;
+                pelota.y = pCanvas.height/2;
+            }
+
+            pongLoopId = requestAnimationFrame(actualizarPong);
+        }
+
+        // === INICIAR TODO EL SISTEMA ===
+        gameLoop();
+
+    </script>
 </body>
 </html>
