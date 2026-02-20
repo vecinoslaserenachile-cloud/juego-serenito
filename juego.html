@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Vecinos La Serena 3D - LA❤️SERENA</title>
+    <title>LA❤️SERENA - LS Galaxy Edition</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M92.71,7.27C82.47-2.42,65.84-2.42,55.6,7.27L50,12.55l-5.59-5.28C34.17-2.42,17.53-2.42,7.29,7.27c-10.24,9.69-10.24,25.43,0,35.12L50,85.22l42.71-42.83C102.95,32.7,102.95,16.96,92.71,7.27z%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2240%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
     <style>
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial Black', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
@@ -18,39 +19,37 @@
             border: 4px solid #bc13fe; pointer-events: none; min-width: 310px;
             box-shadow: 0 4px 25px rgba(188, 19, 254, 0.4);
         }
-        .linea1 { color: #ffd700; font-size: 32px; display: block; text-align: center; }
-        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-        .linea2 { 
-            color: #ff3333; font-size: 24px; display: block; text-align: center;
-            animation: latido 1.3s infinite ease-in-out; text-transform: uppercase; margin-top: 5px;
-        }
+        .linea1 { color: #ffd700; font-size: 28px; display: block; text-align: center; }
+        .linea2 { color: #ff3333; font-size: 20px; display: block; text-align: center; margin-top: 5px; }
         #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
         
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
         }
-        .btn-cam {
+        .btn {
             background: #ffd700; color: black; border: none; padding: 12px 16px;
             border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            font-size: 12px; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
+            font-size: 11px; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
         }
-        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
-        .btn-cam:active { transform: translateY(4px); box-shadow: none; }
+        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; animation: pulso 1s infinite; }
+        @keyframes pulso { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
 <body>
     <div id="ui">
         <span class="linea1">LA❤️SERENA</span>
         <span class="linea2">¡LA SERENA SE LEVANTA!</span>
-        <div id="estado">📡 SINCRONIZANDO SERENITO...</div>
+        <div id="estado">📡 INICIANDO GALAXY CORE...</div>
     </div>
 
     <div id="cam-selector">
-        <button class="btn-cam btn-rescate" onclick="forzarEntrada()">🚀 RESCATAR PROTAGONISTA</button>
-        <button class="btn-cam" onclick="setCam(1)">🚶 Seguimiento</button>
-        <button class="btn-cam" onclick="setCam(2)">👤 Frontal</button>
-        <button class="btn-cam" onclick="setCam(3)">🦅 Cenital</button>
+        <button class="btn btn-rescate" onclick="rescatarSerenito()">🚀 RESCATAR SERENITO</button>
+        <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
+        <button class="btn" onclick="setCam(2)">👤 Frontal</button>
+        <button class="btn" onclick="setCam(3)">🦅 Cenital</button>
+        <button class="btn" onclick="setCam(4)">🏙️ Panorámica</button>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -58,66 +57,78 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let scene, camera, personaje, animCaminar;
+        let scene, camera, personaje, animCaminar, luzSeguimiento;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
+            scene.clearColor = new BABYLON.Color3(0.3, 0.4, 0.7);
             scene.collisionsEnabled = true;
 
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 16, BABYLON.Vector3.Zero(), scene);
+            // --- 1. VISTA INICIAL PANORÁMICA (Como pediste en image_e01f2c.jpg) ---
+            camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2.5, Math.PI/3.5, 75, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
+            camera.lowerRadiusLimit = 5;
+            camera.upperRadiusLimit = 150;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.5;
+            light.intensity = 2.0;
 
-            // MAPA
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
+            // Luz tipo "Galaxy" para que Serenito brille
+            luzSeguimiento = new BABYLON.SpotLight("spot", new BABYLON.Vector3(0, 30, 0), new BABYLON.Vector3(0, -1, 0), Math.PI/3, 2, scene);
+            luzSeguimiento.intensity = 0; // Apagada hasta que aparezca
+
+            // 2. EL MAPA
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
             suelo.checkCollisions = true;
 
-            // CARGA DE SERENITO (15MB)
+            // 3. CARGA DE SERENITO (Blindada)
+            document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA...";
+            
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb?v=" + Date.now(), scene, function (meshes, ps, sk, anims) {
                 personaje = meshes[0];
-                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7);
                 
-                // AJUSTE DE PIVOTE SEGÚN VISOR
-                const bInfo = meshes[0].getHierarchyBoundingVectors();
-                personaje.position = new BABYLON.Vector3(0, (-bInfo.min.y * 1.7) + 0.1, 0);
+                // Forzar visibilidad y posición segura (Cerca de Iglesia Sto Domingo)
+                personaje.scaling = new BABYLON.Vector3(1.8, 1.8, 1.8);
+                personaje.position = new BABYLON.Vector3(10, 2, 10);
                 
-                meshes.forEach(m => { m.isVisible = true; m.setEnabled(true); });
-                camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO EN POSICIÓN";
+                meshes.forEach(m => { 
+                    m.isVisible = true; 
+                    m.setEnabled(true);
+                    m.checkCollisions = true;
+                });
+                
+                document.getElementById("estado").innerHTML = "✅ ¡SERENITO EN PANTALLA!";
+                luzSeguimiento.intensity = 3; // ¡Encender luz!
                 
                 if (anims && anims.length > 0) {
                     animCaminar = anims[0];
-                    animCaminar.stop();
+                    animCaminar.play(true);
                 }
 
-                // CONTROLES
+                // LOOP DE MOVIMIENTO
                 const inputMap = {};
                 scene.actionManager = new BABYLON.ActionManager(scene);
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
                 scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
                 scene.onBeforeRenderObservable.add(() => {
-                    let vel = 0.45; let mov = false; let rot = personaje.rotation.y;
+                    let vel = 0.5; let mov = false; let rot = personaje.rotation.y;
                     if (inputMap["w"] || inputMap["arrowup"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, -vel)); rot = Math.PI; mov = true; }
                     if (inputMap["s"] || inputMap["arrowdown"]) { personaje.moveWithCollisions(new BABYLON.Vector3(0, 0, vel)); rot = 0; mov = true; }
                     if (inputMap["a"] || inputMap["arrowleft"]) { personaje.moveWithCollisions(new BABYLON.Vector3(-vel, 0, 0)); rot = -Math.PI / 2; mov = true; }
                     if (inputMap["d"] || inputMap["arrowright"]) { personaje.moveWithCollisions(new BABYLON.Vector3(vel, 0, 0)); rot = Math.PI / 2; mov = true; }
                     
-                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.15);
-                    if (animCaminar) {
-                        if (mov) { if (!animCaminar.isPlaying) animCaminar.play(true); } else { animCaminar.stop(); }
-                    }
+                    personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rot, 0.2);
+                    luzSeguimiento.position = personaje.position.clone().add(new BABYLON.Vector3(0, 15, 0));
+                    luzSeguimiento.setDirectionToTarget(personaje.position);
                 });
             }, (evt) => {
                 if (evt.lengthComputable) {
@@ -125,39 +136,34 @@
                     document.getElementById("estado").innerHTML = "📥 RECUPERANDO PJ: " + p + "%";
                 }
             });
+
             return scene;
         };
 
-        // FUNCIÓN DE ENTRADA FORZADA (WALK-IN)
-        window.forzarEntrada = function() {
-            if (!personaje) return;
-            document.getElementById("estado").innerHTML = "🚶 SERENITO ENTRANDO A ESCENA...";
+        // FUNCIÓN DE RESCATE (Mario Galaxy Style)
+        window.rescatarSerenito = function() {
+            if (!personaje) {
+                alert("El archivo serenito.glb aún no termina de descargar. Espera al 100%.");
+                return;
+            }
+            // Teletransportar al centro de la cámara
+            const ray = camera.getForwardRay();
+            const targetPos = ray.origin.add(ray.direction.scale(10));
+            targetPos.y = 2;
             
-            const bInfo = personaje.getHierarchyBoundingVectors();
-            const correctY = (-bInfo.min.y * 1.7) + 0.1;
-            
-            // Lo ponemos lejos y lo traemos al centro
-            personaje.position = new BABYLON.Vector3(-40, correctY, -40);
-            if (animCaminar) animCaminar.play(true);
-            
-            const animEntrada = new BABYLON.Animation("animEntrada", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
-            const keys = [];
-            keys.push({ frame: 0, value: new BABYLON.Vector3(-40, correctY, -40) });
-            keys.push({ frame: 180, value: new BABYLON.Vector3(0, correctY, 0) });
-            animEntrada.setKeys(keys);
-            
-            personaje.animations = [animEntrada];
-            scene.beginAnimation(personaje, 0, 180, false, 1, () => {
-                if (animCaminar) animCaminar.stop();
-                document.getElementById("estado").innerHTML = "✅ BIENVENIDO SERENITO";
-            });
+            personaje.position = targetPos;
+            camera.lockedTarget = personaje;
+            luzSeguimiento.intensity = 5;
+            document.getElementById("estado").innerHTML = "🚀 ¡SERENITO RESCATADO!";
         };
 
         window.setCam = function(t) {
             if (!camera) return;
-            if (t==1) { camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
-            if (t==2) { camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
+            camera.lockedTarget = null;
+            if (t==1) { camera.lockedTarget = personaje; camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 15; }
+            if (t==2) { camera.lockedTarget = personaje; camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 12; }
             if (t==3) { camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 50; }
+            if (t==4) { camera.alpha = -Math.PI/2.5; camera.beta = Math.PI/3.5; camera.radius = 80; }
         }
 
         crearEscena();
