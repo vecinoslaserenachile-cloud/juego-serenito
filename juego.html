@@ -106,7 +106,7 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             // Usamos Math.PI para forzar los 180 grados
         // Bajamos de 757 a 735 para "empujarlo" hacia la calle Prat
-            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
+            colocarEdificio(meshes[0], 735, 187, 0, 150);
         });
 
         // 4. INTENDENCIA
@@ -160,6 +160,7 @@
     </script>
 </body>
 </html>
+
 
 
 
