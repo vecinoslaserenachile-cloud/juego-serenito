@@ -19,7 +19,7 @@ const crearEscena = function () {
     camera.checkCollisions = true;
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 1.8;
+    light.intensity = 2.0;
 
     // 2. EL MAPA (Suelo)
     const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
@@ -66,7 +66,7 @@ const crearEscena = function () {
             let moviendo = false;
             let rot = personaje.rotation.y;
 
-            // PERSPECTIVA FIJA: Si caminas, el mouse NO mueve la cámara sola
+            // PERSPECTIVA FIJA: El mouse NO mueve la cámara sola si el usuario eligió una vista
             const keys = ["w", "s", "a", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"];
             if (keys.some(k => inputMap[k])) {
                 camera.detachControl(canvas);
@@ -107,7 +107,7 @@ const crearEscena = function () {
         }
     });
 
-    // EDIFICIOS (Barreras para no atravesar paredes)
+    // BARRERAS PARA LAS CALLES (Edificios)
     function edif(n, x, z, w, h, d) {
         const b = BABYLON.MeshBuilder.CreateBox(n, {width: w, height: h, depth: d}, scene);
         b.position = new BABYLON.Vector3(x, h/2, z);
@@ -129,7 +129,7 @@ function setCam(t) {
         case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break; // Seguimiento
         case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break; // Frontal
         case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 42; break; // Cenital
-        case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // Gral.
+        case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3.5; camera.radius = 55; break; // General
         case 5: camera.alpha = 0; camera.beta = Math.PI/3; camera.radius = 18; break; // Lateral
     }
 }
