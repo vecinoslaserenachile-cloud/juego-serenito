@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Bisturí aplicado: Rotación 180° y Reubicación</div>
+    <div id="ui-status">Ajustando diagonales y rotaciones...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,11 +40,17 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
         
-        // --- 📍 AJUSTES DE PRECISIÓN (BISTURÍ) ---
-        const MUNI_X = 550;      // Una manzana a la derecha
-        const MUNI_Z = 200;      // Posición calle
-        const MUNI_SIZE = 240;   // Escala del edificio
-        const MUNI_ROTACION = 0; // 180° respecto a la versión anterior (3.14 -> 0)
+        // --- 📍 AJUSTES DE PRECISIÓN ---
+        // Edificio Blanco y Rojo (Muni)
+        const MUNI_X = 550;      
+        const MUNI_Z = 200;
+        const MUNI_ROTACION = 1.57; // 90 grados a la izquierda exactos respecto a la versión anterior
+
+        // Intendencia (Diagonal Izquierda y Frente)
+        const INTEN_X = -100;    // Desplazado a la izquierda (negativo para diagonal)
+        const INTEN_Z = 600;     // Cuadra de enfrente
+        const INTEN_SIZE = 240;
+        const INTEN_ROTACION = 1.57; // Orientación inicial para ajustar
         // -----------------------------------------
 
         const crearEscena = function () {
@@ -71,91 +77,66 @@
         suelo.material = matSuelo;
         suelo.checkCollisions = true;
 
-        // 3. CARGAR MUNICIPALIDAD
+        // 3. CARGAR MUNICIPALIDAD (BISTURÍ: 90° a la izquierda)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             const muni = meshes[0];
             const bound = muni.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
-            const factor = MUNI_SIZE / Math.max(size.x, size.y, size.z);
-            
+            const factor = 240 / Math.max(size.x, size.y, size.z);
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
-            
-            // Alineación de pies del edificio al suelo
             const nivelSuelo = -bound.min.y * factor; 
             muni.position = new BABYLON.Vector3(MUNI_X, nivelSuelo, MUNI_Z);
             muni.rotation.y = MUNI_ROTACION; 
 
-            meshes.forEach(m => {
-                m.checkCollisions = true;
-                if(m.material) m.material.backFaceCulling = false;
-            });
-            statusDiv.innerHTML = "✅ Edificio: 180° aplicado";
+            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
+            statusDiv.innerHTML = "✅ Muni: Giro 90° OK";
         });
 
-        // 4. CARGAR SERENITO
+        // 4. CARGAR INTENDENCIA (DIAGONAL IZQUIERDA)
+        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
+            const inten = meshes[0];
+            const bound = inten.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = INTEN_SIZE / Math.max(size.x, size.y, size.z);
+            inten.scaling = new BABYLON.Vector3(factor, factor, factor);
+            const nivelSueloInten = -bound.min.y * factor; 
+            inten.position = new BABYLON.Vector3(INTEN_X, nivelSueloInten, INTEN_Z);
+            inten.rotation.y = INTEN_ROTACION;
+
+            meshes.forEach(m => { m.checkCollisions = true; if(m.material) m.material.backFaceCulling = false; });
+            statusDiv.innerHTML += "<br>✅ Intendencia: Diagonal OK";
+        });
+
+        // 5. SERENITO Y MOVIMIENTO
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            
-            // AJUSTE BISTURÍ: Y=0 exacto para que no flote
             personaje.position = new BABYLON.Vector3(0, 0, 0); 
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
-
             camera.lockedTarget = personaje;
-            camera.radius = 120;
-
             if (anims && anims.length > 0) animCaminar = anims[0];
-            statusDiv.innerHTML += "<br>✅ Serenito: Pies en el suelo";
         });
 
-        // 5. MOVIMIENTO
-        scene.onPointerDown = (evt, pick) => {
-            if (pick.hit && pick.pickedMesh === suelo) {
-                destinoFinal = pick.pickedPoint;
-            }
-        };
+        scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
 
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
             if (diff.length() > 1.5) {
-                diff.normalize();
-                let angulo = Math.atan2(diff.x, diff.z);
-                let currentRot = personaje.rotation.y;
-                let diffRot = angulo - currentRot;
-                while (diffRot < -Math.PI) diffRot += Math.PI * 2;
-                while (diffRot > Math.PI) diffRot -= Math.PI * 2;
-                personaje.rotation.y += diffRot * 0.1;
-                personaje.moveWithCollisions(diff.scale(1.2));
+                personaje.rotation.y = Math.atan2(diff.x, diff.z);
+                personaje.moveWithCollisions(diff.normalize().scale(1.2));
                 if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-            } else {
-                if (animCaminar) animCaminar.stop();
-                destinoFinal = null;
-            }
+            } else { if (animCaminar) animCaminar.stop(); destinoFinal = null; }
         });
 
-        // 6. FUNCIONES CÁMARA
-        window.camaraSerenito = function() {
-            if(!personaje) return;
-            camera.lockedTarget = personaje;
-            camera.radius = 100;
-        }
-
+        window.camaraSerenito = function() { camera.lockedTarget = personaje; camera.radius = 120; }
         window.camaraAerea = function() {
             camera.lockedTarget = null;
-            camera.setPosition(new BABYLON.Vector3(MUNI_X, 400, MUNI_Z + 400));
-            camera.setTarget(new BABYLON.Vector3(MUNI_X, 0, MUNI_Z));
+            camera.setPosition(new BABYLON.Vector3(200, 500, 800));
+            camera.setTarget(new BABYLON.Vector3(200, 0, 400));
         }
-
-        window.rescatar = function() {
-            if(!personaje) return;
-            destinoFinal = null;
-            personaje.position = new BABYLON.Vector3(0, 0, 0); 
-            camaraSerenito();
-            statusDiv.innerHTML = "🚨 Rescate: Centro de Plaza";
-            setTimeout(() => { statusDiv.innerHTML = "✅ Sistema OK"; }, 2000);
-        }
+        window.rescatar = function() { if(personaje) { personaje.position = new BABYLON.Vector3(0, 0, 0); camaraSerenito(); } }
 
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
