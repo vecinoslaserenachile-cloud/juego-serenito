@@ -2,246 +2,59 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>La Serena 3D - Protagonista Recuperado</title>
+    <title>La Serena 3D - Rescate Final</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
     <style>
-        body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; font-family: 'Arial', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* INTERFAZ DE CAMPAÑA */
+        /* INTERFAZ FLOTANTE */
         #ui {
             position: absolute; top: 20px; left: 20px;
-            background: rgba(0, 0, 0, 0.85); padding: 20px;
-            border-radius: 15px; border: 3px solid #bc13fe;
-            color: white; pointer-events: none;
-            box-shadow: 0 0 20px rgba(188, 19, 254, 0.4);
-            text-align: center; min-width: 280px;
+            background: rgba(0, 0, 0, 0.9); padding: 20px;
+            border-radius: 12px; border: 3px solid #bc13fe;
+            color: white; pointer-events: none; min-width: 250px;
         }
-        .titulo { color: #ffd700; font-size: 28px; font-weight: 900; display: block; }
-        .slogan { 
-            color: #ff4444; font-size: 20px; font-weight: 800; display: block; margin-top: 5px;
-            animation: latido 1.5s infinite; text-transform: uppercase;
+        .titulo { color: #ffd700; font-size: 26px; font-weight: 900; display: block; text-align: center; }
+        .subtitulo { 
+            color: #ff3333; font-size: 18px; font-weight: 800; display: block; 
+            text-align: center; animation: latido 1.5s infinite; margin-top: 5px;
         }
         @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 10px; text-align: center; font-size: 12px; }
         
-        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; font-size: 14px; }
-        
-        /* BOTONERA DE CÁMARAS */
-        #cam-controls {
+        /* BOTONES DE CÁMARA */
+        #botones {
             position: absolute; bottom: 20px; width: 100%;
             display: flex; justify-content: center; gap: 10px; pointer-events: none;
         }
         .btn {
             pointer-events: auto; background: #ffd700; border: none;
-            padding: 10px 20px; border-radius: 8px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 0 #b39700; transition: 0.1s;
+            padding: 10px 15px; border-radius: 5px; font-weight: bold;
+            cursor: pointer; font-size: 12px; box-shadow: 0 3px 0 #b39700;
         }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
-
     <div id="ui">
         <span class="titulo">LA❤️SERENA</span>
-        <span class="slogan">¡SE LEVANTA!</span>
-        <div id="estado">📡 BUSCANDO A SERENITO...</div>
+        <span class="subtitulo">¡SE LEVANTA!</span>
+        <div id="estado">📡 INICIANDO SISTEMAS...</div>
     </div>
 
-    <div id="cam-controls">
-        <button class="btn" onclick="cambiarCamara(1)">🚶 Seguimiento</button>
-        <button class="btn" onclick="cambiarCamara(2)">👤 Frontal</button>
+    <div id="botones">
+        <button class="btn" onclick="setCam(1)">🚶 Seguimiento</button>
+        <button class="btn" onclick="setCam(2)">👤 Frontal</button>
         <button class="btn" onclick="setCam(3)">🦅 Cenital</button>
         <button class="btn" onclick="setCam(4)">🏙️ General</button>
         <button class="btn" onclick="setCam(5)">👈 Lateral</button>
     </div>
 
     <canvas id="renderCanvas"></canvas>
-
-    <script>
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        
-        let scene, camera, personaje, animCaminar;
-        let moviendo = false;
-        let destinoClick = null;
-
-        const crearEscena = function () {
-            scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.2, 0.2, 0.3);
-            scene.collisionsEnabled = true;
-
-            // 1. CÁMARA INICIAL
-            camera = new BABYLON.ArcRotateCamera("CamaraPrincipal", -Math.PI/2, Math.PI/3, 12, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
-            camera.checkCollisions = true;
-            camera.lowerRadiusLimit = 5;
-            camera.upperRadiusLimit = 50;
-
-            // 2. ILUMINACIÓN
-            const luz = new BABYLON.HemisphericLight("Luz", new BABYLON.Vector3(0, 1, 0), scene);
-            luz.intensity = 1.8;
-
-            // 3. SUELO (MAPA)
-            const suelo = BABYLON.MeshBuilder.CreateGround("Suelo", {width: 600, height: 600}, scene);
-            const matSuelo = new BABYLON.StandardMaterial("MatSuelo", scene);
-            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene); // Asegúrate que mapa.jpg esté en la carpeta
-            matSuelo.specularColor = new BABYLON.Color3(0,0,0); // Sin brillo excesivo
-            suelo.material = matSuelo;
-            suelo.checkCollisions = true;
-            
-            // 4. CARGA DE SERENITO (CRÍTICO)
-            // Usamos un timestamp para evitar que el navegador use una versión vieja cacheada
-            const nombreArchivo = "serenito.glb"; 
-            
-            BABYLON.SceneLoader.ImportMesh("", "./", nombreArchivo, scene, function (meshes, particleSystems, skeletons, animationGroups) {
-                // ÉXITO: El personaje cargó
-                personaje = meshes[0];
-                
-                document.getElementById("estado").innerHTML = "✅ ¡SERENITO RECUPERADO!";
-                
-                // AJUSTES VITALES
-                personaje.scaling = new BABYLON.Vector3(1.7, 1.7, 1.7); // Escala positiva (No espejo)
-                personaje.position.y = 0.9; // Pies sobre el suelo (no enterrado)
-                personaje.checkCollisions = true;
-                personaje.ellipsoid = new BABYLON.Vector3(0.5, 1.0, 0.5); // Cuerpo físico
-                
-                // La cámara sigue al personaje
-                camera.lockedTarget = personaje;
-
-                // GESTIÓN DE ANIMACIONES
-                if (animationGroups.length > 0) {
-                    animCaminar = animationGroups[0];
-                    animCaminar.stop(); // Empieza quieto
-                }
-
-                // LOOP DE JUEGO
-                scene.registerBeforeRender(function () {
-                    actualizarMovimiento();
-                });
-
-            }, function (evt) {
-                // PROGRESO
-                if (evt.lengthComputable) {
-                    let porcentaje = (evt.loaded * 100 / evt.total).toFixed(0);
-                    document.getElementById("estado").innerHTML = "⏳ CARGANDO: " + porcentaje + "%";
-                }
-            }, function (error) {
-                // ERROR
-                document.getElementById("estado").innerHTML = "❌ ERROR: No encuentro 'serenito.glb'";
-                console.error(error);
-            });
-
-            // GESTIÓN DE INPUTS (Teclado y Click)
-            setupInputs();
-
-            return scene;
-        };
-
-        // VARIABLES DE CONTROL
-        let inputMap = {};
-        
-        function setupInputs() {
-            scene.actionManager = new BABYLON.ActionManager(scene);
-            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (evt) => inputMap[evt.sourceEvent.key.toLowerCase()] = true));
-            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (evt) => inputMap[evt.sourceEvent.key.toLowerCase()] = false));
-
-            // Doble Clic para caminar
-            scene.onPointerObservable.add((pointerInfo) => {
-                if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
-                    if (pointerInfo.pickInfo.hit && pointerInfo.pickInfo.pickedMesh.name === "Suelo") {
-                        destinoClick = pointerInfo.pickInfo.pickedPoint;
-                        destinoClick.y = 0.9; // Mantener altura
-                    }
-                }
-            });
-        }
-
-        function actualizarMovimiento() {
-            if (!personaje) return;
-
-            let velocidad = 0.4;
-            let caminando = false;
-            let rotacionObjetivo = personaje.rotation.y;
-
-            // 1. Movimiento por Teclado
-            if (inputMap["w"] || inputMap["arrowup"]) {
-                personaje.moveWithCollisions(personaje.forward.scale(-velocidad)); // Ajuste según eje del modelo
-                rotacionObjetivo = Math.PI; 
-                caminando = true;
-                destinoClick = null; // Cancelar click si usas teclado
-            }
-            if (inputMap["s"] || inputMap["arrowdown"]) {
-                personaje.moveWithCollisions(personaje.forward.scale(velocidad));
-                rotacionObjetivo = 0;
-                caminando = true;
-                destinoClick = null;
-            }
-            if (inputMap["a"] || inputMap["arrowleft"]) {
-                personaje.moveWithCollisions(personaje.right.scale(-velocidad));
-                rotacionObjetivo = -Math.PI / 2;
-                caminando = true;
-                destinoClick = null;
-            }
-            if (inputMap["d"] || inputMap["arrowright"]) {
-                personaje.moveWithCollisions(personaje.right.scale(velocidad));
-                rotacionObjetivo = Math.PI / 2;
-                caminando = true;
-                destinoClick = null;
-            }
-
-            // 2. Movimiento por Doble Clic (Auto-navegación)
-            if (destinoClick) {
-                let direccion = destinoClick.subtract(personaje.position);
-                if (direccion.length() > 0.5) {
-                    direccion.normalize();
-                    personaje.moveWithCollisions(direccion.scale(velocidad));
-                    // Calcular rotación hacia el punto
-                    rotacionObjetivo = Math.atan2(direccion.x, direccion.z) + Math.PI; 
-                    caminando = true;
-                } else {
-                    destinoClick = null; // Llegó
-                }
-            }
-
-            // Aplicar Rotación Suave
-            // Nota: Usamos Lerp para que no gire de golpe
-            let diff = rotacionObjetivo - personaje.rotation.y;
-            if (Math.abs(diff) > 0.01) {
-                 personaje.rotation.y = BABYLON.Scalar.LerpAngle(personaje.rotation.y, rotacionObjetivo, 0.1);
-            }
-
-            // 3. Animación de Brazos y Piernas
-            if (animCaminar) {
-                if (caminando) {
-                    if (!animCaminar.isPlaying) animCaminar.play(true);
-                } else {
-                    animCaminar.stop();
-                }
-            }
-        }
-
-        // SISTEMA DE CÁMARAS (Global para que los botones lo vean)
-        window.cambiarCamara = window.setCam = function(tipo) {
-            if (!camera) return;
-            // 1: Seguimiento, 2: Frontal, 3: Cenital, 4: General, 5: Lateral
-            switch(tipo) {
-                case 1: camera.alpha = -Math.PI/2; camera.beta = Math.PI/3; camera.radius = 12; break;
-                case 2: camera.alpha = Math.PI/2; camera.beta = Math.PI/2.5; camera.radius = 10; break;
-                case 3: camera.alpha = -Math.PI/2; camera.beta = 0.01; camera.radius = 40; break;
-                case 4: camera.alpha = -Math.PI/3; camera.beta = Math.PI/3; camera.radius = 50; break;
-                case 5: camera.alpha = 0; camera.beta = Math.PI/2.2; camera.radius = 15; break;
-            }
-        };
-
-        const scene = crearEscena();
-        engine.runRenderLoop(function () {
-            scene.render();
-        });
-        window.addEventListener("resize", function () {
-            engine.resize();
-        });
-    </script>
+    
+    <script src="mi_juego.js"></script>
 </body>
 </html>
