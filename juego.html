@@ -2,36 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LA❤️SERENA - Versión de Control V.3</title>
+    <title>LA❤️SERENA - Operación Rescate</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <style>
         body, html { margin: 0; overflow: hidden; background-color: #0b0b1a; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
-        
-        /* INTERFAZ DE CAMPAÑA - VERSIÓN V.3 */
         #ui {
             position: absolute; top: 15px; left: 15px; color: white;
-            font-family: 'Segoe UI', Tahoma, sans-serif; background: rgba(0, 0, 0, 0.9);
-            padding: 25px; border-radius: 15px; border: 3px solid #bc13fe; /* Color Púrpura para marcar V.3 */
+            font-family: 'Segoe UI', sans-serif; background: rgba(0, 0, 0, 0.9);
+            padding: 25px; border-radius: 15px; border: 3px solid #bc13fe;
             pointer-events: none; box-shadow: 0 4px 25px rgba(0,0,0,0.7); min-width: 300px;
         }
         .marca-texto { color: #ffd700; font-size: 30px; font-weight: 900; display: block; text-align: center; }
-        
-        @keyframes latido {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.06); filter: brightness(1.3); }
-            100% { transform: scale(1); filter: brightness(1); }
-        }
+        @keyframes latido { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .slogan-animado { 
-            color: #ff3333; font-size: 24px; font-weight: 900; 
-            display: block; text-align: center; margin-top: 10px;
-            animation: latido 1.2s infinite ease-in-out;
-            text-transform: uppercase; line-height: 1.1;
+            color: #ff3333; font-size: 24px; font-weight: 900; display: block; 
+            text-align: center; margin-top: 10px; animation: latido 1.2s infinite;
         }
-        
-        #version-tag { color: #bc13fe; font-size: 10px; text-align: right; display: block; margin-top: 5px; }
-
         #cam-selector {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 95%;
@@ -39,17 +27,15 @@
         .btn-cam {
             background: #ffd700; color: black; border: none; padding: 12px 16px;
             border-radius: 8px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            font-size: 12px; transition: 0.2s; box-shadow: 0 4px 0 #b39700;
         }
-        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; font-size: 14px; }
+        #estado { color: #00ff00; font-weight: bold; margin-top: 15px; text-align: center; }
     </style>
 </head>
 <body>
     <div id="ui">
         <span class="marca-texto">LA❤️SERENA</span>
-        <span class="slogan-animado">LA SERENA ¡SE LEVANTA!</span>
-        <div id="estado">⏳ BUSCANDO A SERENITO (V.3)...</div>
-        <span id="version-tag">SISTEMA BETA V.3 - BUILD 2026</span>
+        <span class="slogan-animado">¡LA SERENA SE LEVANTA!</span>
+        <div id="estado">⏳ REINICIANDO CARGADOR...</div>
     </div>
 
     <div id="cam-selector">
@@ -65,100 +51,72 @@
     <script>
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let camera, personaje, animCaminar, destinoFinal;
-        let moviendoPorClick = false;
+        let camera, personaje, animCaminar;
 
         const crearEscena = function () {
             const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.1, 0.1, 0.2);
-            scene.collisionsEnabled = true;
-
-            // CONFIGURACIÓN DRACO
+            scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.8);
+            
+            // Configuración Draco (Paso Vital)
             BABYLON.DracoCompression.Configuration = {
                 decoder: { fallbackUrl: "https://preview.babylonjs.com/draco_transcoder.js" }
             };
 
-            // Cámara ArcRotate
             camera = new BABYLON.ArcRotateCamera("camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.checkCollisions = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
+            light.intensity = 1.8;
 
-            // Suelo (Mapa)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 800, height: 800}, scene);
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 600, height: 600}, scene);
             const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
             matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
             matSuelo.specularColor = new BABYLON.Color3(0, 0, 0);
             suelo.material = matSuelo;
-            suelo.checkCollisions = true;
 
-            // --- CARGA CRÍTICA DE SERENITO ---
-            // Usamos un timestamp (?v=...) para evitar que el navegador use una versión vieja fallida
-            const urlModelo = "serenito.glb?v=" + new Date().getTime();
-
+            // CARGA FORZADA DE SERENITO
+            document.getElementById("estado").innerHTML = "📡 CONECTANDO CON GITHUB...";
+            
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-                console.log("¡Serenito detectado!");
+                // Si llegamos aquí, Serenito EXISTE
+                document.getElementById("estado").innerHTML = "✅ ¡APARECIÓ SERENITO!";
                 personaje = meshes[0];
                 
-                // Ajustes de Escala y Posición
-                personaje.scaling = new BABYLON.Vector3(1.8, 1.8, 1.8);
-                personaje.position = new BABYLON.Vector3(0, 1.0, 0); // Un poco más arriba para que se vea
-                personaje.checkCollisions = true;
-                personaje.ellipsoid = new BABYLON.Vector3(0.5, 1.0, 0.5);
-                
+                // AJUSTES DE TAMAÑO Y POSICIÓN (Para que no esté enterrado)
+                personaje.scaling = new BABYLON.Vector3(1.6, 1.6, 1.6);
+                personaje.position = new BABYLON.Vector3(0, 0.8, 0); 
                 camera.lockedTarget = personaje;
-                document.getElementById("estado").innerHTML = "✅ SERENITO HA LLEGADO";
-                document.getElementById("estado").style.color = "#00ff00";
 
-                // Animaciones articuladas
-                animCaminar = anims[0];
-                if (animCaminar) animCaminar.stop();
+                // ACTIVAR ANIMACIÓN SÓLO SI EXISTE
+                if (anims && anims.length > 0) {
+                    animCaminar = anims[0];
+                    animCaminar.stop();
+                }
 
-                // Movimiento por Doble Clic
-                scene.onPointerObservable.add((pointerInfo) => {
-                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOUBLETAP) {
-                        const pickInfo = scene.pick(scene.pointerX, scene.pointerY, (mesh) => mesh === suelo);
-                        if (pickInfo.hit) {
-                            destinoFinal = pickInfo.pickedPoint;
-                            moviendoPorClick = true;
-                        }
-                    }
-                });
+                // Lógica de Movimiento Simplificada para evitar errores
+                const inputMap = {};
+                scene.actionManager = new BABYLON.ActionManager(scene);
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = true));
+                scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, (e) => inputMap[e.sourceEvent.key.toLowerCase()] = false));
 
-                // Lógica de Frames
                 scene.onBeforeRenderObservable.add(() => {
-                    const vel = 0.45;
                     let moviendo = false;
-                    let rotDestino = personaje.rotation.y;
+                    let vel = 0.4;
+                    if (inputMap["w"] || inputMap["arrowup"]) { personaje.position.z -= vel; personaje.rotation.y = Math.PI; moviendo = true; }
+                    if (inputMap["s"] || inputMap["arrowdown"]) { personaje.position.z += vel; personaje.rotation.y = 0; moviendo = true; }
+                    if (inputMap["a"] || inputMap["arrowleft"]) { personaje.position.x -= vel; personaje.rotation.y = -Math.PI / 2; moviendo = true; }
+                    if (inputMap["d"] || inputMap["arrowright"]) { personaje.position.x += vel; personaje.rotation.y = Math.PI / 2; moviendo = true; }
 
-                    // Teclado
-                    const inputMap = {};
-                    if(scene.actionManager) {
-                        // Manejo simplificado de inputs
-                    }
-
-                    // (Aquí va el resto de la lógica de movimiento que ya teníamos)
-                    // ...
-                    
                     if (animCaminar) {
                         if (moviendo) { if (!animCaminar.isPlaying) animCaminar.play(true); } 
                         else { animCaminar.stop(); }
                     }
                 });
-
             }, function(evt) {
-                // Progreso
                 if (evt.lengthComputable) {
                     let p = (evt.loaded * 100 / evt.total).toFixed();
-                    document.getElementById("estado").innerHTML = "📥 CARGANDO PROTAGONISTA: " + p + "%";
+                    document.getElementById("estado").innerHTML = "📥 DESCARGANDO: " + p + "%";
                 }
-            }, function(scene, message) {
-                // ERROR DETECTADO
-                document.getElementById("estado").innerHTML = "❌ ERROR: NO SE ENCUENTRA 'serenito.glb'";
-                document.getElementById("estado").style.color = "#ff0000";
-                console.error(message);
             });
 
             return scene;
@@ -178,6 +136,7 @@
         const scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => engine.resize());
+        window.addEventListener("click", () => canvas.focus());
     </script>
 </body>
 </html>
