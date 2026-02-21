@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Tanque Blindado v14</title>
+    <title>LA❤️SERENA - Versión Final Blindada</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -45,8 +45,8 @@
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR CIUDAD v14.0</div>
-        <div id="st-info">Sincronizando modelos...</div>
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">CIUDAD BLINDADA v15.0</div>
+        <div id="st-info">Cargando elementos...</div>
     </div>
 
     <div class="top-ui">
@@ -71,8 +71,8 @@
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando GPS...</p>
+        <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Buscando ubicación...</p>
         <video id="cam" autoplay playsinline muted></video>
         <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
         <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
@@ -133,7 +133,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // CARGA DE EDIFICIOS (CORRECCIÓN DE ESCALA Y HUNDIMIENTO)
+            // --- RESTAURACIÓN DE EDIFICIOS (UBICACIÓN SAGRADA) ---
             const loadEdificio = (file, x, z, scaleFactor, rotation) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
                     let root = new BABYLON.TransformNode("root_" + file, s);
@@ -145,31 +145,31 @@
                     
                     root.scaling = new BABYLON.Vector3(factor, factor, factor);
                     root.rotation.y = rotation;
-                    // El secreto para que no se hundan: ajustar la posición Y basada en el punto más bajo del modelo
+                    // Fix de altura para que no se hundan
                     root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z);
-                    
                     meshes.forEach(m => m.checkCollisions = true);
                 });
             };
 
-            // Municipalidad: Posición (610, 160) y Rotación 180 (Math.PI)
+            // Municipalidad (Ubicación blindada y rotación 180)
             loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI);
-            // Intendencia: Posición (430, 410)
+            // Intendencia
             loadEdificio("intendencia.glb", 430, 410, 190, 0);
 
-            // SERENITO (ESCALA AJUSTADA Y TANQUE)
+            // --- SERENITO (MOVIMIENTO TANQUE BLINDADO) ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
-                serenito.rotationQuaternion = null; // Necesario para usar rotation.y
+                serenito.rotationQuaternion = null; 
                 serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
+                document.getElementById('st-info').innerText = "Todo listo. Toca el mapa.";
             });
 
-            // 🛑 LÓGICA TANQUE ESTRICTA (GIRO -> PARAR -> CAMINAR)
+            // 🛑 LÓGICA TANQUE ESTRICTA (RESTAURADA)
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destinoFinal = pick.pickedPoint;
@@ -190,15 +190,15 @@
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
                     // == FASE 1: GIRO PURO (Freno de mano puesto) ==
-                    if(Math.abs(rotDiff) > 0.1) { // Si hay más de 5 grados de diferencia
-                        document.getElementById('st-info').innerText = "🔄 Rotando cuerpo...";
+                    if(Math.abs(rotDiff) > 0.1) { 
+                        document.getElementById('st-info').innerText = "🔄 Girando tanque...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop(); // No mueve los pies mientras gira
+                        if(animCaminar) animCaminar.stop(); // No camina hasta estar alineado
                     } 
-                    // == FASE 2: AVANCE (Solo si está alineado) ==
+                    // == FASE 2: AVANCE ==
                     else {
-                        document.getElementById('st-info').innerText = "🚶 Avanzando a destino";
-                        serenito.rotation.y = angleDest; // Alineación perfecta
+                        document.getElementById('st-info').innerText = "🚶 Avanzando...";
+                        serenito.rotation.y = angleDest; 
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
@@ -213,17 +213,17 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES CIUDADANOS
+        // 3. REPORTES CIUDADANOS (CÁMARA + GPS)
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Por favor, inicia sesión con Google primero.");
+            if(!userActual) return alert("Por favor, accede con Google.");
             document.getElementById('modal-rep').style.display = 'flex';
             
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
-                document.getElementById('gps-status').innerText = "📍 Ubicación capturada con éxito";
+                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
                 document.getElementById('gps-status').style.color = "#00ff00";
             });
 
@@ -234,7 +234,7 @@
         }
 
         function enviarReporte() {
-            if(!coordsGlobal) return alert("Esperando señal GPS...");
+            if(!coordsGlobal) return alert("Esperando GPS...");
             db.collection("incidencias").add({
                 uid: userActual.uid,
                 vecino: userActual.displayName,
@@ -243,7 +243,7 @@
                 lon: coordsGlobal.longitude,
                 estado: "Ingresado",
                 fecha: new Date()
-            }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
+            }).then(() => { alert("Reporte enviado con éxito."); cerrarModal('modal-rep'); });
         }
 
         function cerrarModal(id) {
@@ -252,7 +252,7 @@
         }
 
         function verHistorial() {
-            if(!userActual) return alert("Inicia sesión primero.");
+            if(!userActual) return alert("Accede primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const l = document.getElementById('lista');
             l.innerHTML = "Cargando...";
