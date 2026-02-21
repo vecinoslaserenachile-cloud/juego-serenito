@@ -98,7 +98,8 @@
             // 2. 1080 = Movemos la X a la derecha porque al girar el edificio "salta".
             // Si queda muy lejos, baja el 1080. Si queda encima de la Intendencia, súbelo.
             
-            colocarEdificio(meshes[0], 1080, 187, Math.PI, 150);
+            // Bajamos de 1080 a 900 para traerla de vuelta a la esquina correcta
+        colocarEdificio(meshes[0], 900, 187, Math.PI, 150);
             
             statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
         });
@@ -176,4 +177,5 @@
     </script>
 </body>
 </html>
+
 
