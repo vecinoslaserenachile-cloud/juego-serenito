@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Gestión Municipal</title>
+    <title>LA❤️SERENA - Smart City</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -22,7 +22,7 @@
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* RADIO CON VOLUMEN (Recuperada) */
+        /* RADIO */
         .radio-card {
             background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
             display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
@@ -48,8 +48,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box; }
-        
-        /* Video Cámara */
         #cam { width: 100%; height: 250px; background: black; border: 2px solid gold; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
     </style>
 </head>
@@ -61,7 +59,6 @@
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
             <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="ajustarVolumen(this.value)">
         </div>
-        
         <div class="login-card" onclick="login()">
             <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" class="user-pic"> 
             <span id="u-name">Acceder</span>
@@ -77,25 +74,21 @@
         <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
     </div>
 
-    <div id="modal-rep" class="modal">
-        <div class="box">
-            <h2 style="color:gold; margin-top:0;">📷 Nuevo Reporte</h2>
-            <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Activando GPS...</p>
-            <video id="cam" autoplay playsinline></video>
-            <canvas id="snap" style="display:none;"></canvas>
-            <input type="text" id="desc" placeholder="Describe el problema...">
-            <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px;">ENVIAR AHORA</button>
-            <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
-        </div>
-    </div>
+    <div id="modal-rep" class="modal"><div class="box">
+        <h2 style="color:gold;">📷 Nuevo Reporte</h2>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando...</p>
+        <video id="cam" autoplay playsinline></video>
+        <canvas id="snap" style="display:none;"></canvas>
+        <input type="text" id="desc" placeholder="Describe el problema...">
+        <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px;">ENVIAR</button>
+        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
+    </div></div>
 
-    <div id="modal-hist" class="modal">
-        <div class="box">
-            <h3>📂 Mis Reportes</h3>
-            <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
-            <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
-        </div>
-    </div>
+    <div id="modal-hist" class="modal"><div class="box">
+        <h3>📂 Mis Reportes</h3>
+        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
+        <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
+    </div></div>
 
     <script>
         // 1. FIREBASE
@@ -125,7 +118,7 @@
         });
 
         window.login = () => {
-            if(userCurrent) { if(confirm("¿Cerrar sesión?")) auth.signOut(); }
+            if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
             else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
         };
 
@@ -144,10 +137,10 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
             light.intensity = 1.0;
 
-            // CÁMARA BLINDADA (No atraviesa el piso)
+            // CÁMARA BLINDADA (Límites corregidos)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
-            camera.lowerRadiusLimit = 20; // No acercarse demasiado
-            camera.upperBetaLimit = Math.PI / 2.2; // NO BAJAR DEL PISO
+            camera.lowerRadiusLimit = 20; 
+            camera.upperBetaLimit = Math.PI / 2.2; // ESTO EVITA QUE VEAS EL FONDO NEGRO
             camera.attachControl(canvas, true);
             
             // PISO
@@ -157,7 +150,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // EDIFICIOS (POSICIÓN SAGRADA - NO TOCAR)
+            // EDIFICIOS
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -185,7 +178,7 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // === LÓGICA TANQUE ESTRICTA (EL CEREBRO DEL MOVIMIENTO) ===
+            // === MOVIMIENTO TANQUE PURO (CÓDIGO CRÍTICO) ===
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destino = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
@@ -196,17 +189,19 @@
                 if(diff.length() > 1.5) {
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
+                    
+                    // Normalizar ángulo (-PI a PI)
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // ¿ESTÁ MIRANDO AL FRENTE? (Margen de error pequeño)
+                    // UMBRAL DE GIRO: Si la diferencia es mayor a 0.1 rad (aprox 5 grados)
                     if(Math.abs(rotDiff) > 0.1) {
-                        // NO -> SOLO GIRA (Freno de mano puesto)
-                        personaje.rotation.y += rotDiff * 0.15; 
+                        // MODO GIRO: Solo rotar, NO mover
+                        personaje.rotation.y += rotDiff * 0.1; 
                         if(anim) anim.stop(); 
                     } else {
-                        // SI -> AVANZA
-                        personaje.rotation.y = angle; // Ajuste fino
+                        // MODO AVANCE: Solo mover cuando ya miramos al frente
+                        personaje.rotation.y = angle; // Ajuste fino final
                         personaje.moveWithCollisions(diff.normalize().scale(0.8));
                         if(anim && !anim.isPlaying) anim.play(true);
                     }
@@ -231,7 +226,7 @@
         window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. CÁMARA Y REPORTES
+        // 4. REPORTES
         let videoStream = null;
         let gpsData = null;
 
