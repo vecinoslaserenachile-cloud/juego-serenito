@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Smart City</title>
+    <title>LA❤️SERENA - Gestión Municipal</title>
     
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
+
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -20,41 +22,44 @@
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* RADIO PERFECTA (Compacta) */
+        /* RADIO CON VOLUMEN (Recuperada) */
         .radio-card {
-            background: rgba(0,0,0,0.9); color: #ffd700; padding: 8px 15px; border-radius: 50px;
+            background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
             display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto; transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto;
         }
-        .radio-card:hover { transform: scale(1.05); }
-        
-        /* LOGIN USUARIO */
+        .vol-slider { width: 60px; accent-color: #ffd700; cursor: pointer; }
+
+        /* LOGIN */
         .login-card {
-            background: white; color: #333; padding: 8px 20px; border-radius: 50px;
+            background: white; color: #333; padding: 8px 15px; border-radius: 50px;
             font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); pointer-events: auto; border: 2px solid white;
         }
-        .user-pic { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+        .user-pic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
-        /* BARRA INFERIOR */
+        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 22px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
         .btn:active { transform: scale(0.9); }
-        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
+        .btn-main { background: #ff3333; color: white; border: 3px solid white; transform: translateY(-15px); }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; box-sizing: border-box; border-radius: 5px; }
+        .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box; }
+        
+        /* Video Cámara */
+        #cam { width: 100%; height: 250px; background: black; border: 2px solid gold; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="top-ui">
         <div class="radio-card">
-            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()" style="cursor:pointer; font-size:18px;"></i>
-            <span style="font-size:13px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="1" oninput="document.getElementById('audio-player').volume=this.value">
+            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()" style="cursor:pointer;"></i>
+            <span style="font-size:12px; font-weight:bold;">RD MLS</span>
+            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="ajustarVolumen(this.value)">
         </div>
         
         <div class="login-card" onclick="login()">
@@ -64,24 +69,23 @@
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
-
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn" onclick="verHistorial()" title="Mis Reportes"><i class="fas fa-clipboard-list"></i></button>
-        <button class="btn btn-main" onclick="abrirReporte()" title="Reportar"><i class="fas fa-camera"></i></button>
-        <button class="btn" onclick="resetCamara()" title="Seguir a Serenito"><i class="fas fa-street-view"></i></button>
+        <button class="btn" onclick="verHistorial()"><i class="fas fa-list-ul"></i></button>
+        <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
+        <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
     </div>
 
     <div id="modal-rep" class="modal">
         <div class="box">
             <h2 style="color:gold; margin-top:0;">📷 Nuevo Reporte</h2>
-            <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando...</p>
-            <video id="cam" autoplay playsinline style="width:100%; height:220px; background:black; margin-bottom:10px; border:2px solid gold; border-radius:8px; object-fit:cover;"></video>
+            <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Activando GPS...</p>
+            <video id="cam" autoplay playsinline></video>
             <canvas id="snap" style="display:none;"></canvas>
-            <input type="text" id="desc" placeholder="Describe el problema (Ej: Bache)...">
-            <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:8px;">ENVIAR REPORTE</button>
-            <button onclick="document.getElementById('modal-rep').style.display='none'" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
+            <input type="text" id="desc" placeholder="Describe el problema...">
+            <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px;">ENVIAR AHORA</button>
+            <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
         </div>
     </div>
 
@@ -89,12 +93,12 @@
         <div class="box">
             <h3>📂 Mis Reportes</h3>
             <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
-            <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
+            <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
         </div>
     </div>
 
     <script>
-        // === 1. FIREBASE CONFIG ===
+        // 1. FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -108,7 +112,6 @@
         const auth = firebase.auth();
         let userCurrent = null;
 
-        // LOGIN SYSTEM
         auth.onAuthStateChanged(u => {
             if(u) {
                 userCurrent = u;
@@ -122,15 +125,11 @@
         });
 
         window.login = () => {
-            if(userCurrent) {
-                if(confirm("¿Cerrar sesión?")) auth.signOut();
-            } else {
-                const p = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(p).catch(e => alert("⚠️ Activa Google en Firebase Console!\nError: " + e.code));
-            }
+            if(userCurrent) { if(confirm("¿Cerrar sesión?")) auth.signOut(); }
+            else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
         };
 
-        // === 2. MOTOR 3D & MOVIMIENTO TANQUE ===
+        // 2. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, personaje, anim;
@@ -138,14 +137,17 @@
 
         const createScene = function () {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // CIELO AZUL
+            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
             light.intensity = 1.0;
 
+            // CÁMARA BLINDADA (No atraviesa el piso)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
+            camera.lowerRadiusLimit = 20; // No acercarse demasiado
+            camera.upperBetaLimit = Math.PI / 2.2; // NO BAJAR DEL PISO
             camera.attachControl(canvas, true);
             
             // PISO
@@ -156,26 +158,25 @@
             suelo.checkCollisions = true;
 
             // EDIFICIOS
-            const loadMesh = (file, x, z, scale, rot) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", file, s, (m) => {
-                    let mesh = m[0];
-                    let root = new BABYLON.TransformNode("root", s);
-                    mesh.parent = root;
-                    const b = mesh.getHierarchyBoundingVectors(true);
-                    const f = scale / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
-                    mesh.scaling = new BABYLON.Vector3(f, f, f);
-                    root.rotation.y = rot;
-                    root.position = new BABYLON.Vector3(x, -b.min.y*f, z);
+            const load = (f, x, z, sc, r) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
+                    let root = new BABYLON.TransformNode("r", s);
+                    m[0].parent = root;
+                    const b = m[0].getHierarchyBoundingVectors(true);
+                    const scale = sc / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
+                    m[0].scaling = new BABYLON.Vector3(scale, scale, scale);
+                    root.rotation.y = r;
+                    root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
                 });
             };
-            loadMesh("municipalidad.glb", 610, 160, 150, Math.PI);
-            loadMesh("intendencia.glb", 430, 410, 180, 0);
+            load("municipalidad.glb", 610, 160, 150, Math.PI);
+            load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO (Carga)
+            // SERENITO (MOVIMIENTO TANQUE PURO)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 5, 0); // Altura segura
+                personaje.position = new BABYLON.Vector3(0, 5, 0);
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
@@ -184,13 +185,13 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // LÓGICA MOVIMIENTO TANQUE (GIRAR -> AVANZAR)
+            // LÓGICA DE MOVIMIENTO CORREGIDA
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destino = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
                 if(!personaje || !destino) return;
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Ignorar altura
+                diff.y = 0;
 
                 if(diff.length() > 1.5) {
                     let angle = Math.atan2(diff.x, diff.z);
@@ -198,15 +199,15 @@
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // SI LA DIFERENCIA ES GRANDE, SOLO GIRA
-                    if(Math.abs(rotDiff) > 0.1) {
+                    // FASE 1: SOLO GIRAR (Si la diferencia es mayor a 10 grados)
+                    if(Math.abs(rotDiff) > 0.15) {
                         personaje.rotation.y += rotDiff * 0.15; // Velocidad de giro
-                        if(anim) anim.stop(); // Quieto mientras gira
+                        if(anim) anim.stop();
                     } 
-                    // SI YA APUNTA, CAMINA
+                    // FASE 2: CAMINAR (Solo cuando ya miró al frente)
                     else {
                         personaje.rotation.y = angle;
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Velocidad avance
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
                         if(anim && !anim.isPlaying) anim.play(true);
                     }
                 } else {
@@ -214,42 +215,37 @@
                     destino = null;
                 }
             });
-
             return s;
         };
-
         scene = createScene();
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => engine.resize());
 
-        // 3. UI FUNCTIONS
+        // 3. UI
         window.toggleRadio = () => {
-            const aud = document.getElementById('audio-player');
-            const icon = document.getElementById('icon-play');
-            if(aud.paused) {
-                aud.play().then(() => { icon.className = "fas fa-stop"; icon.style.color = "red"; })
-                .catch(e => alert("Presiona PLAY de nuevo (Bloqueo navegador)"));
-            } else {
-                aud.pause();
-                icon.className = "fas fa-play";
-                icon.style.color = "#ffd700";
-            }
+            const a = document.getElementById('audio-player');
+            const i = document.getElementById('icon-play');
+            if(a.paused) { a.play(); i.className="fas fa-stop"; i.style.color="red"; }
+            else { a.pause(); i.className="fas fa-play"; i.style.color="#ffd700"; }
         };
+        window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
 
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. REPORTES
-        let vStream = null;
+        // 4. CÁMARA Y REPORTES
+        let videoStream = null;
         let gpsData = null;
 
         window.abrirReporte = () => {
-            if(!userCurrent) return alert("🔒 Presiona ACCEDER arriba a la derecha.");
+            if(!userCurrent) return alert("🔒 Para reportar, debes ACCEDER primero.");
+            
             document.getElementById('modal-rep').style.display = 'flex';
             
-            // Cámara
+            // Forzar Cámara
             navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}}).then(s => {
-                vStream = s; document.getElementById('cam').srcObject = s;
-            });
+                videoStream = s; document.getElementById('cam').srcObject = s;
+            }).catch(e => alert("Permite el uso de cámara: " + e));
+
             // GPS
             navigator.geolocation.getCurrentPosition(pos => {
                 gpsData = pos.coords;
@@ -265,12 +261,12 @@
             const vid = document.getElementById('cam');
             const cv = document.getElementById('snap');
             cv.width = vid.videoWidth; cv.height = vid.videoHeight;
-            cv.getContext('2d').drawImage(vid, 0, 0); // Captura foto
+            cv.getContext('2d').drawImage(vid, 0, 0);
             
             db.collection("incidencias").add({
                 uid: userCurrent.uid,
                 vecino: userCurrent.displayName,
-                foto_perfil: userCurrent.photoURL,
+                foto: userCurrent.photoURL,
                 desc: desc,
                 lat: gpsData ? gpsData.latitude : 0,
                 lon: gpsData ? gpsData.longitude : 0,
@@ -278,30 +274,34 @@
                 fecha: new Date(),
                 fecha_fmt: new Date().toLocaleDateString()
             }).then(() => {
-                alert("✅ Reporte guardado!");
-                document.getElementById('modal-rep').style.display = 'none';
-                if(vStream) vStream.getTracks().forEach(t => t.stop());
+                alert("Reporte Enviado!");
+                cerrarModal('modal-rep');
             });
         };
 
         window.verHistorial = () => {
-            if(!userCurrent) return alert("🔒 Inicia sesión primero.");
+            if(!userCurrent) return alert("🔒 Accede para ver tu historial.");
             document.getElementById('modal-hist').style.display = 'flex';
             const l = document.getElementById('lista');
             l.innerHTML = "Cargando...";
-            
+
             db.collection("incidencias").where("uid", "==", userCurrent.uid).orderBy("fecha", "desc").get()
             .then(snap => {
                 l.innerHTML = "";
-                if(snap.empty) l.innerHTML = "<p>No tienes reportes.</p>";
-                snap.forEach(d => {
-                    const data = d.data();
-                    l.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-radius:8px;">
-                        <b>📅 ${data.fecha_fmt}</b><br>${data.desc}
-                        <div style="margin-top:5px;"><span style="background:gold; color:black; padding:2px 8px; border-radius:10px; font-size:12px;">${data.estado}</span></div>
-                    </div>`;
-                });
+                if(snap.empty) {
+                    l.innerHTML = "<p>No tienes reportes.</p><button onclick='cerrarModal(\"modal-hist\"); abrirReporte();' style='background:gold; padding:10px; border:none; border-radius:5px; cursor:pointer;'>Crear el Primero</button>";
+                } else {
+                    snap.forEach(d => {
+                        const da = d.data();
+                        l.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-radius:5px;"><b>${da.fecha_fmt}</b>: ${da.desc} <br><small style="color:gold">${da.estado}</small></div>`;
+                    });
+                }
             });
+        };
+
+        window.cerrarModal = (id) => {
+            document.getElementById(id).style.display = 'none';
+            if(videoStream) videoStream.getTracks().forEach(t => t.stop());
         };
     </script>
 </body>
