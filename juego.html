@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v18 Reportes Reales</title>
+    <title>LA❤️SERENA - v21 Versión Final Blindada</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -15,9 +15,17 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
+        /* PANEL DE ESTADO IZQUIERDO */
+        #status-panel {
+            position: absolute; top: 100px; left: 15px; z-index: 500;
+            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
+            padding: 12px; border-radius: 0 10px 10px 0; color: white;
+            font-size: 11px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+        }
+
         /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
@@ -26,19 +34,25 @@
 
         /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         
-        /* HISTORIAL CARDS */
+        /* HISTORIAL */
         .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
-        .admin-reply { background: #333; border: 1px dashed #ffd700; padding: 10px; margin-top: 10px; border-radius: 5px; color: #ffd700; font-size: 13px; }
+        .admin-reply { background: #000; border: 1px dashed #ffd700; padding: 10px; margin-top: 10px; border-radius: 5px; color: #ffd700; font-size: 13px; }
+        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
+
+    <div id="status-panel">
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">CIUDAD DIGITAL v21.0</div>
+        <div id="st-info">Sincronizando con Firebase...</div>
+    </div>
 
     <div class="top-ui">
         <div class="radio-card">
@@ -47,7 +61,7 @@
             <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
-            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:28px; border-radius:50%;"> 
+            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:25px; border-radius:50%;"> 
             <span id="u-name">Acceder</span>
         </div>
     </div>
@@ -63,17 +77,17 @@
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <video id="cam" autoplay playsinline muted style="width:100%; border-radius:10px; border:2px solid #ffd700;"></video>
-        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas hoy?">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR REPORTE</button>
+        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Buscando señal GPS...</p>
+        <video id="cam" autoplay playsinline muted></video>
+        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas?">
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
     <div id="modal-hist" class="modal"><div class="box">
         <h3 style="color:#ffd700;">MIS REPORTES</h3>
-        <div id="lista" style="max-height:350px; overflow-y:auto; padding-right:5px;">
-            </div>
-        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:20px; background:#444; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Cerrar</button>
+        <div id="lista" style="max-height:350px; overflow-y:auto; padding-right:5px;"></div>
+        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:20px; background:#444; color:white; padding:10px; border:none; border-radius:5px; width:100%;">Cerrar</button>
     </div></div>
 
     <script>
@@ -101,7 +115,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D
+        // 2. MOTOR 3D BABYLON
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -123,7 +137,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // RESTAURACIÓN DE EDIFICIOS (CON ROTACIÓN MUNI 180°)
+            // RESTAURACIÓN DE EDIFICIOS (UBICACIÓN SAGRADA)
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -135,7 +149,7 @@
                     root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
                 });
             };
-            load("municipalidad.glb", 610, 160, 170, Math.PI); // 180 GRADOS BLINDADOS
+            load("municipalidad.glb", 610, 160, 170, Math.PI); // 180 grados blindados
             load("intendencia.glb", 430, 410, 190, 0);
 
             // SERENITO TANQUE
@@ -147,9 +161,10 @@
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
+                document.getElementById('st-info').innerText = "Todo listo. Haz clic para moverte.";
             });
 
-            // LÓGICA TANQUE ESTRICTA
+            // LÓGICA TANQUE ESTRICTA (GIRO -> AVANCE)
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
@@ -178,18 +193,22 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES & HISTORIAL (EL ARREGLO)
+        // 3. REPORTES & HISTORIAL (VERSIÓN FIJADA)
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
             if(!userActual) return alert("Identifícate primero.");
             document.getElementById('modal-rep').style.display = 'flex';
-            navigator.geolocation.getCurrentPosition(pos => { coordsGlobal = pos.coords; });
+            navigator.geolocation.getCurrentPosition(pos => { 
+                coordsGlobal = pos.coords;
+                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
+                document.getElementById('gps-status').style.color = "#00ff00";
+            });
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Sin cámara no hay reporte."); }
+            } catch (err) { alert("Permite el acceso a la cámara."); }
         }
 
         function enviarReporte() {
@@ -201,8 +220,8 @@
                 lon: coordsGlobal ? coordsGlobal.longitude : 0,
                 estado: "Ingresado",
                 fecha: new Date(),
-                respuesta_admin: "" // Campo para que el municipio conteste
-            }).then(() => { alert("¡Enviado!"); cerrarModal('modal-rep'); });
+                respuesta_admin: "" 
+            }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
         }
 
         function verHistorial() {
@@ -211,22 +230,18 @@
             const lista = document.getElementById('lista');
             lista.innerHTML = "<p style='color:gold;'>Cargando tus reportes...</p>";
 
-            // CONSULTA FIJADA
+            // CONSULTA CON ÍNDICE COMPUESTO
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
                 .orderBy("fecha", "desc")
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) {
-                        lista.innerHTML = "<p>No tienes reportes aún. ¡Usa la cámara!</p>";
-                        return;
-                    }
+                    if(snap.empty) { lista.innerHTML = "<p>No tienes reportes aún.</p>"; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
                         const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString() : "S/F";
-                        const respuesta = d.respuesta_admin ? `<div class="admin-reply"><b>Muni responde:</b> ${d.respuesta_admin}</div>` : "";
-                        
+                        const respuesta = d.respuesta_admin ? `<div class="admin-reply"><b>Municipalidad responde:</b> ${d.respuesta_admin}</div>` : "";
                         lista.innerHTML += `
                             <div class="report-card">
                                 <b>📅 ${fecha}</b><br>
@@ -237,8 +252,8 @@
                     });
                 })
                 .catch(err => {
-                    console.error("Error Firestore:", err);
-                    lista.innerHTML = `<p style='color:red;'>Error al cargar. Revisa si falta el índice compuesto en Firebase.</p>`;
+                    console.error(err);
+                    lista.innerHTML = `<p style='color:red;'>Error al cargar. Asegúrate de que el índice en Firebase esté 'Habilitado'.</p>`;
                 });
         }
 
