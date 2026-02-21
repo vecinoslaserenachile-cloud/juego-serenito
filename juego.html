@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Final</title>
+    <title>LA❤️SERENA - Final 610</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena...</div>
+    <div id="ui-status">Cargando Coordenadas Rodrigo...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -39,14 +39,12 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- FUNCIÓN BÁSICA ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
             
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            
             let nivelSuelo = -bound.min.y * factor;
             if (isNaN(nivelSuelo)) nivelSuelo = 0;
             
@@ -80,7 +78,6 @@
 
         scene = crearEscena();
 
-        // 1. MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -88,14 +85,15 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (CORREGIDA A 180 GRADOS)
+        // 2. MUNICIPALIDAD (TUS COORDENADAS EXACTAS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // CORRECCIÓN FINAL:
-            // X = 850 (Para que no choque con la intendencia al girar)
-            // Rotación = Math.PI (180 Grados exactos)
-            colocarEdificio(meshes[0], 850, 160, Math.PI, 150);
             
-            statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
+            // X = 610 (Tu coordenada correcta)
+            // Z = 160 (Tu coordenada correcta)
+            // Rot = Math.PI (180 Grados)
+            colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
+            
+            statusDiv.innerHTML += "<br>✅ Muni en 610/160";
         });
 
         // 3. INTENDENCIA
@@ -118,7 +116,6 @@
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
-        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
