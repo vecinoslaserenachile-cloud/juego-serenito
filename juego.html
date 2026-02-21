@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Smart City</title>
+    <title>LA❤️SERENA - Gestión Municipal v10</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -22,52 +22,44 @@
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* RADIO */
         .radio-card {
             background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
-            display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto;
+            display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto;
         }
-        .vol-slider { width: 60px; accent-color: #ffd700; cursor: pointer; }
-
-        /* LOGIN */
+        
         .login-card {
             background: white; color: #333; padding: 8px 15px; border-radius: 50px;
             font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); pointer-events: auto; border: 2px solid white;
+            pointer-events: auto; border: 2px solid white;
         }
-        .user-pic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 
         /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
-        .btn:active { transform: scale(0.9); }
+        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
 
         /* MODALES */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; }
+        .box { background: #1a1a1a; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         
-        /* CÁMARA GRANDE Y VISIBLE */
-        #cam { width: 100%; height: 300px; background: #000; border: 2px solid #ffd700; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
-        
-        /* Estado de Carga */
-        #loading-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; font-weight: bold; pointer-events: none; text-shadow: 2px 2px 4px black; }
+        #cam-container { width: 100%; height: 300px; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 15px; border: 2px solid #ffd700; position: relative; }
+        #cam { width: 100%; height: 100%; object-fit: cover; display: none; } /* Oculto hasta autorizar */
+        .cam-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #555; font-size: 14px; }
+
+        .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-send { width: 100%; padding: 15px; background: #ffd700; border: none; font-weight: bold; cursor: pointer; color: black; border-radius: 10px; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-text">Cargando La Serena...</div>
-
     <div class="top-ui">
         <div class="radio-card">
-            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()" style="cursor:pointer;"></i>
+            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="ajustarVolumen(this.value)">
+            <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="1" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
-            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" class="user-pic"> 
+            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:28px; border-radius:50%;"> 
             <span id="u-name">Acceder</span>
         </div>
     </div>
@@ -76,31 +68,33 @@
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn" onclick="verHistorial()"><i class="fas fa-list-ul"></i></button>
-        <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
+        <button class="btn" onclick="verHistorial()"><i class="fas fa-history"></i></button>
+        <button class="btn btn-main" onclick="prepararReporte()"><i class="fas fa-camera"></i></button>
         <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h2 style="color:gold;">📷 Nuevo Reporte</h2>
-        <p id="gps-status" style="font-size:12px; color:#aaa; margin: 5px 0;">📍 Activando GPS...</p>
+        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando GPS...</p>
         
-        <video id="cam" autoplay playsinline muted></video>
-        <canvas id="snap" style="display:none;"></canvas>
+        <div id="cam-container">
+            <div class="cam-placeholder" id="cam-msg">Iniciando cámara...</div>
+            <video id="cam" autoplay playsinline muted></video>
+        </div>
         
-        <input type="text" id="desc" placeholder="¿Qué sucede? (Ej: Bache, Basura)">
-        <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px; font-size: 16px;">ENVIAR AHORA</button>
-        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
+        <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
+        <button class="btn-send" onclick="enviarReporte()">ENVIAR INCIDENCIA</button>
+        <button onclick="cerrarReporte()" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
-    <div id="modal-hist" class="modal"><div class="box">
-        <h3>📂 Mis Reportes</h3>
-        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
-        <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
+    <div id="modal-hist" class="modal"><div class="box" id="lista-content">
+        <h3>MIS REPORTES</h3>
+        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
+        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
     </div></div>
 
     <script>
-        // 1. FIREBASE
+        // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -112,52 +106,48 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        let userCurrent = null;
+        let userActual = null;
 
         auth.onAuthStateChanged(u => {
             if(u) {
-                userCurrent = u;
+                userActual = u;
                 document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
                 document.getElementById('u-img').src = u.photoURL;
             } else {
-                userCurrent = null;
+                userActual = null;
                 document.getElementById('u-name').innerText = "Acceder";
             }
         });
 
         window.login = () => {
-            if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
-            else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
+            if(!userActual) auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+            else if(confirm("¿Cerrar sesión?")) auth.signOut();
         };
 
-        // 2. MOTOR 3D
+        // BABYLON 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let scene, camera, personaje, anim;
-        let destino = null;
+        let scene, camera, serenito, animCaminar, destinoFinal;
 
-        const createScene = function () {
+        const crearEscena = function () {
             const s = new BABYLON.Scene(engine);
             s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
-            light.intensity = 1.0;
-
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
-            camera.lowerRadiusLimit = 20; 
+            
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 130, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             
-            // PISO
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, s);
-            const mat = new BABYLON.StandardMaterial("mat", s);
+            const mat = new BABYLON.StandardMaterial("m", s);
             mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // EDIFICIOS
+            // Edificios
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -172,166 +162,139 @@
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO (Aparición desde el cielo para asegurar visibilidad)
+            // SERENITO TANQUE
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
-                document.getElementById('loading-text').style.display = 'none'; // Ocultar texto carga
-                personaje = m[0];
-                personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                
-                // NACE A 12 METROS DE ALTURA PARA QUE CAIGA AL PISO
-                personaje.position = new BABYLON.Vector3(0, 12, 0);
-                
-                personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
-                personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
-                personaje.checkCollisions = true;
-                personaje.applyGravity = true;
-                camera.lockedTarget = personaje;
-                if(a && a.length > 0) { anim = a[0]; anim.stop(); }
+                serenito = m[0];
+                serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
+                serenito.position = new BABYLON.Vector3(0, 5, 0);
+                serenito.ellipsoid = new BABYLON.Vector3(1, 2, 1);
+                serenito.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
+                serenito.checkCollisions = true;
+                serenito.applyGravity = true;
+                camera.lockedTarget = serenito;
+                if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // === LÓGICA TANQUE (GIRAR -> PARAR -> CAMINAR) ===
-            s.onPointerDown = (evt, pick) => { 
-                if(pick.hit && pick.pickedMesh === suelo) {
-                    destino = pick.pickedPoint;
-                }
-            };
+            // LÓGICA DE MOVIMIENTO TANQUE (GIRAR -> AVANZAR)
+            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
-                if(!personaje || !destino) return;
-                
-                let diff = destino.subtract(personaje.position);
-                diff.y = 0; 
+                if(!serenito || !destinoFinal) return;
+                let diff = destinoFinal.subtract(serenito.position);
+                diff.y = 0;
 
-                if(diff.length() > 1.5) { 
-                    let angle = Math.atan2(diff.x, diff.z);
-                    let rotDiff = angle - personaje.rotation.y;
-                    
+                if(diff.length() > 1.2) {
+                    let angleDest = Math.atan2(diff.x, diff.z);
+                    let rotDiff = angleDest - serenito.rotation.y;
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // FASE 1: GIRO (Si > 3 grados)
-                    if(Math.abs(rotDiff) > 0.05) {
-                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; // Girar rápido
-                        if(anim) anim.stop(); // ¡QUIETO!
+                    // FASE 1: GIRO EXCLUSIVO
+                    if(Math.abs(rotDiff) > 0.08) {
+                        serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
+                        if(animCaminar) animCaminar.stop();
                     } 
                     // FASE 2: AVANCE
                     else {
-                        personaje.rotation.y = angle; // Fijar ángulo exacto
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Caminar
-                        if(anim && !anim.isPlaying) anim.play(true);
+                        serenito.rotation.y = angleDest;
+                        serenito.moveWithCollisions(diff.normalize().scale(0.85));
+                        if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    if(anim) anim.stop();
-                    destino = null;
+                    if(animCaminar) animCaminar.stop();
+                    destinoFinal = null;
                 }
             });
             return s;
         };
-        scene = createScene();
-        engine.runRenderLoop(() => { scene.render(); });
-        window.addEventListener("resize", () => engine.resize());
+        scene = crearEscena();
+        engine.runRenderLoop(() => scene.render());
 
-        // 3. UI
+        // CÁMARA Y REPORTES
+        let streamActivo = null;
+        let coordsGlobal = null;
+
+        async function prepararReporte() {
+            if(!userActual) return alert("Inicia sesión para reportar.");
+            
+            // 1. Pedir permisos ANTES de mostrar modal
+            try {
+                streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                
+                // 2. Si hay permiso, abrir modal y GPS
+                document.getElementById('modal-rep').style.display = 'flex';
+                const video = document.getElementById('cam');
+                video.srcObject = streamActivo;
+                video.style.display = 'block';
+                document.getElementById('cam-msg').style.display = 'none';
+
+                navigator.geolocation.getCurrentPosition(pos => {
+                    coordsGlobal = pos.coords;
+                    document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
+                    document.getElementById('gps-status').style.color = "#00ff00";
+                });
+
+            } catch (err) {
+                alert("Se requiere acceso a la cámara para el reporte municipal.");
+            }
+        }
+
+        function enviarReporte() {
+            const txt = document.getElementById('desc').value;
+            if(!txt) return alert("Escribe una breve descripción.");
+            if(!coordsGlobal) return alert("Esperando señal GPS...");
+
+            db.collection("incidencias").add({
+                uid: userActual.uid,
+                vecino: userActual.displayName,
+                descripcion: txt,
+                lat: coordsGlobal.latitude,
+                lon: coordsGlobal.longitude,
+                estado: "Ingresado",
+                fecha: new Date()
+            }).then(() => {
+                alert("✅ Reporte enviado con éxito.");
+                cerrarReporte();
+            });
+        }
+
+        function cerrarReporte() {
+            document.getElementById('modal-rep').style.display = 'none';
+            if(streamActivo) streamActivo.getTracks().forEach(t => t.stop());
+            document.getElementById('gps-status').innerText = "📍 Esperando GPS...";
+            document.getElementById('gps-status').style.color = "#aaa";
+        }
+
+        function verHistorial() {
+            if(!userActual) return alert("Accede para ver tu historial.");
+            document.getElementById('modal-hist').style.display = 'flex';
+            const lista = document.getElementById('lista');
+            lista.innerHTML = "Cargando...";
+
+            db.collection("incidencias").where("uid", "==", userActual.uid).orderBy("fecha", "desc").get()
+            .then(snap => {
+                lista.innerHTML = "";
+                if(snap.empty) lista.innerHTML = "No tienes reportes aún.";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    lista.innerHTML += `<div style="background:#222; padding:10px; margin:5px 0; border-radius:8px;">
+                        <b>${d.fecha.toDate().toLocaleDateString()}</b>: ${d.descripcion}<br>
+                        <small style="color:gold">Estado: ${d.estado}</small>
+                    </div>`;
+                });
+            });
+        }
+
         window.toggleRadio = () => {
             const a = document.getElementById('audio-player');
             const i = document.getElementById('icon-play');
-            if(a.paused) { a.play(); i.className="fas fa-stop"; i.style.color="red"; }
-            else { a.pause(); i.className="fas fa-play"; i.style.color="#ffd700"; }
-        };
-        window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
-        window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
-
-        // 4. REPORTES (CÁMARA AUTO-START)
-        let videoStream = null;
-        let gpsData = null;
-
-        window.abrirReporte = () => {
-            if(!userCurrent) return alert("🔒 Presiona ACCEDER arriba a la derecha.");
-            document.getElementById('modal-rep').style.display = 'flex';
-            
-            // INTENTO DE INICIO RÁPIDO DE CÁMARA
-            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(function(stream) {
-                    videoStream = stream;
-                    let vid = document.getElementById('cam');
-                    vid.srcObject = stream;
-                    vid.play();
-                })
-                .catch(function(err) {
-                    console.log(err);
-                    alert("⚠️ Por favor, permite el uso de la cámara.");
-                });
-            }
-
-            // OBTENER GPS EN PARALELO
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    gpsData = pos.coords;
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
-                    .then(r => r.json()).then(d => {
-                        document.getElementById('gps-status').innerText = `📍 ${d.display_name.split(',')[0]}`;
-                        document.getElementById('gps-status').style.color = "#00ff00"; // Verde = Éxito
-                    });
-                },
-                (err) => {
-                    document.getElementById('gps-status').innerText = "⚠️ GPS no disponible";
-                    document.getElementById('gps-status').style.color = "red";
-                }
-            );
+            if(a.paused) { a.play(); i.className = "fas fa-stop"; i.style.color = "red"; }
+            else { a.pause(); i.className = "fas fa-play"; i.style.color = "#ffd700"; }
         };
 
-        window.enviar = () => {
-            const desc = document.getElementById('desc').value;
-            const vid = document.getElementById('cam');
-            const cv = document.getElementById('snap');
-            
-            if (vid.srcObject) {
-                cv.width = vid.videoWidth; cv.height = vid.videoHeight;
-                cv.getContext('2d').drawImage(vid, 0, 0);
-            }
-            
-            db.collection("incidencias").add({
-                uid: userCurrent.uid,
-                vecino: userCurrent.displayName,
-                foto: userCurrent.photoURL,
-                desc: desc,
-                lat: gpsData ? gpsData.latitude : 0,
-                lon: gpsData ? gpsData.longitude : 0,
-                estado: "Ingresado",
-                fecha: new Date(),
-                fecha_fmt: new Date().toLocaleDateString()
-            }).then(() => {
-                alert("✅ Reporte Recibido"); cerrarModal('modal-rep');
-            });
-        };
+        window.resetCamara = () => { if(serenito) { camera.lockedTarget = serenito; camera.radius = 130; } };
+        window.addEventListener("resize", () => engine.resize());
 
-        window.verHistorial = () => {
-            if(!userCurrent) return alert("🔒 Accede primero.");
-            document.getElementById('modal-hist').style.display = 'flex';
-            const l = document.getElementById('lista');
-            l.innerHTML = "Cargando...";
-
-            db.collection("incidencias").where("uid", "==", userCurrent.uid).orderBy("fecha", "desc").get()
-            .then(snap => {
-                l.innerHTML = "";
-                if(snap.empty) {
-                    l.innerHTML = "<p>Sin reportes.</p><button onclick='cerrarModal(\"modal-hist\"); abrirReporte();' style='background:gold; padding:10px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;'>Crear Reporte</button>";
-                } else {
-                    snap.forEach(d => {
-                        const da = d.data();
-                        l.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-radius:5px;"><b>${da.fecha_fmt}</b>: ${da.desc} <br><small style="color:gold">${da.estado}</small></div>`;
-                    });
-                }
-            });
-        };
-
-        window.cerrarModal = (id) => {
-            document.getElementById(id).style.display = 'none';
-            if(videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-        };
     </script>
 </body>
 </html>
