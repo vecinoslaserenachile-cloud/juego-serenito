@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena 3D...</div>
+    <div id="ui-status">Muni Girada 180°...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,15 +40,12 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- FUNCIÓN MAESTRA PARA UBICAR EDIFICIOS ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
             
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            
-            // Auto-nivelación al suelo (Y=0)
             const nivelSuelo = -bound.min.y * factor; 
             mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
             mesh.rotation.y = rotacion; 
@@ -67,14 +64,9 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
-            // --- CÁMARA ---
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            
-            // 👇 AQUÍ ESTÁ EL CANDADO DE SUELO QUE PEDISTE 👇
             camera.upperBetaLimit = Math.PI / 2.2; 
-            // 👆 Esto evita que la cámara baje más allá del horizonte 👆
-            
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
             camera.checkCollisions = true;
@@ -84,7 +76,6 @@
 
         scene = crearEscena();
 
-        // 1. CARGAR MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -92,13 +83,14 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (Ubicación: Calle Prat, Rotación: 0)
+        // 2. MUNICIPALIDAD (GIRADA 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 735, 187, 0, 150);
-            statusDiv.innerHTML += "<br>✅ Muni (Candado activo)";
+            // 👇 CAMBIO AQUÍ: Math.PI es media vuelta (180 grados)
+            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Girada";
         });
 
-        // 3. INTENDENCIA (Ubicación: Diagonal, Tamaño: 180)
+        // 3. INTENDENCIA (Se mantiene igual)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
@@ -118,7 +110,6 @@
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
-        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
@@ -145,7 +136,6 @@
             }
         });
 
-        // 6. BOTONES
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
