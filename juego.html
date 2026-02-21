@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Sistema Ciudadano Pro</title>
+    <title>LA❤️SERENA - Plataforma Ciudadana Pro</title>
     
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -11,37 +11,66 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #1a1a2e; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #001a33; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        #ui-status { position: absolute; top: 15px; left: 15px; background: rgba(0,255,0,0.2); color: #00ff00; padding: 12px; border-radius: 8px; font-size: 14px; border: 1px solid #00ff00; z-index: 1000; font-weight: bold; }
         
-        /* 📻 CONTENEDOR DE RADIO RD MLS */
-        #radio-portal { position: absolute; top: 15px; right: 15px; z-index: 1000; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 12px; border: 2px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        /* UI Status y Radio */
+        #ui-status { position: absolute; top: 15px; left: 15px; background: rgba(0,0,0,0.8); color: #00ff00; padding: 12px; border-radius: 8px; font-size: 13px; border: 1px solid #00ff00; z-index: 10; font-weight: bold; }
+        #radio-portal { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 12px; border: 2px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         
-        #toolbar { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 1000; }
-        .btn { background: #ffd700; color: #000; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #b39700; transition: 0.2s; }
+        /* Toolbar Principal */
+        #toolbar { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 12px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #b39700; transition: 0.2s; font-size: 14px; }
         .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #b39700; }
-        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 5px 0 #990000; }
         .btn-alerta { background: #007bff; color: white; box-shadow: 0 5px 0 #004a99; }
+        .btn-rescate { background: #ff3333; color: white; box-shadow: 0 5px 0 #990000; }
+
+        /* 🚨 NUEVO MÓDULO DE REPORTE (PANTALLA COMPLETA) */
+        #modulo-reporte { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(180deg, #001a33 0%, #003366 100%); 
+            z-index: 2000; color: white; padding: 30px; box-sizing: border-box; text-align: center;
+        }
+        .reporte-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); max-width: 500px; margin: 0 auto; }
+        #preview-multimedia { width: 100%; height: 250px; border: 2px dashed #aaa; margin: 20px 0; border-radius: 10px; object-fit: cover; display: none; }
+        .geo-info { color: #ffd700; font-weight: bold; margin: 15px 0; font-size: 1.1em; }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">🛰️ Smart City La Serena Conectada</div>
+    <div id="ui-status">🛰️ Smart City: La Serena Online</div>
 
     <div id="radio-portal">
         <iframe src="https://yesstreaming.com/radio/8000/public?autoplay=false" 
-                width="300" height="100" frameborder="0" allowtransparency="true"></iframe>
+                width="280" height="90" frameborder="0" allowtransparency="true"></iframe>
     </div>
+
+    <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
         <button class="btn" onclick="camaraAerea()">🚁 Vista Aérea</button>
-        <button class="btn btn-alerta" onclick="lanzarReporte()">📢 REPORTE VECINAL</button>
+        <button class="btn btn-alerta" onclick="abrirModuloReporte()">📸 REPORTE CIUDADANO</button>
         <button class="btn btn-rescate" onclick="rescatar()">🚨 RESCATE</button>
     </div>
 
-    <canvas id="renderCanvas"></canvas>
+    <div id="modulo-reporte">
+        <div class="reporte-card">
+            <h2>🚨 Centro de Emergencias LA❤️SERENA</h2>
+            <p>Captura el incidente para enviarlo a la central municipal.</p>
+            
+            <div id="geo-status" class="geo-info">📍 Localizando calle y número...</div>
+            
+            <input type="file" id="input-camara" accept="image/*,video/*" capture="environment" style="display:none;" onchange="previsualizar(this)">
+            <img id="preview-multimedia" src="">
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn" onclick="document.getElementById('input-camara').click()">📷 TOMAR FOTO / VIDEO</button>
+                <button class="btn btn-alerta" onclick="enviarReporteFinal()">📤 ENVIAR REPORTE</button>
+                <button class="btn btn-rescate" onclick="cerrarModuloReporte()">❌ CANCELAR</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 1. CONFIGURACIÓN FIREBASE
@@ -59,8 +88,31 @@
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, personaje, animCaminar, destinoFinal = null;
+        let datosGeograficos = { lat: 0, lon: 0, direccion: "" };
 
-        // Función para colocar edificios (Fija la Intendencia)
+        // --- SISTEMA 3D BABYLON ---
+        const crearEscena = function () {
+            scene = new BABYLON.Scene(engine);
+            scene.collisionsEnabled = true;
+            scene.gravity = new BABYLON.Vector3(0, -0.15, 0); // Gravedad blindada
+            
+            new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene).intensity = 1.5;
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 180, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.checkCollisions = true;
+            return scene;
+        };
+
+        scene = crearEscena();
+
+        // PISO SÓLIDO (Blindaje contra caídas)
+        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
+        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+        suelo.material = matSuelo;
+        suelo.checkCollisions = true;
+
+        // EDIFICIOS (Carga Quirúrgica)
         const colocarEdificio = (mesh, x, z, escala, rotY = 0) => {
             mesh.rotationQuaternion = null;
             const bound = mesh.getHierarchyBoundingVectors(true);
@@ -72,53 +124,28 @@
             mesh.getChildMeshes().forEach(m => m.checkCollisions = true);
         };
 
-        const crearEscena = function () {
-            scene = new BABYLON.Scene(engine);
-            scene.collisionsEnabled = true;
-            scene.gravity = new BABYLON.Vector3(0, -0.15, 0); // Gravedad suave para no "traspasar" el mapa
-            
-            new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene).intensity = 1.5;
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 180, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
-            camera.checkCollisions = true;
-            return scene;
-        };
-
-        scene = crearEscena();
-
-        // 2. EL PISO (Base de todo)
-        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
-        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-        suelo.material = matSuelo;
-        suelo.checkCollisions = true;
-
-        // 3. CARGA DE EDIFICIOS (Ambos deben aparecer ahora)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 610, 160, 150, Math.PI); // Giro de 180° respetado
+            colocarEdificio(meshes[0], 610, 160, 150, Math.PI); // 180° Respetado
         });
 
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 430, 410, 180); // Intendencia Restaurada
+            colocarEdificio(meshes[0], 430, 410, 180);
         });
 
-        // 4. SERENITO (Cuerpo sólido)
+        // SERENITO (Blindaje de pies y espejo polera)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.rotationQuaternion = null; 
-            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Espejo polera
+            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Espejo polera respetado
             personaje.position = new BABYLON.Vector3(0, 5, 0); 
-            
-            // LA LLAVE DEL SUELO: El elipsoide es lo que choca con el piso
-            personaje.ellipsoid = new BABYLON.Vector3(1.5, 3.5, 1.5); 
+            personaje.ellipsoid = new BABYLON.Vector3(1.5, 3.5, 1.5); // Colisión real
             personaje.checkCollisions = true;
             personaje.applyGravity = true; 
-            
             camera.lockedTarget = personaje;
             if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
         });
 
-        // MOVIMIENTO Y CÁMARA
+        // MOVIMIENTO TANQUE
         scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
@@ -133,30 +160,73 @@
                 diff.normalize();
                 personaje.moveWithCollisions(diff.scale(1.1));
                 if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-            } else {
-                if (animCaminar) animCaminar.stop();
-                destinoFinal = null;
-            }
+            } else { if (animCaminar) animCaminar.stop(); destinoFinal = null; }
         });
+
+        // --- LÓGICA DEL REPORTE PRO ---
+
+        function abrirModuloReporte() {
+            document.getElementById('modulo-reporte').style.display = 'block';
+            obtenerDireccionReal();
+        }
+
+        function cerrarModuloReporte() {
+            document.getElementById('modulo-reporte').style.display = 'none';
+        }
+
+        async function obtenerDireccionReal() {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                datosGeograficos.lat = lat;
+                datosGeograficos.lon = lon;
+
+                try {
+                    const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    const data = await resp.json();
+                    const calle = data.address.road || "Calle sin nombre";
+                    const numero = data.address.house_number || "S/N";
+                    datosGeograficos.direccion = `${calle} ${numero}`;
+                    document.getElementById('geo-status').innerText = `📍 Ubicación: ${datosGeograficos.direccion}, La Serena`;
+                } catch (e) {
+                    document.getElementById('geo-status').innerText = "📍 GPS Activo (Dirección no disponible)";
+                }
+            });
+        }
+
+        function previsualizar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('preview-multimedia');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function enviarReporteFinal() {
+            const msj = prompt("Describe brevemente el incidente:");
+            if (!msj) return;
+
+            db.collection("reportes_pro").add({
+                vecino: "Rodrigo Godoy",
+                incidente: msj,
+                direccion: datosGeograficos.direccion,
+                lat: datosGeograficos.lat,
+                lon: datosGeograficos.lon,
+                fecha: new Date(),
+                estado: "Nuevo"
+            }).then(() => {
+                alert("✅ REPORTE ENVIADO EXITOSAMENTE\nLa central municipal ha recibido tu ubicación y evidencia.");
+                cerrarModuloReporte();
+            });
+        }
 
         window.camaraSerenito = () => { camera.lockedTarget = personaje; camera.radius = 120; }
         window.camaraAerea = () => { camera.lockedTarget = null; camera.setPosition(new BABYLON.Vector3(500, 700, 500)); camera.setTarget(new BABYLON.Vector3(500, 0, 300)); }
         window.rescatar = () => { personaje.position = new BABYLON.Vector3(0, 10, 0); destinoFinal = null; camaraSerenito(); }
-
-        window.lanzarReporte = () => {
-            const msj = prompt("📢 SERENITO INFORMA:\n¿Qué incidente quieres reportar?");
-            if (msj) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    db.collection("reportes").add({
-                        vecino: "Rodrigo Godoy",
-                        mensaje: msj,
-                        lat: pos.coords.latitude,
-                        lon: pos.coords.longitude,
-                        fecha: new Date()
-                    }).then(() => { alert("✅ Reporte enviado con éxito a la central."); });
-                });
-            }
-        };
 
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
