@@ -3,37 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Sistema Integrado</title>
+    <title>LA❤️SERENA - Versión Corregida</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
-
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 14px; pointer-events: none; border: 1px solid lime; font-weight: bold; z-index: 10; }
+        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 14px; pointer-events: none; border: 1px solid lime; z-index: 1000; }
         
-        /* Radio RD MLS */
-        #radio-container { position: absolute; top: 10px; right: 10px; z-index: 100; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* CORRECCIÓN UI DERECHA: Radio Rd MLS */
+        #radio-container { position: absolute; top: 10px; right: 10px; z-index: 1000; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 2px solid white; }
         
-        #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
-        .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
+        #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 1000; }
+        .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; }
         .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
         .btn-alerta { background: #007bff; color: white; box-shadow: 0 4px 0 #004a99; }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">Cargando Smart City...</div>
+    <div id="ui-status">✅ Base de Datos y Radio Conectadas</div>
 
     <div id="radio-container">
         <iframe src="https://yesstreaming.com/radio/8000/public?autoplay=false" 
-                width="250" height="100" frameborder="0" allowtransparency="true"></iframe>
+                width="280" height="90" frameborder="0" allowtransparency="true"></iframe>
     </div>
 
     <div id="toolbar">
@@ -46,7 +43,6 @@
     <canvas id="renderCanvas"></canvas>
 
     <script>
-        // === CONFIGURACIÓN FIREBASE (Tus Llaves Maestras) ===
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -60,92 +56,77 @@
 
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const statusDiv = document.getElementById("ui-status");
-
-        let scene, camera, personaje, animCaminar;
-        let destinoFinal = null;
-
-        // Función para edificios
-        const colocarSimple = (mesh, x, z, escala) => {
-            mesh.rotationQuaternion = null; 
-            const bound = mesh.getHierarchyBoundingVectors(true);
-            const size = bound.max.subtract(bound.min);
-            const factor = escala / Math.max(size.x, size.y, size.z);
-            mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            let nivelSuelo = -bound.min.y * factor;
-            mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
-        };
+        let scene, camera, personaje, animCaminar, destinoFinal = null;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-            scene.collisionsEnabled = true;
+            scene.collisionsEnabled = true; // ACTIVAR FÍSICA
             scene.gravity = new BABYLON.Vector3(0, -0.9, 0); 
+            
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
+            camera.checkCollisions = true; // Cámara no atraviesa paredes
             return scene;
         };
 
         scene = crearEscena();
 
-        // 1. MAPA
+        // 1. MAPA (Referencia del Piso)
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
         suelo.material = matSuelo;
-        suelo.checkCollisions = true;
+        suelo.checkCollisions = true; // EL SUELO DEBE SER SÓLIDO
 
-        // 2. MUNICIPALIDAD (Respetando tu giro de 180°)
+        // 2. MUNICIPALIDAD (Tu giro de 180° respetado)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            let muniMesh = meshes[0];
+            let muni = meshes[0];
             let cajaPadre = new BABYLON.TransformNode("cajaMuni", scene);
-            muniMesh.parent = cajaPadre;
-            const bound = muniMesh.getHierarchyBoundingVectors(true);
+            muni.parent = cajaPadre;
+            muni.rotationQuaternion = null;
+            cajaPadre.rotation.y = Math.PI;
+            const bound = muni.getHierarchyBoundingVectors(true);
             const factor = 150 / Math.max(bound.max.x - bound.min.x, bound.max.y - bound.min.y, bound.max.z - bound.min.z);
-            muniMesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            muniMesh.rotationQuaternion = null;
-            cajaPadre.rotation.y = Math.PI; // Giro Maestro
+            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
             cajaPadre.position = new BABYLON.Vector3(610, -bound.min.y * factor, 160);
-            statusDiv.innerHTML = "✅ Base de Datos y Radio Conectadas";
+            muni.getChildMeshes().forEach(m => m.checkCollisions = true);
         });
 
-        // 3. INTENDENCIA
-        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarSimple(meshes[0], 430, 410, 180);
-        });
-
-        // 4. SERENITO (Respetando tu escala -10 Espejo)
+        // 3. SERENITO (Corrección de Caída)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.rotationQuaternion = null; 
             personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Efecto Espejo Logo
             personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            
+            // PIES DE SERENITO (Ellipsoid): Crucial para no pasar de largo
+            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2); 
             personaje.checkCollisions = true;
             personaje.applyGravity = true; 
+            
             camera.lockedTarget = personaje;
             if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
         });
 
-        // MOVIMIENTO TANQUE (Respetado íntegramente)
+        // LÓGICA DE MOVIMIENTO
         scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
             if (diff.length() > 1.5) {
-                let anguloObjetivo = Math.atan2(diff.x, diff.z); 
-                let diferencia = anguloObjetivo - personaje.rotation.y;
-                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
-                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
-                if (Math.abs(diferencia) > 0.1) {
-                    personaje.rotation.y += diferencia * 0.15;
+                let angulo = Math.atan2(diff.x, diff.z);
+                let dist = angulo - personaje.rotation.y;
+                while (dist > Math.PI) dist -= Math.PI * 2;
+                while (dist < -Math.PI) dist += Math.PI * 2;
+                if (Math.abs(dist) > 0.1) {
+                    personaje.rotation.y += dist * 0.15;
                     if (animCaminar) animCaminar.stop();
                 } else {
-                    personaje.rotation.y = anguloObjetivo;
+                    personaje.rotation.y = angulo;
                     diff.normalize();
-                    personaje.moveWithCollisions(diff.scale(1.2));
+                    personaje.moveWithCollisions(diff.scale(1.2)); // Caminar con colisión
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
             } else {
@@ -154,14 +135,12 @@
             }
         });
 
-        // ACCIONES
         window.camaraSerenito = () => { camera.lockedTarget = personaje; camera.radius = 100; }
         window.camaraAerea = () => { camera.lockedTarget = null; camera.setPosition(new BABYLON.Vector3(500, 600, 500)); camera.setTarget(new BABYLON.Vector3(500, 0, 300)); }
         window.rescatar = () => { destinoFinal = null; personaje.position = new BABYLON.Vector3(0, 8, 0); camaraSerenito(); }
 
-        // REPORTE VECINAL (Firebase Integration)
         window.lanzarReporte = () => {
-            const msj = prompt("📢 SERENITO TE ESCUCHA:\n¿Qué incidente deseas reportar en La Serena?");
+            const msj = prompt("📢 SERENITO TE ESCUCHA:\n¿Qué sucede en tu sector?");
             if (msj) {
                 navigator.geolocation.getCurrentPosition((pos) => {
                     db.collection("reportes").add({
@@ -170,9 +149,7 @@
                         lat: pos.coords.latitude,
                         lon: pos.coords.longitude,
                         fecha: new Date()
-                    }).then(() => {
-                        alert("✅ Reporte enviado a vecinoslaserenachile@gmail.com\n¡Gracias por cuidar tu comuna!");
-                    });
+                    }).then(() => { alert("✅ Reporte enviado con éxito."); });
                 });
             }
         };
