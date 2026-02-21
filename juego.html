@@ -73,30 +73,46 @@
         suelo.material = matSuelo;
         suelo.checkCollisions = true;
 
-        // 2. MUNICIPALIDAD - CÓDIGO LIMPIO SIN CONFLICTOS
-        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            let muni = meshes[0];
-            
-            // A. Rompemos candado
-            muni.rotationQuaternion = null; 
+        <script>
+    // ... (Mantén todo el código de arriba igual hasta llegar a la carga de la Muni) ...
 
-            // B. Calculamos escala para tamaño 150
-            const bound = muni.getHierarchyBoundingVectors(true);
-            const size = bound.max.subtract(bound.min);
-            const factor = 150 / Math.max(size.x, size.y, size.z);
-            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
+    // 2. MUNICIPALIDAD - MÉTODO DEL PADRE PIVOTE (EL QUE NO FALLA)
+    BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+        let muni = meshes[0];
+        
+        // Creamos una "Caja Invisible" (Contenedor)
+        let cajaPadre = new BABYLON.TransformNode("cajaMuni", scene);
+        
+        // Metemos el edificio dentro de la caja
+        muni.parent = cajaPadre;
 
-            // C. GIRAR 180° SOBRE EL EJE Y (Math.PI)
-            muni.rotation.y = Math.PI; 
+        // 1. AJUSTE DE TAMAÑO (150)
+        const bound = muni.getHierarchyBoundingVectors(true);
+        const size = bound.max.subtract(bound.min);
+        const factor = 150 / Math.max(size.x, size.y, size.z);
+        muni.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-            // D. POSICIONAR (610, nivel del suelo, 160)
-            let nivelSuelo = -bound.min.y * factor;
-            muni.position = new BABYLON.Vector3(610, nivelSuelo, 160);
+        // 2. DESBLOQUEO TOTAL
+        // Quitamos los candados a TODO el edificio (padre e hijos)
+        muni.rotationQuaternion = null;
+        muni.getChildMeshes().forEach(m => m.rotationQuaternion = null);
 
-            muni.checkCollisions = true;
-            muni.getChildMeshes().forEach(m => m.checkCollisions = true);
-            statusDiv.innerHTML = "✅ Muni Girada y Ubicada";
-        });
+        // 3. EL GIRO MAESTRO (Giramos la CAJA, no el edificio)
+        // Esto obliga al edificio a dar la vuelta completa
+        cajaPadre.rotation.y = Math.PI; // 180 grados
+
+        // 4. POSICIÓN (En tus coordenadas 610, 160)
+        let nivelSuelo = -bound.min.y * factor;
+        cajaPadre.position = new BABYLON.Vector3(610, nivelSuelo, 160);
+
+        muni.checkCollisions = true;
+        muni.getChildMeshes().forEach(m => m.checkCollisions = true);
+        
+        statusDiv.innerHTML = "✅ Muni: ¡Giro 180° Logrado!";
+    });
+
+    // ... (El resto del código de Serenito e Intendencia se queda igual) ...
+</script>
 
         // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
@@ -153,3 +169,4 @@
     </script>
 </body>
 </html>
+
