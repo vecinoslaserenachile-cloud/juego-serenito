@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Corrección de Espalda...</div>
+    <div id="ui-status">Cargando Física y Movimiento...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -59,8 +59,12 @@
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
+            // Activamos gravedad básica
+            scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
+
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
+
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.upperBetaLimit = Math.PI / 2.2; 
@@ -80,7 +84,7 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (Posición Fija 610, 160)
+        // 2. MUNICIPALIDAD (TUS COORDENADAS MAESTRAS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Muni Fija";
@@ -92,19 +96,24 @@
             statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
-        // 4. SERENITO
+        // 4. SERENITO (SOLUCIÓN DE ALTURA)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            personaje.position = new BABYLON.Vector3(0, 0, 0); 
+            
+            // CORRECCIÓN DE ALTURA: Lo levantamos 8 unidades para que no nazca enterrado
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
+            personaje.checkCollisions = true;
+            personaje.applyGravity = true; // Para que caiga al suelo al empezar
 
             camera.lockedTarget = personaje;
             if (anims && anims.length > 0) {
                 animCaminar = anims[0];
                 animCaminar.stop(); 
             }
-            statusDiv.innerHTML += "<br>✅ Serenito Listo";
+            statusDiv.innerHTML += "<br>✅ Serenito Desenterrado";
         });
 
         scene.onPointerDown = (evt, pick) => {
@@ -113,7 +122,7 @@
             }
         };
 
-        // --- CEREBRO CORREGIDO (GIRA 180 PARA NO CAMINAR DE ESPALDA) ---
+        // --- CEREBRO DE MOVIMIENTO NATURAL V3 ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
@@ -123,27 +132,28 @@
             if (diff.length() > 1.0) {
                 diff.normalize();
                 
-                // 1. CÁLCULO DE ÁNGULO CON CORRECCIÓN DE ESPALDA
-                // Math.PI es la clave: Le sumamos 180 grados para que el frente sea el frente.
+                // CÁLCULO DE ÁNGULO + CORRECCIÓN DE MICHAEL JACKSON
+                // Math.PI (180 grados) le da la vuelta para que mire de frente
                 let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
                 
                 let rotacionActual = personaje.rotation.y;
                 let diferencia = anguloObjetivo - rotacionActual;
                 
-                // Normalizar ángulo entre -PI y PI
+                // Matemáticas para girar por el lado corto
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. GIRO SUAVE
+                // GIRO SUAVE (0.1)
                 personaje.rotation.y += diferencia * 0.1;
 
-                // 3. REGLA: PRIMERO GIRO, LUEGO CAMINO
-                // Solo camina si la diferencia es pequeña (ya está mirando al frente)
-                if (Math.abs(diferencia) < 0.25) {
-                    personaje.moveWithCollisions(diff.scale(1.2)); // Avanza
+                // REGLA DE ORO: SI LA DIFERENCIA ES GRANDE, NO CAMINES.
+                // 0.3 radianes son unos 17 grados. Si está más chueco que eso, solo gira.
+                if (Math.abs(diferencia) < 0.3) {
+                    // Está mirando (casi) al frente, ¡AVANZA!
+                    personaje.moveWithCollisions(diff.scale(1.2)); 
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 } else {
-                    // Si está girando, pies quietos
+                    // Si está girando mucho, se detiene para no patinar
                     if (animCaminar) animCaminar.stop();
                 }
 
@@ -168,7 +178,8 @@
         window.rescatar = function() {
             if(!personaje) return;
             destinoFinal = null;
-            personaje.position = new BABYLON.Vector3(0, 0, 0); 
+            // Lo reseteamos arriba también para que no se entierre al rescatar
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
             camaraSerenito();
             statusDiv.innerHTML = "🚨 Rescate OK";
             setTimeout(() => { statusDiv.innerHTML = "✅ Sistema OK"; }, 2000);
