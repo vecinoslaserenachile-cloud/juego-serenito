@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena 3D...</div>
+    <div id="ui-status">Cargando Sistema de Contenedores...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,37 +40,39 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- FUNCIÓN MAESTRA CORREGIDA (SOLUCIÓN DEFINITIVA DE EJE) ---
+        // --- FUNCIÓN MAESTRA: TÉCNICA DEL CONTENEDOR (INFALIBLE) ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            // 1. DESVINCULAR Y CENTRAR GEOMETRÍA
+            // 1. Limpieza inicial: quitamos padres antiguos
             mesh.setParent(null);
             
-            // Calculamos el centro real del modelo
+            // 2. Calculamos el tamaño y centro del edificio tal como viene
             let bounds = mesh.getHierarchyBoundingVectors();
-            let center = bounds.max.add(bounds.min).scale(0.5);
-            
-            // Movemos el modelo para que su centro sea 0,0,0
-            mesh.position = center.scale(-1);
-            
-            // "Horneamos" (Fijamos) este cambio para que sea permanente
-            mesh.bakeCurrentTransformIntoVertices(); 
-            
-            // 2. AHORA SÍ ESCALAMOS Y POSICIONAMOS
-            // Recalculamos tamaño con el nuevo centro
-            bounds = mesh.getHierarchyBoundingVectors();
             let size = bounds.max.subtract(bounds.min);
-            let factor = escala / Math.max(size.x, size.y, size.z);
-            
-            mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            
-            // Ajustamos altura para que toque el suelo
-            let nivelSuelo = -bounds.min.y * factor; 
-            
-            // Aplicamos la posición final y la rotación
-            mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
-            mesh.rotation.y = rotacion; 
+            let center = bounds.max.add(bounds.min).scale(0.5);
 
-            // Activamos colisiones
+            // 3. Calculamos el factor de escala
+            let maxDim = Math.max(size.x, size.y, size.z);
+            let factor = escala / maxDim;
+
+            // 4. CREAMOS EL CONTENEDOR (PIVOTE REAL)
+            // Este es un punto invisible que pondremos exactamente donde tú quieres
+            let pivote = new BABYLON.TransformNode("pivote_" + mesh.name);
+            pivote.position = new BABYLON.Vector3(x, 0, z); // Aquí es donde estará el edificio
+            pivote.rotation.y = rotacion; // Aquí aplicamos el giro
+            
+            // 5. METEMOS EL EDIFICIO AL CONTENEDOR
+            mesh.parent = pivote;
+            
+            // 6. CENTRAMOS EL EDIFICIO DENTRO DEL CONTENEDOR
+            // Lo movemos lo opuesto a su centro para que quede alineado al (0,0,0) del pivote
+            // Y ajustamos la altura para que el piso quede en 0
+            mesh.position = new BABYLON.Vector3(-center.x * factor, -bounds.min.y * factor, -center.z * factor);
+            
+            // 7. APLICAMOS LA ESCALA
+            // Escalamos el edificio, no el pivote, para evitar distorsiones raras
+            mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
+
+            // 8. ACTIVAR COLISIONES
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -86,10 +88,9 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
-            // CÁMARA CON CANDADO DE SUELO
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            camera.upperBetaLimit = Math.PI / 2.2; // Evita ver por debajo del suelo
+            camera.upperBetaLimit = Math.PI / 2.2; 
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
             camera.checkCollisions = true;
@@ -107,12 +108,13 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (ROTADA 90 GRADOS IZQ EN SU PROPIO EJE)
+        // 2. MUNICIPALIDAD (Usando Contenedor)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // Gracias a la corrección de arriba, ahora gira perfecto en su lugar.
-            // -Math.PI / 2 = 90 grados a la izquierda (Anti-horario)
+            // Posición: 735, 187
+            // Rotación: -Math.PI / 2 (90° Izquierda)
+            // Esta vez GIRARÁ SI O SÍ sobre su centro gracias al contenedor.
             colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Girada 90° Izq";
+            statusDiv.innerHTML += "<br>✅ Muni Girada y Fija";
         });
 
         // 3. INTENDENCIA
@@ -135,7 +137,6 @@
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
-        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
@@ -162,7 +163,6 @@
             }
         });
 
-        // 6. BOTONES
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
