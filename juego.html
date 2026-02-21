@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Tanque Serenito</title>
+    <title>LA❤️SERENA - Smart City</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,12 +18,6 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* DIAGNÓSTICO (Para que sepas qué pasa) */
-        #debug-log {
-            position: absolute; top: 70px; left: 10px; color: yellow; background: rgba(0,0,0,0.5); 
-            padding: 5px; font-size: 12px; pointer-events: none; max-width: 300px; z-index: 500;
-        }
-
         /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
@@ -46,20 +40,25 @@
 
         /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 22px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
+        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
         .btn:active { transform: scale(0.9); }
-        .btn-main { background: #ff3333; color: white; border: 3px solid white; transform: translateY(-15px); }
+        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box; }
-        #cam { width: 100%; height: 250px; background: black; border: 2px solid gold; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
+        
+        /* CÁMARA GRANDE Y VISIBLE */
+        #cam { width: 100%; height: 300px; background: #000; border: 2px solid #ffd700; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
+        
+        /* Estado de Carga */
+        #loading-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 20px; font-weight: bold; pointer-events: none; text-shadow: 2px 2px 4px black; }
     </style>
 </head>
 <body>
 
-    <div id="debug-log">Iniciando sistema...</div>
+    <div id="loading-text">Cargando La Serena...</div>
 
     <div class="top-ui">
         <div class="radio-card">
@@ -84,11 +83,13 @@
 
     <div id="modal-rep" class="modal"><div class="box">
         <h2 style="color:gold;">📷 Nuevo Reporte</h2>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando...</p>
-        <video id="cam" autoplay playsinline></video>
+        <p id="gps-status" style="font-size:12px; color:#aaa; margin: 5px 0;">📍 Activando GPS...</p>
+        
+        <video id="cam" autoplay playsinline muted></video>
         <canvas id="snap" style="display:none;"></canvas>
-        <input type="text" id="desc" placeholder="Describe el problema...">
-        <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px;">ENVIAR</button>
+        
+        <input type="text" id="desc" placeholder="¿Qué sucede? (Ej: Bache, Basura)">
+        <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px; font-size: 16px;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
     </div></div>
 
@@ -99,12 +100,6 @@
     </div></div>
 
     <script>
-        // LOG DE ERRORES (Para saber si falla algo)
-        function log(msg) {
-            console.log(msg);
-            document.getElementById('debug-log').innerText = msg;
-        }
-
         // 1. FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
@@ -114,31 +109,26 @@
             messagingSenderId: "283725387947",
             appId: "1:283725387947:web:898aa22c80c2fadbe8bfee"
         };
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
-            const auth = firebase.auth();
-            let userCurrent = null;
-            log("Firebase OK. Conectando usuario...");
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        let userCurrent = null;
 
-            auth.onAuthStateChanged(u => {
-                if(u) {
-                    userCurrent = u;
-                    document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
-                    document.getElementById('u-img').src = u.photoURL;
-                    log("Usuario conectado: " + u.displayName);
-                } else {
-                    userCurrent = null;
-                    document.getElementById('u-name').innerText = "Acceder";
-                    log("Esperando login...");
-                }
-            });
+        auth.onAuthStateChanged(u => {
+            if(u) {
+                userCurrent = u;
+                document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
+                document.getElementById('u-img').src = u.photoURL;
+            } else {
+                userCurrent = null;
+                document.getElementById('u-name').innerText = "Acceder";
+            }
+        });
 
-            window.login = () => {
-                if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
-                else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
-            };
-        } catch (e) { log("Error Firebase: " + e.message); }
+        window.login = () => {
+            if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
+            else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
+        };
 
         // 2. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
@@ -170,7 +160,6 @@
             // EDIFICIOS
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
-                    if(!m || m.length===0) return;
                     let root = new BABYLON.TransformNode("r", s);
                     m[0].parent = root;
                     const b = m[0].getHierarchyBoundingVectors(true);
@@ -178,31 +167,32 @@
                     m[0].scaling = new BABYLON.Vector3(scale, scale, scale);
                     root.rotation.y = r;
                     root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
-                    log("Edificio cargado: " + f);
-                }, null, (e) => log("Error " + f));
+                });
             };
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO
+            // SERENITO (Aparición desde el cielo para asegurar visibilidad)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
+                document.getElementById('loading-text').style.display = 'none'; // Ocultar texto carga
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 5, 0);
+                
+                // NACE A 12 METROS DE ALTURA PARA QUE CAIGA AL PISO
+                personaje.position = new BABYLON.Vector3(0, 12, 0);
+                
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
                 personaje.applyGravity = true;
                 camera.lockedTarget = personaje;
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
-                log("Serenito listo para la acción");
-            }, null, (e) => log("Error Serenito: " + e));
+            });
 
-            // === LÓGICA TANQUE ESTRICTA ===
+            // === LÓGICA TANQUE (GIRAR -> PARAR -> CAMINAR) ===
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destino = pick.pickedPoint;
-                    log("Destino fijado. Moviendo...");
                 }
             };
             
@@ -219,15 +209,15 @@
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // FASE 1: GIRO (Si > 5 grados)
-                    if(Math.abs(rotDiff) > 0.1) {
-                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; 
-                        if(anim) anim.stop(); 
+                    // FASE 1: GIRO (Si > 3 grados)
+                    if(Math.abs(rotDiff) > 0.05) {
+                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; // Girar rápido
+                        if(anim) anim.stop(); // ¡QUIETO!
                     } 
                     // FASE 2: AVANCE
                     else {
-                        personaje.rotation.y = angle; 
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
+                        personaje.rotation.y = angle; // Fijar ángulo exacto
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Caminar
                         if(anim && !anim.isPlaying) anim.play(true);
                     }
                 } else {
@@ -251,33 +241,44 @@
         window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. REPORTES
+        // 4. REPORTES (CÁMARA AUTO-START)
         let videoStream = null;
         let gpsData = null;
 
         window.abrirReporte = () => {
-            if(!userCurrent) return alert("🔒 Debes ACCEDER para reportar.");
+            if(!userCurrent) return alert("🔒 Presiona ACCEDER arriba a la derecha.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}})
-            .then(s => {
-                videoStream = s; 
-                let vid = document.getElementById('cam');
-                vid.srcObject = s;
-                vid.play(); // Forzar play
-            })
-            .catch(e => {
-                log("Cámara error: " + e);
-                alert("Permite la cámara en tu navegador.");
-            });
-
-            navigator.geolocation.getCurrentPosition(pos => {
-                gpsData = pos.coords;
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
-                .then(r => r.json()).then(d => {
-                    document.getElementById('gps-status').innerText = `📍 ${d.display_name.split(',')[0]}`;
+            // INTENTO DE INICIO RÁPIDO DE CÁMARA
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    videoStream = stream;
+                    let vid = document.getElementById('cam');
+                    vid.srcObject = stream;
+                    vid.play();
+                })
+                .catch(function(err) {
+                    console.log(err);
+                    alert("⚠️ Por favor, permite el uso de la cámara.");
                 });
-            });
+            }
+
+            // OBTENER GPS EN PARALELO
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    gpsData = pos.coords;
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
+                    .then(r => r.json()).then(d => {
+                        document.getElementById('gps-status').innerText = `📍 ${d.display_name.split(',')[0]}`;
+                        document.getElementById('gps-status').style.color = "#00ff00"; // Verde = Éxito
+                    });
+                },
+                (err) => {
+                    document.getElementById('gps-status').innerText = "⚠️ GPS no disponible";
+                    document.getElementById('gps-status').style.color = "red";
+                }
+            );
         };
 
         window.enviar = () => {
@@ -290,22 +291,19 @@
                 cv.getContext('2d').drawImage(vid, 0, 0);
             }
             
-            // Subir a Firebase
-            try {
-                db.collection("incidencias").add({
-                    uid: userCurrent.uid,
-                    vecino: userCurrent.displayName,
-                    foto: userCurrent.photoURL,
-                    desc: desc,
-                    lat: gpsData ? gpsData.latitude : 0,
-                    lon: gpsData ? gpsData.longitude : 0,
-                    estado: "Ingresado",
-                    fecha: new Date(),
-                    fecha_fmt: new Date().toLocaleDateString()
-                }).then(() => {
-                    alert("✅ Enviado"); cerrarModal('modal-rep');
-                });
-            } catch(e) { alert("Error al enviar: " + e.message); }
+            db.collection("incidencias").add({
+                uid: userCurrent.uid,
+                vecino: userCurrent.displayName,
+                foto: userCurrent.photoURL,
+                desc: desc,
+                lat: gpsData ? gpsData.latitude : 0,
+                lon: gpsData ? gpsData.longitude : 0,
+                estado: "Ingresado",
+                fecha: new Date(),
+                fecha_fmt: new Date().toLocaleDateString()
+            }).then(() => {
+                alert("✅ Reporte Recibido"); cerrarModal('modal-rep');
+            });
         };
 
         window.verHistorial = () => {
@@ -318,7 +316,7 @@
             .then(snap => {
                 l.innerHTML = "";
                 if(snap.empty) {
-                    l.innerHTML = "<p>No tienes registros.</p><button onclick='cerrarModal(\"modal-hist\"); abrirReporte();' style='background:gold; padding:10px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;'>📝 Crear Primer Reporte</button>";
+                    l.innerHTML = "<p>Sin reportes.</p><button onclick='cerrarModal(\"modal-hist\"); abrirReporte();' style='background:gold; padding:10px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold;'>Crear Reporte</button>";
                 } else {
                     snap.forEach(d => {
                         const da = d.data();
