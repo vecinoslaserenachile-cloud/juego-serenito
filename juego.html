@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Final 610</title>
+    <title>LA❤️SERENA - Serenito 2.0</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Coordenadas Rodrigo...</div>
+    <div id="ui-status">Cargando Movimiento Natural...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -43,14 +43,11 @@
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
-            
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             let nivelSuelo = -bound.min.y * factor;
             if (isNaN(nivelSuelo)) nivelSuelo = 0;
-            
             mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
             mesh.rotation.y = rotacion; 
-
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -62,22 +59,20 @@
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
-
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
-
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
             camera.checkCollisions = true;
-
             return scene;
         };
 
         scene = crearEscena();
 
+        // 1. MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -85,26 +80,19 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (TUS COORDENADAS EXACTAS)
+        // 2. MUNICIPALIDAD (BLOQUEADA EN TU POSICIÓN CORRECTA)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            
-            // X = 610 (Tu coordenada correcta)
-            // Z = 160 (Tu coordenada correcta)
-            // Rot = Math.PI (180 Grados)
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
-            
-            statusDiv.innerHTML += "<br>✅ Muni en 610/160";
+            statusDiv.innerHTML += "<br>✅ Muni Fija";
         });
 
-        // 3. INTENDENCIA
+        // 3. INTENDENCIA (BLOQUEADA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
-            statusDiv.innerHTML += "<br>✅ Intendencia OK";
-        }, null, function() {
-            statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
+            statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
-        // 4. SERENITO
+        // 4. SERENITO (SISTEMA DE ANIMACIÓN MEJORADO)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
@@ -112,31 +100,69 @@
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
 
             camera.lockedTarget = personaje;
-            if (anims && anims.length > 0) animCaminar = anims[0];
+            if (anims && anims.length > 0) {
+                animCaminar = anims[0];
+                animCaminar.stop(); // Nos aseguramos que empiece quieto
+            }
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
+        // 5. LÓGICA DE CLIC
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
             }
         };
 
+        // 6. CEREBRO DE MOVIMIENTO (NUEVO)
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
+            
+            // Calculamos vector hacia el destino
             let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0;
-            if (diff.length() > 1.5) {
+            diff.y = 0; // Ignoramos altura
+
+            if (diff.length() > 1.5) { // Si estamos lejos
                 diff.normalize();
-                let angulo = Math.atan2(diff.x, diff.z);
-                let currentRot = personaje.rotation.y;
-                let diffRot = angulo - currentRot;
-                while (diffRot < -Math.PI) diffRot += Math.PI * 2;
-                while (diffRot > Math.PI) diffRot -= Math.PI * 2;
-                personaje.rotation.y += diffRot * 0.1;
-                personaje.moveWithCollisions(diff.scale(1.2));
-                if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                
+                // Calculamos el ángulo objetivo
+                let anguloObjetivo = Math.atan2(diff.x, diff.z);
+                
+                // Rotación actual suavizada
+                // Usamos un LERP (Interpolación) para que el giro sea elegante
+                let rotacionActual = personaje.rotation.y;
+                let diferenciaRotacion = anguloObjetivo - rotacionActual;
+
+                // Corregimos el salto de 360 grados (PI * 2)
+                while (diferenciaRotacion > Math.PI) diferenciaRotacion -= Math.PI * 2;
+                while (diferenciaRotacion < -Math.PI) diferenciaRotacion += Math.PI * 2;
+
+                // APLICAMOS EL GIRO
+                // 0.1 es la velocidad de giro. Si lo quieres más rápido sube a 0.2
+                personaje.rotation.y += diferenciaRotacion * 0.1;
+
+                // LÓGICA HUMANA:
+                // Si la diferencia de ángulo es pequeña (menor a 0.5 radianes / ~30 grados), CAMINA.
+                // Si la diferencia es grande (está de espaldas), SOLO GIRA.
+                if (Math.abs(diferenciaRotacion) < 0.5) {
+                    // Está mirando al frente, ¡AVANZA!
+                    personaje.moveWithCollisions(diff.scale(1.2)); // 1.2 es velocidad de caminar
+                    
+                    if (animCaminar && !animCaminar.isPlaying) {
+                        animCaminar.play(true); // Activa animación
+                        animCaminar.speedRatio = 1.0; // Velocidad normal
+                    }
+                } else {
+                    // Está girando, ¡QUIETO!
+                    // Podríamos poner animación de "Wait" aquí si tuvieras, 
+                    // pero por ahora detenemos la caminata para que no patine.
+                    if (animCaminar) {
+                        animCaminar.stop();
+                    }
+                }
+
             } else {
+                // LLEGÓ AL DESTINO
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
             }
