@@ -139,7 +139,7 @@
 
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.lowerRadiusLimit = 20; 
-            camera.upperBetaLimit = Math.PI / 2.2; // LÍMITE PISO
+            camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             
             // PISO
@@ -164,12 +164,11 @@
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO (Recuperado y Blindado)
+            // SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                // Nace a 10 metros de altura para asegurar que caiga AL piso y no BAJO él
-                personaje.position = new BABYLON.Vector3(0, 10, 0); 
+                personaje.position = new BABYLON.Vector3(0, 5, 0);
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
@@ -178,7 +177,7 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // === LÓGICA TANQUE ESTRICTA (EL CORAZÓN DEL PROBLEMA) ===
+            // === LÓGICA TANQUE ESTRICTA (Separada por Fases) ===
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destino = pick.pickedPoint;
@@ -189,33 +188,31 @@
                 if(!personaje || !destino) return;
                 
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Ignorar altura, solo plano X-Z
+                diff.y = 0; // Solo nos importa el plano horizontal
 
-                if(diff.length() > 1.5) { // Si no hemos llegado...
+                if(diff.length() > 1.5) { // Si estamos lejos del destino...
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
                     
-                    // Normalizar ángulo -PI a PI
+                    // Normalizar ángulo (-PI a PI)
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // == FASE 1: GIRO EXCLUSIVO ==
-                    // Si el ángulo es mayor a 5 grados (0.1 rad), SOLO ROTA.
+                    // FASE 1: GIRO (Si el ángulo es mayor a ~5 grados)
                     if(Math.abs(rotDiff) > 0.1) {
-                        personaje.rotation.y += Math.sign(rotDiff) * 0.1; // Girar
-                        if(anim) anim.stop(); // ¡Patas quietas!
+                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; // Velocidad de giro
+                        if(anim) anim.stop(); // ¡QUIETO! Solo gira
                     } 
-                    // == FASE 2: AVANCE ==
-                    // Si ya está alineado, ENTONCES avanza.
+                    // FASE 2: AVANCE (Solo si ya miramos al frente)
                     else {
-                        personaje.rotation.y = angle; // Ajuste fino
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
-                        if(anim && !anim.isPlaying) anim.play(true); // Activar animación
+                        personaje.rotation.y = angle; // Ajuste fino final
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Avanzar
+                        if(anim && !anim.isPlaying) anim.play(true); // Animar
                     }
                 } else {
                     // LLEGADA
                     if(anim) anim.stop();
-                    destino = null; // Borrar destino
+                    destino = null; // Borrar destino para dejar de calcular
                 }
             });
             return s;
@@ -234,7 +231,7 @@
         window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. REPORTES
+        // 4. REPORTES (CÁMARA FORZADA)
         let videoStream = null;
         let gpsData = null;
 
@@ -242,15 +239,20 @@
             if(!userCurrent) return alert("🔒 Debes ACCEDER para reportar.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            // Try/Catch para permisos de cámara
-            navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}})
-            .then(s => {
-                videoStream = s; document.getElementById('cam').srcObject = s;
-            })
-            .catch(e => {
-                console.log(e);
-                alert("⚠️ No se pudo acceder a la cámara. Revisa el icono de candado en tu navegador.");
-            });
+            // Solicitud Agresiva de Cámara
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(stream) {
+                    videoStream = stream;
+                    let video = document.getElementById('cam');
+                    video.srcObject = stream;
+                    video.play();
+                })
+                .catch(function(err) {
+                    console.log("Error Cámara: " + err);
+                    alert("⚠️ Error: Permite el acceso a la cámara en tu navegador.");
+                });
+            }
 
             navigator.geolocation.getCurrentPosition(pos => {
                 gpsData = pos.coords;
@@ -265,7 +267,8 @@
             const desc = document.getElementById('desc').value;
             const vid = document.getElementById('cam');
             const cv = document.getElementById('snap');
-            // Capturar foto si hay video, si no, enviar negro
+            
+            // Capturar frame actual
             if (vid.srcObject) {
                 cv.width = vid.videoWidth; cv.height = vid.videoHeight;
                 cv.getContext('2d').drawImage(vid, 0, 0);
@@ -308,7 +311,9 @@
 
         window.cerrarModal = (id) => {
             document.getElementById(id).style.display = 'none';
-            if(videoStream) videoStream.getTracks().forEach(t => t.stop());
+            if(videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
         };
     </script>
 </body>
