@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Giro Pivote</title>
+    <title>LA❤️SERENA - Giro Real</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -13,7 +13,8 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
+        /* Panel de Estado para ver qué hace el personaje */
+        #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 14px; pointer-events: none; border: 1px solid lime; font-weight: bold; }
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
         .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
         .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
@@ -21,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Modo: Pivote Estricto (Girar -> Luego Caminar)</div>
+    <div id="ui-status">Esperando clic...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -39,6 +40,7 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
+        // Función para colocar edificios
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
@@ -75,7 +77,7 @@
 
         scene = crearEscena();
 
-        // 1. MAPA
+        // 1. CARGAR MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -83,7 +85,7 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (FIJA 610, 160)
+        // 2. MUNICIPALIDAD (POSICIÓN FIJA 610, 160)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Muni Fija";
@@ -92,14 +94,13 @@
         // 3. INTENDENCIA (FIJA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
-            statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
         // 4. SERENITO (SIN ENTERRAR)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            personaje.position = new BABYLON.Vector3(0, 8, 0); // Nace en el aire
+            personaje.position = new BABYLON.Vector3(0, 8, 0); // Altura 8 para no nacer enterrado
             
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
             personaje.checkCollisions = true;
@@ -108,66 +109,79 @@
             camera.lockedTarget = personaje;
             if (anims && anims.length > 0) {
                 animCaminar = anims[0];
-                animCaminar.stop(); 
+                animCaminar.stop(); // Nace quieto
             }
-            statusDiv.innerHTML += "<br>✅ Serenito Listo";
+            statusDiv.innerHTML += "<br>✅ Serenito Listo. Haz clic.";
         });
 
+        // DETECTAR CLIC EN EL SUELO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
+                statusDiv.innerHTML = "🛑 CALCULANDO RUTA...";
             }
         };
 
-        // --- CEREBRO ESTRICTO TIPO "RESIDENT EVIL" ---
+        // --- CEREBRO MAESTRO DE MOVIMIENTO ---
+        // Este bloque se ejecuta 60 veces por segundo
         scene.onBeforeRenderObservable.add(() => {
+            // Si no hay personaje o no hay destino, no hacemos nada
             if (!personaje || !destinoFinal) return;
             
+            // Calculamos la dirección hacia el destino
             let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0;
+            diff.y = 0; // Ignoramos la altura
 
-            if (diff.length() > 1.0) {
-                diff.normalize();
+            // Si estamos lejos del destino (más de 1.5 metros)
+            if (diff.length() > 1.5) {
                 
-                // 1. CALCULAR GIRO (Con corrección de espalda + Math.PI)
+                // 1. MATEMÁTICAS DE ROTACIÓN
+                // Calculamos hacia dónde debe mirar (+ Math.PI para corregir la espalda)
                 let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
                 let rotacionActual = personaje.rotation.y;
                 
-                // Normalizar ángulo (-PI a PI) para giro corto
+                // Ajuste para girar por el lado más corto (izquierda o derecha)
                 let diferencia = anguloObjetivo - rotacionActual;
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. EL SEMÁFORO ESTRICTO
-                // Umbral muy bajo: 0.1 radianes (aprox 5 grados).
+                // 2. EL SEMÁFORO (LA LÓGICA ESTRICTA)
+                // Si la diferencia de ángulo es mayor a 0.1 (aprox 5 grados),
+                // significa que NO estamos mirando al destino.
                 
                 if (Math.abs(diferencia) > 0.1) {
-                    // --- FASE 1: SOLO GIRAR ---
-                    // Rotamos el personaje
-                    personaje.rotation.y += diferencia * 0.15;
+                    // --- FASE DE GIRO ---
+                    statusDiv.innerHTML = "🔄 GIRANDO SOBRE EL EJE...";
                     
-                    // ¡PIERNAS QUIETAS! Forzamos stop a la animación
+                    // Giramos el personaje
+                    personaje.rotation.y += diferencia * 0.1; 
+                    
+                    // ¡IMPORTANTE! PROHIBIDO MOVER LAS PIERNAS
+                    // Detenemos la animación y no usamos moveWithCollisions
                     if (animCaminar) animCaminar.stop(); 
                     
                 } else {
-                    // --- FASE 2: SOLO CAMINAR ---
-                    // Ya estamos mirando al frente.
-                    // Snap final: Igualamos rotación exacta para que no vibre
-                    personaje.rotation.y = anguloObjetivo; 
+                    // --- FASE DE CAMINATA ---
+                    statusDiv.innerHTML = "🚶 CAMINANDO DE FRENTE...";
                     
-                    // AHORA SÍ movemos el cuerpo
+                    // Ya estamos mirando al frente. 
+                    // Movemos el personaje hacia adelante
+                    diff.normalize();
                     personaje.moveWithCollisions(diff.scale(1.2)); 
                     
-                    // Activamos animación de caminar
+                    // Ahora sí, activamos la animación
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
 
             } else {
+                // LLEGAMOS AL DESTINO
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
+                statusDiv.innerHTML = "✅ LLEGADA (Quieto)";
             }
         });
 
+        // --- FUNCIONES DE LOS BOTONES ---
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
@@ -183,12 +197,13 @@
         window.rescatar = function() {
             if(!personaje) return;
             destinoFinal = null;
+            // Lo ponemos en el aire para resetear físicas
             personaje.position = new BABYLON.Vector3(0, 8, 0); 
             camaraSerenito();
             statusDiv.innerHTML = "🚨 Rescate OK";
-            setTimeout(() => { statusDiv.innerHTML = "✅ Sistema OK"; }, 2000);
         }
 
+        // --- BUCLE DE RENDERIZADO ---
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
     </script>
