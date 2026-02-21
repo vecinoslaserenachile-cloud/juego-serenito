@@ -83,24 +83,35 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (CON CORRECCIÓN DE PIVOTE)
+       // 2. MUNICIPALIDAD (LÓGICA "AYER" - DIRECTA Y SIN RODEOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             let muni = meshes[0];
 
-            // 1. Desbloqueamos rotación
-            muni.rotationQuaternion = null;
+            // --- LA LÍNEA MÁGICA QUE BUSCAS ---
+            muni.rotationQuaternion = null; 
+            // ----------------------------------
 
-            // 2. TRUCO MAESTRO: Calculamos el centro real y forzamos el eje ahí
-            // Esto corrige el error de que el edificio gire "desde la esquina"
-            let centroReal = muni.getBoundingInfo().boundingBox.center;
-            muni.setPivotPoint(centroReal);
+            // 1. ESCALA (Tamaño 150)
+            // Usamos un cálculo simple para asegurar el tamaño 150 que te gusta
+            const bound = muni.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 150 / Math.max(size.x, size.y, size.z);
+            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-            // 3. Ahora sí, giramos 180 grados
-            // Nota: Al cambiar el pivote, a veces la posición se ajusta sola.
-            // Si ves que se mueve un poco, ajusta el 610/160.
-            colocarEdificio(muni, 610, 160, Math.PI, 150);
-            
-            statusDiv.innerHTML += "<br>✅ Muni Girada (Pivote Corregido)";
+            // 2. ROTACIÓN (180 GRADOS / MEDIA VUELTA)
+            muni.rotation.y = Math.PI;
+
+            // 3. POSICIÓN (TUS COORDENADAS)
+            // Ajustamos Y a 0 para que no flote ni se entierre
+            muni.position = new BABYLON.Vector3(610, 0, 160);
+
+            // 4. COLISIONES (Para que Serenito no la atraviese)
+            muni.checkCollisions = true;
+            muni.getChildMeshes().forEach(m => {
+                m.checkCollisions = true;
+            });
+
+            statusDiv.innerHTML += "<br>✅ Muni: Giro 180° ACTIVADO";
         });
 
         // 3. INTENDENCIA (BLOQUEADA)
@@ -195,4 +206,5 @@
     </script>
 </body>
 </html>
+
 
