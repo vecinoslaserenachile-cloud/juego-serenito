@@ -90,12 +90,17 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (MODO RESCATE)
+   // 2. MUNICIPALIDAD (ROTADA 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // Ponemos ROTACIÓN 0 para encontrarla primero.
-            // Una vez que aparezca, aplicaremos el giro de 180 manual.
-            colocarEdificio(meshes[0], 735, 187, 0, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Encontrada";
+            
+            // CAMBIO CLAVE:
+            // 1. Math.PI = Gira 180 grados.
+            // 2. 1080 = Movemos la X a la derecha porque al girar el edificio "salta".
+            // Si queda muy lejos, baja el 1080. Si queda encima de la Intendencia, súbelo.
+            
+            colocarEdificio(meshes[0], 1080, 187, Math.PI, 150);
+            
+            statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
         });
 
         // 3. INTENDENCIA
@@ -171,3 +176,4 @@
     </script>
 </body>
 </html>
+
