@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Master Final</title>
+    <title>LA❤️SERENA - Final Pro</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Sistema Cargado</div>
+    <div id="ui-status">Sistema de Escalas Independientes</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -39,7 +39,9 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
+        // Función Genérica (Solo para Intendencia y objetos simples)
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
+            mesh.rotationQuaternion = null; 
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
@@ -83,32 +85,34 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-      // 2. MUNICIPALIDAD (FUERZA BRUTA - QUATERNION)
+        // 2. MUNICIPALIDAD (SIN ESPEJO, SOLO ROTACIÓN)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             let muni = meshes[0];
 
-            // 1. ESCALA (Tamaño 150)
+            // A. ESCALA POSITIVA (Sin espejo)
             const bound = muni.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
-            const factor = 150 / Math.max(size.x, size.y, size.z);
+            // Math.abs asegura que el número sea POSITIVO siempre
+            const factor = Math.abs(150 / Math.max(size.x, size.y, size.z));
+            
+            // Vector (factor, factor, factor) -> NORMAL, NO ESPEJO
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-            // 2. ROTACIÓN (LA SOLUCIÓN DEFINITIVA)
-            // En vez de borrar el candado, le damos la llave exacta.
-            // Math.PI = 180 grados.
+            // B. ROTACIÓN FORZADA (Llave Maestra)
+            // 180 grados (Math.PI)
             muni.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
 
-            // 3. POSICIÓN (TUS COORDENADAS)
+            // C. POSICIÓN
             muni.position = new BABYLON.Vector3(610, 0, 160);
 
-            // 4. COLISIONES
+            // D. COLISIONES
             muni.checkCollisions = true;
             muni.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
                 if(m.material) m.material.backFaceCulling = false;
             });
 
-            statusDiv.innerHTML += "<br>✅ Muni: Quaternion 180° OK";
+            statusDiv.innerHTML += "<br>✅ Muni: Normal y Girada 180°";
         });
 
         // 3. INTENDENCIA (BLOQUEADA)
@@ -116,12 +120,16 @@
             colocarEdificio(meshes[0], 430, 410, 0, 180);
         });
 
-        // 4. SERENITO (BLOQUEADO: ESPEJO + MOVIMIENTO TANQUE)
+        // 4. SERENITO (CON ESPEJO -10 PARA LA CAMISETA)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
-            personaje.rotationQuaternion = null; // Necesario para girar
-            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Espejo (Polera OK)
-            personaje.position = new BABYLON.Vector3(0, 8, 0); // Altura OK
+            
+            personaje.rotationQuaternion = null; 
+            
+            // AQUÍ SÍ: Usamos -10 para el efecto espejo en la camiseta
+            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); 
+            
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
             personaje.checkCollisions = true;
             personaje.applyGravity = true; 
@@ -131,7 +139,7 @@
                 animCaminar = anims[0];
                 animCaminar.stop(); 
             }
-            statusDiv.innerHTML += "<br>✅ Serenito Listo";
+            statusDiv.innerHTML += "<br>✅ Serenito: Espejo OK";
         });
 
         scene.onPointerDown = (evt, pick) => {
@@ -141,7 +149,7 @@
             }
         };
 
-        // --- CEREBRO MAESTRO DE MOVIMIENTO (BLOQUEADO) ---
+        // --- CEREBRO MAESTRO DE MOVIMIENTO ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
@@ -149,7 +157,6 @@
             diff.y = 0; 
 
             if (diff.length() > 1.5) {
-                // Lógica de giro
                 let anguloObjetivo = Math.atan2(diff.x, diff.z); 
                 let rotacionActual = personaje.rotation.y;
                 let diferencia = anguloObjetivo - rotacionActual;
@@ -157,7 +164,6 @@
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // Semáforo estricto
                 if (Math.abs(diferencia) > 0.1) {
                     statusDiv.innerHTML = "🔄 GIRANDO...";
                     personaje.rotation.y += diferencia * 0.1; 
@@ -203,6 +209,3 @@
     </script>
 </body>
 </html>
-
-
-
