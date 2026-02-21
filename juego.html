@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Movimiento Fluido</title>
+    <title>LA❤️SERENA - Giro Estricto</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Movimiento Natural...</div>
+    <div id="ui-status">Sistema: Primero Giro, Luego Camino</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -59,8 +59,7 @@
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
-            // Gravedad para que caiga al suelo tras nacer en el aire
-            scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
+            scene.gravity = new BABYLON.Vector3(0, -0.9, 0); // Gravedad activada
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
@@ -84,25 +83,23 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (POSICIÓN CORRECTA BLOQUEADA)
+        // 2. MUNICIPALIDAD (FIJA 610, 160)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Muni Fija";
         });
 
-        // 3. INTENDENCIA
+        // 3. INTENDENCIA (FIJA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
-        // 4. SERENITO (ALTURA CORREGIDA)
+        // 4. SERENITO (SIN ENTERRAR)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            
-            // Lo ponemos alto para que no se entierre, la gravedad hará el resto
-            personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            personaje.position = new BABYLON.Vector3(0, 8, 0); // Nace en el aire para no enterrarse
             
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
             personaje.checkCollisions = true;
@@ -122,44 +119,49 @@
             }
         };
 
-        // --- CEREBRO DE MOVIMIENTO "FLUIDO" ---
+        // --- CEREBRO ESTRICTO (SOLUCIÓN DEFINITIVA DE GIRO) ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
 
+            // Si estamos lejos del destino
             if (diff.length() > 1.0) {
                 diff.normalize();
                 
-                // 1. CÁLCULO DEL ÁNGULO DE GIRO
-                // Math.PI sigue ahí para que no camine de espaldas
+                // 1. CÁLCULO DE ÁNGULO (Con corrección de espalda + Math.PI)
                 let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
                 let rotacionActual = personaje.rotation.y;
                 
-                // Normalizamos el ángulo para que gire por el camino más corto
+                // Matemáticas para buscar el giro corto
                 let diferencia = anguloObjetivo - rotacionActual;
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. VELOCIDAD DE GIRO (Ajustada para que se vea mecánica pero fluida)
-                // 0.15 es un buen equilibrio.
-                personaje.rotation.y += diferencia * 0.15;
-
-                // 3. LA CLAVE DE LA NATURALIDAD: EL UMBRAL DE CAMINATA
-                // Antes era 0.25 (muy estricto). Ahora es 0.8 (aprox 45 grados).
-                // Esto significa: "Si el destino está más o menos al frente, CAMINA mientras terminas de girar".
-                // Esto crea curvas al caminar en vez de paradas en seco.
+                // 2. DECISIÓN DE MOVIMIENTO
+                // Umbral MUY estricto: 0.15 radianes (aprox 8 grados).
+                // Si la diferencia es mayor a esto, está "desalineado".
                 
-                if (Math.abs(diferencia) < 0.8) {
-                    personaje.moveWithCollisions(diff.scale(1.2)); 
-                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                if (Math.abs(diferencia) > 0.15) {
+                    // ESTADO: SOLO GIRANDO
+                    // Gira rápido para no aburrir (0.2)
+                    personaje.rotation.y += diferencia * 0.2;
+                    
+                    // FRENOS ACTIVADOS: No se mueve de posición
+                    if (animCaminar) animCaminar.stop(); 
+                    
                 } else {
-                    // Si el destino está a la espalda, gira en el sitio (pivote)
-                    if (animCaminar) animCaminar.stop();
+                    // ESTADO: ALINEADO Y CAMINANDO
+                    // Solo cuando ya mira al frente, ajustamos fino y caminamos.
+                    personaje.rotation.y += diferencia * 0.1; // Ajuste fino
+                    personaje.moveWithCollisions(diff.scale(1.2)); // Caminar
+                    
+                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
 
             } else {
+                // Llegó al destino
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
             }
