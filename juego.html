@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Limpieza Total</title>
+    <title>LA❤️SERENA - Versión Final Pro</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Limpieza de Código: Girando Muni 180°...</div>
+    <div id="ui-status">Sistema de Rescate Activado...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -39,7 +39,7 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // Función solo para edificios genéricos
+        // Función para edificios simples (Intendencia)
         const colocarSimple = (mesh, x, z, escala) => {
             mesh.rotationQuaternion = null; 
             const bound = mesh.getHierarchyBoundingVectors(true);
@@ -48,7 +48,6 @@
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             let nivelSuelo = -bound.min.y * factor;
             mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
-            return factor;
         };
 
         const crearEscena = function () {
@@ -73,53 +72,42 @@
         suelo.material = matSuelo;
         suelo.checkCollisions = true;
 
-        <script>
-    // ... (Mantén todo el código de arriba igual hasta llegar a la carga de la Muni) ...
+        // 2. MUNICIPALIDAD - MÉTODO PADRE PIVOTE (PARA EL GIRO DE 180°)
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            let muni = meshes[0];
+            
+            // Creamos el contenedor invisible
+            let cajaPadre = new BABYLON.TransformNode("cajaMuni", scene);
+            muni.parent = cajaPadre; // El edificio entra a la caja
 
-    // 2. MUNICIPALIDAD - MÉTODO DEL PADRE PIVOTE (EL QUE NO FALLA)
-    BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-        let muni = meshes[0];
-        
-        // Creamos una "Caja Invisible" (Contenedor)
-        let cajaPadre = new BABYLON.TransformNode("cajaMuni", scene);
-        
-        // Metemos el edificio dentro de la caja
-        muni.parent = cajaPadre;
+            // Ajuste de tamaño
+            const bound = muni.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 150 / Math.max(size.x, size.y, size.z);
+            muni.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-        // 1. AJUSTE DE TAMAÑO (150)
-        const bound = muni.getHierarchyBoundingVectors(true);
-        const size = bound.max.subtract(bound.min);
-        const factor = 150 / Math.max(size.x, size.y, size.z);
-        muni.scaling = new BABYLON.Vector3(factor, factor, factor);
+            // Desbloqueo de rotación
+            muni.rotationQuaternion = null;
+            muni.getChildMeshes().forEach(m => m.rotationQuaternion = null);
 
-        // 2. DESBLOQUEO TOTAL
-        // Quitamos los candados a TODO el edificio (padre e hijos)
-        muni.rotationQuaternion = null;
-        muni.getChildMeshes().forEach(m => m.rotationQuaternion = null);
+            // GIRO DE LA CAJA (180 grados)
+            cajaPadre.rotation.y = Math.PI;
 
-        // 3. EL GIRO MAESTRO (Giramos la CAJA, no el edificio)
-        // Esto obliga al edificio a dar la vuelta completa
-        cajaPadre.rotation.y = Math.PI; // 180 grados
+            // POSICIÓN FINAL (610, 160)
+            let nivelSuelo = -bound.min.y * factor;
+            cajaPadre.position = new BABYLON.Vector3(610, nivelSuelo, 160);
 
-        // 4. POSICIÓN (En tus coordenadas 610, 160)
-        let nivelSuelo = -bound.min.y * factor;
-        cajaPadre.position = new BABYLON.Vector3(610, nivelSuelo, 160);
-
-        muni.checkCollisions = true;
-        muni.getChildMeshes().forEach(m => m.checkCollisions = true);
-        
-        statusDiv.innerHTML = "✅ Muni: ¡Giro 180° Logrado!";
-    });
-
-    // ... (El resto del código de Serenito e Intendencia se queda igual) ...
-</script>
+            muni.checkCollisions = true;
+            muni.getChildMeshes().forEach(m => m.checkCollisions = true);
+            statusDiv.innerHTML = "✅ Muni Girada y Lista";
+        });
 
         // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarSimple(meshes[0], 430, 410, 180);
         });
 
-        // 4. SERENITO - BLINDADO
+        // 4. SERENITO - MOVIMIENTO Y ESPEJO CORREGIDO
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.rotationQuaternion = null; 
@@ -129,26 +117,38 @@
             personaje.checkCollisions = true;
             personaje.applyGravity = true; 
             camera.lockedTarget = personaje;
-            if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
+            if (anims && anims.length > 0) { 
+                animCaminar = anims[0]; 
+                animCaminar.stop(); 
+            }
+            statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
-        // MOVIMIENTO ESTRICTO
-        scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+        scene.onPointerDown = (evt, pick) => { 
+            if (pick.hit && pick.pickedMesh === suelo) {
+                destinoFinal = pick.pickedPoint; 
+            }
+        };
 
+        // LÓGICA DE MOVIMIENTO "TANQUE" (GIRO -> CAMINO)
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
+            
             if (diff.length() > 1.5) {
                 let anguloObjetivo = Math.atan2(diff.x, diff.z); 
                 let diferencia = anguloObjetivo - personaje.rotation.y;
+                
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
                 if (Math.abs(diferencia) > 0.1) {
+                    // Solo gira
                     personaje.rotation.y += diferencia * 0.15;
                     if (animCaminar) animCaminar.stop();
                 } else {
+                    // Ya giró, ahora camina
                     personaje.rotation.y = anguloObjetivo;
                     diff.normalize();
                     personaje.moveWithCollisions(diff.scale(1.2));
@@ -162,11 +162,15 @@
 
         window.camaraSerenito = function() { camera.lockedTarget = personaje; camera.radius = 100; }
         window.camaraAerea = function() { camera.lockedTarget = null; camera.setPosition(new BABYLON.Vector3(500, 600, 500)); camera.setTarget(new BABYLON.Vector3(500, 0, 300)); }
-        window.rescatar = function() { destinoFinal = null; personaje.position = new BABYLON.Vector3(0, 8, 0); camaraSerenito(); }
+        window.rescatar = function() { 
+            destinoFinal = null; 
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            camaraSerenito(); 
+            statusDiv.innerHTML = "🚨 Rescate OK";
+        }
 
         engine.runRenderLoop(() => { scene.render(); });
         window.addEventListener("resize", () => { engine.resize(); });
     </script>
 </body>
 </html>
-
