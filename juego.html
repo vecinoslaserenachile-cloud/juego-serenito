@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena 3D...</div>
+    <div id="ui-status">Cargando Sistema de Ejes...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,16 +40,42 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
+        // --- LA NUEVA FUNCIÓN MAESTRA (CORRIGE EL EJE CENTRAL) ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            const bound = mesh.getHierarchyBoundingVectors(true);
-            const size = bound.max.subtract(bound.min);
-            const factor = escala / Math.max(size.x, size.y, size.z);
+            // 1. LIMPIEZA DE EJE (Esto arregla el problema de rotación)
+            // Desvinculamos el mesh de cualquier padre para calcular bien
+            mesh.setParent(null);
             
+            // Calculamos el centro geométrico del edificio
+            let bounds = mesh.getHierarchyBoundingVectors();
+            let center = bounds.max.add(bounds.min).scale(0.5);
+            
+            // Movemos el edificio para que su centro esté en 0,0,0
+            mesh.position = center.scale(-1);
+            
+            // "Horneamos" (fijamos) esa posición como el nuevo eje 0
+            mesh.bakeCurrentTransformIntoVertices();
+            
+            // 2. AHORA SÍ ESCALAMOS Y POSICIONAMOS
+            // Recalculamos dimensiones con el nuevo eje
+            bounds = mesh.getHierarchyBoundingVectors();
+            let size = bounds.max.subtract(bounds.min);
+            let maxDim = Math.max(size.x, size.y, size.z);
+            let factor = escala / maxDim;
+
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            const nivelSuelo = -bound.min.y * factor; 
-            mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
+            
+            // Calculamos la altura para que pise el suelo (Y=0)
+            let halfHeight = (size.y * factor) / 2;
+            
+            // Posicionamos (Ahora X y Z son el CENTRO REAL del edificio)
+            mesh.position = new BABYLON.Vector3(x, halfHeight, z);
+            
+            // Rotamos (Ahora gira sobre su propio centro perfecto)
             mesh.rotation.y = rotacion; 
 
+            // Activar colisiones
+            mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
                 if(m.material) m.material.backFaceCulling = false;
@@ -66,7 +92,7 @@
 
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            // CANDADO DE SUELO
+            // Candado de suelo
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
@@ -77,6 +103,7 @@
 
         scene = crearEscena();
 
+        // 1. CARGAR MAPA
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
@@ -84,17 +111,16 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (GIRADA 180 GRADOS)
+        // 2. MUNICIPALIDAD (Ahora rotará en su eje perfecto)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // TRUCO: Al girar (Math.PI), el edificio salta a la izquierda.
-            // Lo compensamos moviendo X de 735 a 1080.
-            colocarEdificio(meshes[0], 1080, 187, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Girada";
+            // Usamos las coordenadas originales (735) porque ya no salta al rotar
+            // Math.PI (180 grados) ahora gira el edificio en SU PROPIO EJE
+            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Centrada y Girada";
         });
 
-        // 3. INTENDENCIA (RESTAURADA A SU POSICIÓN CORRECTA)
+        // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            // Volvemos a los valores que funcionaban bien: 430 y 410
             colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
