@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Muni Girada 180°...</div>
+    <div id="ui-status">Posiciones Restauradas...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -83,16 +83,16 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (GIRADA 180 GRADOS)
+        // 2. MUNICIPALIDAD (Restaurada a Rotación 0 para separar)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // 👇 CAMBIO AQUÍ: Math.PI es media vuelta (180 grados)
-            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Girada";
+            // Volvemos a '0' en rotación, ya que Math.PI la desplazaba encima del otro
+            colocarEdificio(meshes[0], 735, 187, 0, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Separada";
         });
 
-        // 3. INTENDENCIA (Se mantiene igual)
+        // 3. INTENDENCIA (Posición segura)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
+            colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -162,4 +162,3 @@
     </script>
 </body>
 </html>
-
