@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Serenito 2.0</title>
+    <title>LA❤️SERENA - Serenito Natural</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Movimiento Natural...</div>
+    <div id="ui-status">Cargando Sistema Anti-Deslizamiento...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -80,19 +80,21 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (BLOQUEADA EN TU POSICIÓN CORRECTA)
+        // 2. MUNICIPALIDAD (POSICIÓN FIJA RODRIGO: 610, 160)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            // Posición exacta que recuperamos
+            // Math.PI = 180 grados
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Fija";
+            statusDiv.innerHTML += "<br>✅ Muni Fija (610, 160)";
         });
 
-        // 3. INTENDENCIA (BLOQUEADA)
+        // 3. INTENDENCIA (POSICIÓN FIJA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
-        // 4. SERENITO (SISTEMA DE ANIMACIÓN MEJORADO)
+        // 4. SERENITO (SISTEMA DE GIRO CORREGIDO)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
@@ -102,67 +104,52 @@
             camera.lockedTarget = personaje;
             if (anims && anims.length > 0) {
                 animCaminar = anims[0];
-                animCaminar.stop(); // Nos aseguramos que empiece quieto
+                animCaminar.stop(); 
             }
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
-        // 5. LÓGICA DE CLIC
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
             }
         };
 
-        // 6. CEREBRO DE MOVIMIENTO (NUEVO)
+        // --- CEREBRO DE MOVIMIENTO "HUMANO" ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
-            // Calculamos vector hacia el destino
             let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0; // Ignoramos altura
+            diff.y = 0;
 
-            if (diff.length() > 1.5) { // Si estamos lejos
+            if (diff.length() > 1.0) { // Si estamos a más de 1 metro
                 diff.normalize();
                 
-                // Calculamos el ángulo objetivo
+                // 1. CALCULAR ÁNGULO
                 let anguloObjetivo = Math.atan2(diff.x, diff.z);
-                
-                // Rotación actual suavizada
-                // Usamos un LERP (Interpolación) para que el giro sea elegante
                 let rotacionActual = personaje.rotation.y;
-                let diferenciaRotacion = anguloObjetivo - rotacionActual;
+                
+                // Corrección matemática para que gire por el lado más corto
+                let diferencia = anguloObjetivo - rotacionActual;
+                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
+                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // Corregimos el salto de 360 grados (PI * 2)
-                while (diferenciaRotacion > Math.PI) diferenciaRotacion -= Math.PI * 2;
-                while (diferenciaRotacion < -Math.PI) diferenciaRotacion += Math.PI * 2;
+                // 2. GIRAR
+                // Velocidad de giro: 0.15 (suficiente para que no sea instantáneo pero tampoco lento)
+                personaje.rotation.y += diferencia * 0.15;
 
-                // APLICAMOS EL GIRO
-                // 0.1 es la velocidad de giro. Si lo quieres más rápido sube a 0.2
-                personaje.rotation.y += diferenciaRotacion * 0.1;
-
-                // LÓGICA HUMANA:
-                // Si la diferencia de ángulo es pequeña (menor a 0.5 radianes / ~30 grados), CAMINA.
-                // Si la diferencia es grande (está de espaldas), SOLO GIRA.
-                if (Math.abs(diferenciaRotacion) < 0.5) {
-                    // Está mirando al frente, ¡AVANZA!
-                    personaje.moveWithCollisions(diff.scale(1.2)); // 1.2 es velocidad de caminar
-                    
-                    if (animCaminar && !animCaminar.isPlaying) {
-                        animCaminar.play(true); // Activa animación
-                        animCaminar.speedRatio = 1.0; // Velocidad normal
-                    }
+                // 3. REGLA DE ORO: ¿PUEDO CAMINAR?
+                // Solo camina si la diferencia de ángulo es MENOR a 0.2 radianes (unos 10 grados)
+                // Es decir, solo avanza si está mirando casi de frente al objetivo.
+                if (Math.abs(diferencia) < 0.25) {
+                    personaje.moveWithCollisions(diff.scale(1.2)); // Avanza
+                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 } else {
-                    // Está girando, ¡QUIETO!
-                    // Podríamos poner animación de "Wait" aquí si tuvieras, 
-                    // pero por ahora detenemos la caminata para que no patine.
-                    if (animCaminar) {
-                        animCaminar.stop();
-                    }
+                    // Si está girando mucho, NO AVANZA (Detiene el deslizamiento)
+                    if (animCaminar) animCaminar.stop();
                 }
 
             } else {
-                // LLEGÓ AL DESTINO
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
             }
