@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Gestión Municipal Inteligente</title>
+    <title>LA❤️SERENA - Sistema de Recuperación</title>
     
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
@@ -13,402 +13,277 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* ESTILOS DE INTERFAZ PROFESIONAL */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
+        /* CONSOLA DE DIAGNÓSTICO (Para ver errores en pantalla) */
+        #debug-console {
+            position: absolute; top: 0; left: 0; width: 100%; background: rgba(255,0,0,0.8); 
+            color: white; padding: 5px; font-size: 12px; z-index: 9999; display: none;
+        }
+
         /* UI SUPERIOR */
-        .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
+        .top-ui { position: absolute; top: 40px; left: 15px; right: 15px; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* Tarjeta de Radio */
-        .radio-card {
-            background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 15px; border-radius: 30px;
-            display: flex; align-items: center; gap: 12px; border: 1px solid #ffd700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-        .equalizer { width: 10px; height: 10px; background: #ff3333; border-radius: 50%; animation: blink 1s infinite; display: none; }
-        @keyframes blink { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
-
-        /* Tarjeta de Usuario */
-        .user-card {
-            background: white; color: #333; padding: 5px 15px 5px 5px; border-radius: 30px;
-            display: flex; align-items: center; gap: 10px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
-        }
-        .user-card:hover { transform: scale(1.05); }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd700; }
+        /* Tarjeta Radio */
+        .card { background: rgba(0,0,0,0.8); color: white; padding: 10px 15px; border-radius: 30px; display: flex; align-items: center; gap: 10px; border: 1px solid gold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         
-        /* BARRA DE HERRAMIENTAS INFERIOR */
-        #toolbar {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; z-index: 100;
-        }
-        .btn-tool {
-            width: 65px; height: 65px; border-radius: 50%; border: none;
-            background: rgba(255,255,255,0.95); font-size: 24px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s; color: #444;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .btn-tool:active { transform: scale(0.95); }
-        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
+        /* Toolbar */
+        #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+        .btn-main { background: #ff3333; color: white; border: 3px solid white; transform: translateY(-10px); }
 
-        /* MODALES (Reporte e Historial) */
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center;
-        }
-        .modal-box {
-            background: #222; width: 90%; max-width: 480px; padding: 25px; border-radius: 15px;
-            border: 1px solid #444; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            max-height: 85vh; overflow-y: auto; text-align: center;
-        }
-        .input-std {
-            width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555;
-            color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px;
-        }
-        #cam-preview { width: 100%; height: 200px; background: #000; margin: 10px 0; border: 2px solid #ffd700; border-radius: 8px; object-fit: cover; }
-        
-        /* Lista Historial */
-        .ticket-item { background: #333; padding: 12px; margin-bottom: 10px; border-radius: 8px; text-align: left; border-left: 4px solid #aaa; }
-        .status-badge { float: right; font-size: 11px; padding: 3px 8px; border-radius: 10px; }
-        .st-new { background: #ffd700; color: black; } /* Ingresado */
-        .st-ok { background: #28a745; color: white; } /* Resuelto */
+        /* Modales */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
+        .box { background: #222; width: 90%; max-width: 400px; padding: 20px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="radio-card pointer">
-            <div id="radio-indicator" class="equalizer"></div>
-            <i class="fas fa-play" id="btn-radio-icon" onclick="toggleRadio()" style="cursor: pointer;"></i>
-            <span style="font-size:14px; font-weight:600;">RD MLS</span>
-            <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="setVolume(this.value)">
-        </div>
+    <div id="debug-console"></div>
 
-        <div class="user-card pointer" onclick="gestionarLogin()">
-            <img id="user-pic" class="user-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
-            <span id="user-name">Acceder</span>
+    <div class="top-ui">
+        <div class="card pointer">
+            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()" style="cursor:pointer;"></i>
+            <span>RADIO MUNI</span>
+        </div>
+        <div class="card pointer" onclick="login()" id="btn-login-ui">
+            <i class="fab fa-google"></i> <span id="txt-login">Acceder</span>
         </div>
     </div>
 
-    <audio id="stream-audio" crossorigin="anonymous">
-        <source src="https://az11.yesstreaming.net:8590/radio.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn-tool" onclick="verHistorial()" title="Mis Reportes"><i class="fas fa-list-alt"></i></button>
-        <button class="btn-tool btn-main" onclick="abrirReporte()" title="Reportar Incidencia"><i class="fas fa-camera"></i></button>
-        <button class="btn-tool" onclick="camaraAerea()" title="Mapa Aéreo"><i class="fas fa-map-marked-alt"></i></button>
-        <button class="btn-tool" onclick="resetCamara()" title="Seguir a Serenito"><i class="fas fa-walking"></i></button>
+        <button class="btn" onclick="verHistorial()"><i class="fas fa-list"></i></button>
+        <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
+        <button class="btn" onclick="resetCamara()"><i class="fas fa-walking"></i></button>
     </div>
 
-    <div id="modal-reporte" class="modal-overlay">
-        <div class="modal-box">
-            <div style="text-align:right;"><i class="fas fa-times" onclick="cerrarModal('modal-reporte')" style="cursor:pointer; font-size:24px;"></i></div>
-            <h2 style="color:#ffd700; margin-top:0;">📷 Nueva Incidencia</h2>
-            
-            <p id="gps-msg" style="color:#aaa; font-size:13px; margin:5px 0;">📍 Obteniendo ubicación...</p>
-            
-            <video id="cam-preview" autoplay playsinline></video>
-            <canvas id="snapshot" style="display:none;"></canvas>
-
-            <input type="text" id="desc-txt" class="input-std" placeholder="¿Qué sucede? (Ej: Semáforo malo)">
-            
-            <button onclick="guardarIncidencia()" style="width:100%; padding:15px; background:#ffd700; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:16px; margin-top:10px;">
-                ENVIAR REPORTE
-            </button>
+    <div id="modal-rep" class="modal">
+        <div class="box">
+            <h2 style="color:gold;">📷 Reporte</h2>
+            <video id="cam" autoplay playsinline style="width:100%; height:200px; background:black; margin-bottom:10px;"></video>
+            <canvas id="snap" style="display:none;"></canvas>
+            <input type="text" id="desc" placeholder="Describe el problema...">
+            <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer;">ENVIAR</button>
+            <button onclick="document.getElementById('modal-rep').style.display='none'" style="margin-top:10px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
         </div>
     </div>
 
-    <div id="modal-historial" class="modal-overlay">
-        <div class="modal-box">
-            <div style="text-align:right;"><i class="fas fa-times" onclick="cerrarModal('modal-historial')" style="cursor:pointer; font-size:24px;"></i></div>
-            <h3 style="color:#fff; margin-top:0;">📂 Mis Gestiones</h3>
-            <div id="lista-tickets" style="margin-top:20px; text-align:left;">
-                <p style="text-align:center; color:#777;">Cargando historial...</p>
-            </div>
+    <div id="modal-hist" class="modal">
+        <div class="box">
+            <h3>📂 Mis Reportes</h3>
+            <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
+            <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:10px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
         </div>
     </div>
 
     <script>
-        // === A. CONFIGURACIÓN MAESTRA FIREBASE ===
-        const firebaseConfig = {
-            apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
-            authDomain: "laserena-d1263.firebaseapp.com",
-            projectId: "laserena-d1263",
-            storageBucket: "laserena-d1263.firebasestorage.app",
-            messagingSenderId: "283725387947",
-            appId: "1:283725387947:web:898aa22c80c2fadbe8bfee"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        let usuarioActual = null;
+        // === SISTEMA DE DIAGNÓSTICO ===
+        function logError(msg) {
+            const consoleDiv = document.getElementById('debug-console');
+            consoleDiv.style.display = 'block';
+            consoleDiv.innerHTML += "⚠️ " + msg + "<br>";
+            console.error(msg);
+        }
 
-        // === B. AUTENTICACIÓN (Google Login) ===
-        function gestionarLogin() {
-            if (!usuarioActual) {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider).catch(e => alert("Error Login: " + e.message));
-            } else {
-                if(confirm("¿Cerrar sesión de " + usuarioActual.displayName + "?")) {
-                    auth.signOut();
+        try {
+            // 1. FIREBASE INIT
+            const firebaseConfig = {
+                apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
+                authDomain: "laserena-d1263.firebaseapp.com",
+                projectId: "laserena-d1263",
+                storageBucket: "laserena-d1263.firebasestorage.app",
+                messagingSenderId: "283725387947",
+                appId: "1:283725387947:web:898aa22c80c2fadbe8bfee"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const auth = firebase.auth();
+            let userCurrent = null;
+
+            // Auth Listener
+            auth.onAuthStateChanged(u => {
+                if(u) {
+                    userCurrent = u;
+                    document.getElementById('txt-login').innerText = u.displayName.split(' ')[0];
+                } else {
+                    userCurrent = null;
+                    document.getElementById('txt-login').innerText = "Acceder";
                 }
-            }
-        }
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                usuarioActual = user;
-                document.getElementById('user-pic').src = user.photoURL;
-                document.getElementById('user-name').innerText = user.displayName.split(" ")[0]; // Solo primer nombre
-            } else {
-                usuarioActual = null;
-                document.getElementById('user-pic').src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                document.getElementById('user-name').innerText = "Acceder";
-            }
-        });
-
-        // === C. RADIO (Conexión Directa) ===
-        const audioEl = document.getElementById('stream-audio');
-        let isPlaying = false;
-
-        function toggleRadio() {
-            const icon = document.getElementById('btn-radio-icon');
-            const eq = document.getElementById('radio-indicator');
-            
-            if (!isPlaying) {
-                audioEl.play().then(() => {
-                    isPlaying = true;
-                    icon.className = "fas fa-stop";
-                    icon.style.color = "#ff3333";
-                    eq.style.display = "block";
-                }).catch(e => {
-                    console.log(e);
-                    alert("⚠️ Pulsa 'Play' nuevamente para autorizar el audio.");
-                });
-            } else {
-                audioEl.pause();
-                isPlaying = false;
-                icon.className = "fas fa-play";
-                icon.style.color = "white";
-                eq.style.display = "none";
-            }
-        }
-        function setVolume(val) { audioEl.volume = val; }
-
-        // === D. MOTOR 3D (Restauración Total) ===
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        let scene, camera, personaje, animCaminar, destinoFinal;
-
-        const crearEscena = function () {
-            scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // CIELO AZUL
-            scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
-            scene.collisionsEnabled = true;
-
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.0;
-
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
-            camera.checkCollisions = true; // Cámara no atraviesa edificios
-            return scene;
-        };
-        scene = crearEscena();
-
-        // PISO BLINDADO
-        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
-        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-        suelo.material = matSuelo;
-        suelo.checkCollisions = true;
-
-        // EDIFICIOS (Posición Correcta)
-        const cargarEdificio = (file, x, z, scaleFactor, rot) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", file, scene, (m) => {
-                let mesh = m[0];
-                let root = new BABYLON.TransformNode("root", scene);
-                mesh.parent = root;
-                
-                const b = mesh.getHierarchyBoundingVectors(true);
-                const size = b.max.subtract(b.min);
-                const factor = scaleFactor / Math.max(size.x, size.y, size.z);
-                
-                mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-                root.rotation.y = rot;
-                
-                // Pegado al piso
-                let nivelSuelo = -b.min.y * factor;
-                root.position = new BABYLON.Vector3(x, nivelSuelo, z);
-                
-                mesh.getChildMeshes().forEach(c => c.checkCollisions = true);
             });
-        };
-        cargarEdificio("municipalidad.glb", 610, 160, 150, Math.PI); // Giro 180
-        cargarEdificio("intendencia.glb", 430, 410, 180, 0);
 
-        // SERENITO (Movimiento Tanque Restaurado)
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-            personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Espejo
-            personaje.position = new BABYLON.Vector3(0, 5, 0); // Nace cayendo para no atascarse
+            window.login = () => {
+                const p = new firebase.auth.GoogleAuthProvider();
+                auth.signInWithPopup(p).catch(e => logError("Login Error: " + e.message));
+            };
+
+            // 2. MOTOR 3D
+            const canvas = document.getElementById("renderCanvas");
+            if (!BABYLON) throw new Error("BabylonJS no cargó.");
             
-            // FÍSICA Y COLISIÓN (Pies firmes)
-            personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
-            personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
-            personaje.checkCollisions = true;
-            personaje.applyGravity = true;
+            const engine = new BABYLON.Engine(canvas, true);
+            let scene, camera, personaje, anim;
+            let destino = null;
+
+            const createScene = function () {
+                const s = new BABYLON.Scene(engine);
+                s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
+                s.gravity = new BABYLON.Vector3(0, -0.9, 0);
+                s.collisionsEnabled = true;
+
+                const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
+                light.intensity = 1.0;
+
+                camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
+                camera.attachControl(canvas, true);
+                
+                // PISO
+                const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2000, height: 2000}, s);
+                const mat = new BABYLON.StandardMaterial("mat", s);
+                mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
+                suelo.material = mat;
+                suelo.checkCollisions = true;
+
+                // EDIFICIOS (Con manejo de error)
+                const loadMesh = (file, x, z, scale, rot) => {
+                    BABYLON.SceneLoader.ImportMesh("", "./", file, s, (m) => {
+                        let mesh = m[0];
+                        let root = new BABYLON.TransformNode("root", s);
+                        mesh.parent = root;
+                        
+                        // Normalizar escala
+                        const b = mesh.getHierarchyBoundingVectors(true);
+                        const size = b.max.subtract(b.min);
+                        const factor = scale / Math.max(size.x, size.y, size.z);
+                        mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
+                        
+                        root.rotation.y = rot;
+                        root.position = new BABYLON.Vector3(x, -b.min.y*factor, z);
+                    }, null, (e) => logError("Error cargando " + file));
+                };
+
+                loadMesh("municipalidad.glb", 610, 160, 150, Math.PI);
+                loadMesh("intendencia.glb", 430, 410, 180, 0);
+
+                // SERENITO
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
+                    personaje = m[0];
+                    personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
+                    personaje.position = new BABYLON.Vector3(0, 5, 0);
+                    personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
+                    personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
+                    personaje.checkCollisions = true;
+                    personaje.applyGravity = true;
+                    camera.lockedTarget = personaje;
+                    if(a && a.length > 0) { anim = a[0]; anim.stop(); }
+                }, null, (e) => logError("Error cargando Serenito"));
+
+                // MOVIMIENTO
+                s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destino = pick.pickedPoint; };
+                
+                s.onBeforeRenderObservable.add(() => {
+                    if(!personaje || !destino) return;
+                    let diff = destino.subtract(personaje.position);
+                    diff.y = 0;
+                    if(diff.length() > 1.5) {
+                        let angle = Math.atan2(diff.x, diff.z);
+                        let rotData = angle - personaje.rotation.y;
+                        while (rotData > Math.PI) rotData -= Math.PI * 2;
+                        while (rotData < -Math.PI) rotData += Math.PI * 2;
+                        
+                        // Giro suave
+                        personaje.rotation.y += rotData * 0.1;
+                        
+                        // Avance
+                        if(Math.abs(rotData) < 0.5) {
+                            personaje.moveWithCollisions(diff.normalize().scale(1.0));
+                            if(anim && !anim.isPlaying) anim.play(true);
+                        }
+                    } else {
+                        if(anim) anim.stop();
+                        destino = null;
+                    }
+                });
+
+                return s;
+            };
+
+            scene = createScene();
             
-            camera.lockedTarget = personaje;
-            if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
-        });
+            engine.runRenderLoop(() => { scene.render(); });
+            window.addEventListener("resize", () => engine.resize());
 
-        // LÓGICA DE MOVIMIENTO "TANQUE" (Giro -> Avance)
-        scene.onPointerDown = (evt, pick) => { 
-            if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; 
-        };
-
-        scene.onBeforeRenderObservable.add(() => {
-            if (!personaje || !destinoFinal) return;
-            let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0;
-
-            if (diff.length() > 1.5) {
-                let anguloObjetivo = Math.atan2(diff.x, diff.z);
-                let actual = personaje.rotation.y;
-                let diferencia = anguloObjetivo - actual;
-
-                // Normalizar -PI a PI
-                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
-                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
-
-                // FASE 1: SOLO GIRAR
-                if (Math.abs(diferencia) > 0.15) {
-                    personaje.rotation.y += diferencia * 0.1; // Velocidad de giro
-                    if (animCaminar) animCaminar.stop();
-                } 
-                // FASE 2: AVANZAR
-                else {
-                    personaje.rotation.y = anguloObjetivo;
-                    let dir = diff.normalize();
-                    personaje.moveWithCollisions(dir.scale(1.0)); // Velocidad avance
-                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+            // 3. FUNCIONES DE UI
+            window.toggleRadio = () => {
+                const aud = document.getElementById('audio-player');
+                const icon = document.getElementById('icon-play');
+                if(aud.paused) {
+                    aud.play().then(() => { icon.className = "fas fa-stop"; icon.style.color = "red"; })
+                    .catch(e => alert("Navegador bloqueó audio. Dale click de nuevo."));
+                } else {
+                    aud.pause();
+                    icon.className = "fas fa-play";
+                    icon.style.color = "white";
                 }
-            } else {
-                if (animCaminar) animCaminar.stop();
-                destinoFinal = null;
-            }
-        });
+            };
 
-        // === E. FUNCIONES DE REPORTE Y CÁMARA ===
-        let streamVideo = null;
-        let gpsActual = null;
-        let direccionActual = "";
+            window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 150; } };
 
-        function abrirReporte() {
-            if (!usuarioActual) return alert("🔒 Por favor, pulsa ACCEDER arriba a la derecha para identificarte.");
-            
-            document.getElementById('modal-reporte').style.display = 'flex';
-            
-            // Activar Cámara
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(s => {
-                streamVideo = s;
-                document.getElementById('cam-preview').srcObject = s;
-            });
-
-            // Activar GPS
-            navigator.geolocation.getCurrentPosition(pos => {
-                gpsActual = pos.coords;
-                // Geocodificación (Lat/Lon -> Calle)
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
-                .then(r => r.json()).then(d => {
-                    direccionActual = d.display_name.split(",")[0]; // Solo calle
-                    document.getElementById('gps-msg').innerText = `📍 ${direccionActual}`;
+            let videoStream = null;
+            window.abrirReporte = () => {
+                if(!userCurrent) return alert("Debes ACCEDER primero.");
+                document.getElementById('modal-rep').style.display = 'flex';
+                navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}}).then(s => {
+                    videoStream = s;
+                    document.getElementById('cam').srcObject = s;
                 });
-            });
-        }
+            };
 
-        function guardarIncidencia() {
-            const desc = document.getElementById('desc-txt').value;
-            if(!desc) return alert("Escribe qué sucede.");
+            window.enviar = () => {
+                const desc = document.getElementById('desc').value;
+                const vid = document.getElementById('cam');
+                const cv = document.getElementById('snap');
+                cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+                cv.getContext('2d').drawImage(vid, 0, 0);
 
-            // Snapshot
-            const vid = document.getElementById('cam-preview');
-            const cv = document.getElementById('snapshot');
-            cv.width = vid.videoWidth; cv.height = vid.videoHeight;
-            cv.getContext('2d').drawImage(vid, 0, 0);
-            
-            // Guardar en DB
-            db.collection("incidencias").add({
-                uid: usuarioActual.uid,
-                vecino: usuarioActual.displayName,
-                email: usuarioActual.email,
-                foto: usuarioActual.photoURL,
-                descripcion: desc,
-                direccion: direccionActual,
-                lat: gpsActual ? gpsActual.latitude : 0,
-                lon: gpsActual ? gpsActual.longitude : 0,
-                estado: "Ingresado",
-                respuesta: "",
-                fecha: new Date(),
-                fecha_str: new Date().toLocaleDateString()
-            }).then(() => {
-                alert("✅ Reporte Enviado a la Central.");
-                cerrarModal('modal-reporte');
-            });
-        }
+                db.collection("incidencias").add({
+                    uid: userCurrent.uid,
+                    vecino: userCurrent.displayName,
+                    desc: desc,
+                    estado: "Ingresado",
+                    fecha: new Date(),
+                    fecha_str: new Date().toLocaleDateString()
+                }).then(() => {
+                    alert("Enviado!");
+                    document.getElementById('modal-rep').style.display = 'none';
+                    if(videoStream) videoStream.getTracks().forEach(t => t.stop());
+                });
+            };
 
-        function verHistorial() {
-            if (!usuarioActual) return alert("🔒 Debes ACCEDER para ver tus reportes.");
-            document.getElementById('modal-historial').style.display = 'flex';
-            const lista = document.getElementById('lista-tickets');
-            lista.innerHTML = '<p style="text-align:center;">Cargando...</p>';
-
-            db.collection("incidencias")
-                .where("uid", "==", usuarioActual.uid)
-                .orderBy("fecha", "desc")
-                .get()
+            window.verHistorial = () => {
+                if(!userCurrent) return alert("Accede primero.");
+                document.getElementById('modal-hist').style.display = 'flex';
+                const list = document.getElementById('lista');
+                list.innerHTML = "Cargando...";
+                db.collection("incidencias").where("uid", "==", userCurrent.uid).orderBy("fecha", "desc").get()
                 .then(snap => {
-                    lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "<p>No tienes reportes.</p>"; return; }
-                    
-                    snap.forEach(doc => {
-                        const d = doc.data();
-                        const badgeClass = d.estado === "Resuelto" ? "st-ok" : "st-new";
-                        const html = `
-                            <div class="ticket-item">
-                                <div style="margin-bottom:5px;">
-                                    <strong>${d.fecha_str}</strong>
-                                    <span class="status-badge ${badgeClass}">${d.estado}</span>
-                                </div>
-                                <div style="font-size:14px;">${d.descripcion}</div>
-                                <div style="font-size:12px; color:#aaa; margin-top:4px;">📍 ${d.direccion || 'Ubicación GPS'}</div>
-                                ${d.respuesta ? `<div style="background:#555; padding:5px; margin-top:5px; border-radius:5px; font-size:12px;">🏛️ <b>Muni:</b> ${d.respuesta}</div>` : ''}
-                            </div>
-                        `;
-                        lista.innerHTML += html;
+                    list.innerHTML = "";
+                    snap.forEach(d => {
+                        const data = d.data();
+                        list.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-radius:5px;"><b>${data.fecha_str}</b>: ${data.desc} <br><small style="color:gold">${data.estado}</small></div>`;
                     });
                 });
+            };
+
+        } catch (error) {
+            logError("CRASH CRÍTICO: " + error.message);
         }
-
-        function cerrarModal(id) {
-            document.getElementById(id).style.display = 'none';
-            if(streamVideo) streamVideo.getTracks().forEach(t => t.stop());
-        }
-
-        // FUNCIONES DE CÁMARA
-        window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
-        window.camaraAerea = () => { camera.lockedTarget = null; camera.setPosition(new BABYLON.Vector3(500, 800, 500)); camera.setTarget(new BABYLON.Vector3(500, 0, 300)); };
-
-        // Ajuste Pantalla
-        window.addEventListener("resize", () => engine.resize());
-        engine.runRenderLoop(() => scene.render());
-
     </script>
 </body>
 </html>
