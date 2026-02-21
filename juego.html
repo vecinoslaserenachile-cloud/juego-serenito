@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Sistema de Ejes...</div>
+    <div id="ui-status">Cargando La Serena 3D...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,41 +40,37 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- LA NUEVA FUNCIÓN MAESTRA (CORRIGE EL EJE CENTRAL) ---
+        // --- FUNCIÓN MAESTRA CORREGIDA (SOLUCIÓN DEFINITIVA DE EJE) ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            // 1. LIMPIEZA DE EJE (Esto arregla el problema de rotación)
-            // Desvinculamos el mesh de cualquier padre para calcular bien
+            // 1. DESVINCULAR Y CENTRAR GEOMETRÍA
             mesh.setParent(null);
             
-            // Calculamos el centro geométrico del edificio
+            // Calculamos el centro real del modelo
             let bounds = mesh.getHierarchyBoundingVectors();
             let center = bounds.max.add(bounds.min).scale(0.5);
             
-            // Movemos el edificio para que su centro esté en 0,0,0
+            // Movemos el modelo para que su centro sea 0,0,0
             mesh.position = center.scale(-1);
             
-            // "Horneamos" (fijamos) esa posición como el nuevo eje 0
-            mesh.bakeCurrentTransformIntoVertices();
+            // "Horneamos" (Fijamos) este cambio para que sea permanente
+            mesh.bakeCurrentTransformIntoVertices(); 
             
             // 2. AHORA SÍ ESCALAMOS Y POSICIONAMOS
-            // Recalculamos dimensiones con el nuevo eje
+            // Recalculamos tamaño con el nuevo centro
             bounds = mesh.getHierarchyBoundingVectors();
             let size = bounds.max.subtract(bounds.min);
-            let maxDim = Math.max(size.x, size.y, size.z);
-            let factor = escala / maxDim;
-
+            let factor = escala / Math.max(size.x, size.y, size.z);
+            
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // Calculamos la altura para que pise el suelo (Y=0)
-            let halfHeight = (size.y * factor) / 2;
+            // Ajustamos altura para que toque el suelo
+            let nivelSuelo = -bounds.min.y * factor; 
             
-            // Posicionamos (Ahora X y Z son el CENTRO REAL del edificio)
-            mesh.position = new BABYLON.Vector3(x, halfHeight, z);
-            
-            // Rotamos (Ahora gira sobre su propio centro perfecto)
+            // Aplicamos la posición final y la rotación
+            mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
             mesh.rotation.y = rotacion; 
 
-            // Activar colisiones
+            // Activamos colisiones
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -90,10 +86,10 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
+            // CÁMARA CON CANDADO DE SUELO
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
-            // Candado de suelo
-            camera.upperBetaLimit = Math.PI / 2.2; 
+            camera.upperBetaLimit = Math.PI / 2.2; // Evita ver por debajo del suelo
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
             camera.checkCollisions = true;
@@ -111,13 +107,12 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (Ahora rotará en su eje perfecto)
+        // 2. MUNICIPALIDAD (ROTADA 90 GRADOS IZQ EN SU PROPIO EJE)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // Usamos las coordenadas originales (735) porque ya no salta al rotar
-            // Math.PI (180 grados) ahora gira el edificio en SU PROPIO EJE
-            // Giramos 90 grados a la izquierda (-Math.PI / 2)
-colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Centrada y Girada";
+            // Gracias a la corrección de arriba, ahora gira perfecto en su lugar.
+            // -Math.PI / 2 = 90 grados a la izquierda (Anti-horario)
+            colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Girada 90° Izq";
         });
 
         // 3. INTENDENCIA
@@ -140,6 +135,7 @@ colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
+        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
@@ -166,6 +162,7 @@ colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
             }
         });
 
+        // 6. BOTONES
         window.camaraSerenito = function() {
             if(!personaje) return;
             camera.lockedTarget = personaje;
@@ -192,4 +189,3 @@ colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
     </script>
 </body>
 </html>
-
