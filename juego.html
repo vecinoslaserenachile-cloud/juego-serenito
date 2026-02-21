@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v12 Tanque Blindado</title>
+    <title>LA❤️SERENA - v13 Escala y Tanque</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,12 +18,11 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* STATUS PANEL */
         #status-panel {
             position: absolute; top: 100px; left: 15px; z-index: 500;
-            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
+            background: rgba(0,0,0,0.8); border-left: 5px solid #ffd700;
             padding: 12px; border-radius: 0 10px 10px 0; color: white;
-            font-size: 12px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            font-size: 12px; pointer-events: none;
         }
 
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
@@ -33,31 +32,30 @@
         .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; }
 
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
-        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
+        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
+        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
 
-        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #111; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
+        .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
-        .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+        .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700;">MOTOR v12.0</div>
-        <div id="st-info">Esperando comando...</div>
+        <div style="font-weight:bold; color:#ffd700;">MOTOR v13.0</div>
+        <div id="st-info">Esperando...</div>
     </div>
 
     <div class="top-ui">
         <div class="radio-card">
             <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
-            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:25px; border-radius:50%;"> 
+            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:28px; border-radius:50%;"> 
             <span id="u-name">Acceder</span>
         </div>
     </div>
@@ -66,28 +64,22 @@
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn" onclick="verHistorial()"><i class="fas fa-history"></i></button>
+        <button class="btn" onclick="verHistorial()"><i class="fas fa-list-ul"></i></button>
         <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
-        <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
+        <button class="btn" onclick="resetCamara()"><i class="fas fa-walking"></i></button>
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700;">REPORTE MUNICIPAL</h3>
-        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Buscando GPS...</p>
+        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando ubicación...</p>
         <video id="cam" autoplay playsinline muted></video>
-        <input type="text" id="desc" class="input-std" placeholder="¿Qué reportas?">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px;">ENVIAR AHORA</button>
-        <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
-    </div></div>
-
-    <div id="modal-hist" class="modal"><div class="box">
-        <h3>MIS GESTIONES</h3>
-        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
-        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
+        <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR AHORA</button>
+        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
     <script>
-        // FIREBASE
+        // 1. FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -111,7 +103,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // MOTOR BABYLON
+        // 2. BABYLON 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -122,7 +114,7 @@
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 130, BABYLON.Vector3.Zero(), s);
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             
@@ -134,20 +126,22 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m) => {
-                m[0].position = new BABYLON.Vector3(610, 0, 160);
-                m[0].rotation.y = Math.PI;
-                m[0].scaling = new BABYLON.Vector3(40, 40, 40);
-            });
-            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m) => {
-                m[0].position = new BABYLON.Vector3(430, 0, 410);
-                m[0].scaling = new BABYLON.Vector3(50, 50, 50);
-            });
+            // CARGA DE EDIFICIOS CON ESCALA CORREGIDA (MÁS GRANDES)
+            const loadEdificio = (name, x, z, scale, rotation) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", name, s, (meshes) => {
+                    let mesh = meshes[0];
+                    mesh.position = new BABYLON.Vector3(x, 0, z);
+                    mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
+                    mesh.rotation.y = rotation;
+                });
+            };
+            loadEdificio("municipalidad.glb", 610, 160, 150, Math.PI);
+            loadEdificio("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO TANQUE
+            // SERENITO CON ESCALA CORREGIDA (MÁS PEQUEÑO)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
-                serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
+                serenito.scaling = new BABYLON.Vector3(-5, 5, 5); // Escala reducida a la mitad
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
                 serenito.applyGravity = true;
@@ -155,36 +149,41 @@
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // LÓGICA TANQUE MEJORADA
-            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+            // 🛑 LÓGICA TANQUE REFORZADA (GIRO -> STOP -> AVANCE)
+            s.onPointerDown = (evt, pick) => { 
+                if(pick.hit && pick.pickedMesh === suelo) {
+                    destinoFinal = pick.pickedPoint;
+                }
+            };
             
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
+                
                 let diff = destinoFinal.subtract(serenito.position);
-                diff.y = 0;
+                diff.y = 0; 
 
-                if(diff.length() > 1.2) {
+                if(diff.length() > 1.0) { 
                     let angleDest = Math.atan2(diff.x, diff.z);
                     let rotDiff = angleDest - serenito.rotation.y;
                     
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // SI LA ROTACIÓN ES MAYOR A 3 GRADOS (0.05 rad), NO AVANZA
-                    if(Math.abs(rotDiff) > 0.05) {
-                        document.getElementById('st-info').innerText = "🔄 Girando cuerpo...";
+                    // == FASE 1: GIRO PURO (Bloqueo de movimiento) ==
+                    if(Math.abs(rotDiff) > 0.1) { // Si el error es mayor a ~5 grados
+                        document.getElementById('st-info').innerText = "🔄 Alineando cuerpo...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop(); // Freno de mano: no camina mientras gira
+                        if(animCaminar) animCaminar.stop(); // No camina mientras gira
                     } 
-                    // SOLO CUANDO ESTÁ ALINEADO, ACTIVA MOTORES
+                    // == FASE 2: AVANCE (Solo si está alineado) ==
                     else {
-                        document.getElementById('st-info').innerText = "🚶 Caminando a destino";
-                        serenito.rotation.y = angleDest; // Snap final para precisión
-                        serenito.moveWithCollisions(diff.normalize().scale(0.85));
+                        document.getElementById('st-info').innerText = "🚶 Caminando...";
+                        serenito.rotation.y = angleDest; // Alineación perfecta
+                        serenito.moveWithCollisions(diff.normalize().scale(0.8));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    document.getElementById('st-info').innerText = "✅ Destino alcanzado";
+                    document.getElementById('st-info').innerText = "✅ Detenido";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -194,24 +193,24 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // REPORTES
+        // 3. REPORTES
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Identifícate primero.");
+            if(!userActual) return alert("Inicia sesión primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
                 document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
-                document.getElementById('gps-status').style.color = "lime";
+                document.getElementById('gps-status').style.color = "#00ff00";
             });
 
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Sin cámara no hay reporte."); }
+            } catch (err) { alert("Cámara necesaria para el reporte."); }
         }
 
         function enviarReporte() {
@@ -223,7 +222,7 @@
                 lon: coordsGlobal ? coordsGlobal.longitude : 0,
                 estado: "Ingresado",
                 fecha: new Date()
-            }).then(() => { alert("Enviado a sistema municipal."); cerrarModal('modal-rep'); });
+            }).then(() => { alert("Reporte enviado."); cerrarModal('modal-rep'); });
         }
 
         function cerrarModal(id) {
@@ -237,7 +236,7 @@
             else { a.pause(); document.getElementById('icon-play').className = "fas fa-play"; }
         };
 
-        window.resetCamara = () => { if(serenito) { camera.lockedTarget = serenito; camera.radius = 130; } };
+        window.resetCamara = () => { if(serenito) { camera.lockedTarget = serenito; camera.radius = 140; } };
         window.addEventListener("resize", () => engine.resize());
 
     </script>
