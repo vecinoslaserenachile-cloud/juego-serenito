@@ -115,7 +115,8 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             // Usamos las coordenadas originales (735) porque ya no salta al rotar
             // Math.PI (180 grados) ahora gira el edificio en SU PROPIO EJE
-            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
+            // Giramos 90 grados a la izquierda (-Math.PI / 2)
+colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
             statusDiv.innerHTML += "<br>✅ Muni Centrada y Girada";
         });
 
@@ -191,3 +192,4 @@
     </script>
 </body>
 </html>
+
