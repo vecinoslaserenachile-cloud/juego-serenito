@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Gestión Municipal v11</title>
+    <title>LA❤️SERENA - v12 Tanque Blindado</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -15,57 +15,49 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* PANEL DE ESTADO IZQUIERDO */
+        /* STATUS PANEL */
         #status-panel {
             position: absolute; top: 100px; left: 15px; z-index: 500;
-            background: rgba(0,0,0,0.8); border-left: 5px solid #ffd700;
-            padding: 15px; border-radius: 0 10px 10px 0; color: white;
-            font-size: 13px; max-width: 200px; pointer-events: none;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
+            padding: 12px; border-radius: 0 10px 10px 0; color: white;
+            font-size: 12px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
         }
-        .status-ok { color: #00ff00; }
-        .status-err { color: #ff3333; font-weight: bold; }
 
-        /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
         .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
-        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
+        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; }
 
-        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
-        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
+        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
+        .box { background: #111; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
-        .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:5px;">SISTEMA v11.0</div>
-        <div id="st-map">🗺️ Mapa: <span class="status-ok">Listo</span></div>
-        <div id="st-personaje">🚶 Serenito: <span>Cargando...</span></div>
-        <div id="st-login">👤 Usuario: <span>Pendiente</span></div>
-        <div id="st-gps">📍 GPS: <span>Buscando...</span></div>
+        <div style="font-weight:bold; color:#ffd700;">MOTOR v12.0</div>
+        <div id="st-info">Esperando comando...</div>
     </div>
 
     <div class="top-ui">
         <div class="radio-card">
             <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
-            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:28px; border-radius:50%;"> 
+            <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" style="width:25px; border-radius:50%;"> 
             <span id="u-name">Acceder</span>
         </div>
     </div>
@@ -80,29 +72,21 @@
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700;">NUEVO REPORTE</h3>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando GPS...</p>
+        <h3 style="color:#ffd700;">REPORTE MUNICIPAL</h3>
+        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Buscando GPS...</p>
         <video id="cam" autoplay playsinline muted></video>
-        <input type="text" id="desc" class="input-std" placeholder="¿Qué sucede?">
+        <input type="text" id="desc" class="input-std" placeholder="¿Qué reportas?">
         <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px;">ENVIAR AHORA</button>
-        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
+        <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
     </div></div>
 
     <div id="modal-hist" class="modal"><div class="box">
-        <h3>MIS REPORTES</h3>
+        <h3>MIS GESTIONES</h3>
         <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
         <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
     </div></div>
 
     <script>
-        // PANEL LOG
-        function updateStatus(id, text, type) {
-            const el = document.getElementById(id);
-            if(el) {
-                el.innerHTML = el.innerHTML.split(':')[0] + ': <span class="status-' + type + '">' + text + '</span>';
-            }
-        }
-
         // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
@@ -122,16 +106,12 @@
                 userActual = u;
                 document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
                 document.getElementById('u-img').src = u.photoURL;
-                updateStatus('st-login', 'Conectado', 'ok');
-            } else {
-                userActual = null;
-                updateStatus('st-login', 'Desconectado', 'err');
             }
         });
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // MOTOR 3D
+        // MOTOR BABYLON
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -154,20 +134,15 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // Edificios
-            const load = (f, x, z, sc, r) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
-                    let root = new BABYLON.TransformNode("r", s);
-                    m[0].parent = root;
-                    const b = m[0].getHierarchyBoundingVectors(true);
-                    const scale = sc / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
-                    m[0].scaling = new BABYLON.Vector3(scale, scale, scale);
-                    root.rotation.y = r;
-                    root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
-                });
-            };
-            load("municipalidad.glb", 610, 160, 150, Math.PI);
-            load("intendencia.glb", 430, 410, 180, 0);
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m) => {
+                m[0].position = new BABYLON.Vector3(610, 0, 160);
+                m[0].rotation.y = Math.PI;
+                m[0].scaling = new BABYLON.Vector3(40, 40, 40);
+            });
+            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m) => {
+                m[0].position = new BABYLON.Vector3(430, 0, 410);
+                m[0].scaling = new BABYLON.Vector3(50, 50, 50);
+            });
 
             // SERENITO TANQUE
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
@@ -178,10 +153,9 @@
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
-                updateStatus('st-personaje', 'Listo', 'ok');
-            }, null, (e) => updateStatus('st-personaje', 'Error GLB', 'err'));
+            });
 
-            // MOVIMIENTO TANQUE (ROTAR -> MOVER)
+            // LÓGICA TANQUE MEJORADA
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
@@ -192,21 +166,25 @@
                 if(diff.length() > 1.2) {
                     let angleDest = Math.atan2(diff.x, diff.z);
                     let rotDiff = angleDest - serenito.rotation.y;
+                    
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // FASE 1: SOLO GIRAR (Si la diferencia es notable)
-                    if(Math.abs(rotDiff) > 0.15) {
-                        serenito.rotation.y += Math.sign(rotDiff) * 0.1; 
-                        if(animCaminar) animCaminar.stop();
+                    // SI LA ROTACIÓN ES MAYOR A 3 GRADOS (0.05 rad), NO AVANZA
+                    if(Math.abs(rotDiff) > 0.05) {
+                        document.getElementById('st-info').innerText = "🔄 Girando cuerpo...";
+                        serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
+                        if(animCaminar) animCaminar.stop(); // Freno de mano: no camina mientras gira
                     } 
-                    // FASE 2: SOLO AVANZAR
+                    // SOLO CUANDO ESTÁ ALINEADO, ACTIVA MOTORES
                     else {
-                        serenito.rotation.y = angleDest;
-                        serenito.moveWithCollisions(diff.normalize().scale(0.8));
+                        document.getElementById('st-info').innerText = "🚶 Caminando a destino";
+                        serenito.rotation.y = angleDest; // Snap final para precisión
+                        serenito.moveWithCollisions(diff.normalize().scale(0.85));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
+                    document.getElementById('st-info').innerText = "✅ Destino alcanzado";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -221,21 +199,19 @@
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Accede primero.");
+            if(!userActual) return alert("Identifícate primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            // GPS Prioridad
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
                 document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
-                updateStatus('st-gps', 'Conectado', 'ok');
+                document.getElementById('gps-status').style.color = "lime";
             });
 
-            // Cámara Prioridad
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Permite la cámara para el reporte."); }
+            } catch (err) { alert("Sin cámara no hay reporte."); }
         }
 
         function enviarReporte() {
@@ -247,7 +223,7 @@
                 lon: coordsGlobal ? coordsGlobal.longitude : 0,
                 estado: "Ingresado",
                 fecha: new Date()
-            }).then(() => { alert("Reporte enviado."); cerrarModal('modal-rep'); });
+            }).then(() => { alert("Enviado a sistema municipal."); cerrarModal('modal-rep'); });
         }
 
         function cerrarModal(id) {
