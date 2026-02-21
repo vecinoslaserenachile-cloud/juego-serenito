@@ -92,7 +92,8 @@
 
         // 3. INTENDENCIA (Posición segura)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 430, 410, 0, 180);
+            // Giramos 180° (Math.PI) y compensamos el salto moviendo X a 1050
+colocarEdificio(meshes[0], 1050, 187, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -162,4 +163,5 @@
     </script>
 </body>
 </html>
+
 
