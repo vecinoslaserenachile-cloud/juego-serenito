@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Versión Final Blindada</title>
+    <title>LA❤️SERENA - Monumentos y Tanque v17</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -26,31 +26,16 @@
             font-size: 11px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
         }
 
-        /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* RADIO MLS */
-        .radio-card {
-            background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
-            display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto;
-        }
+        .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
+        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
 
-        /* LOGIN */
-        .login-card {
-            background: white; color: #333; padding: 8px 15px; border-radius: 50px;
-            font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); pointer-events: auto; border: 2px solid white;
-        }
-
-        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
-        .btn:active { transform: scale(0.9); }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
-        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
@@ -60,8 +45,10 @@
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR CIUDAD v16.0</div>
-        <div id="st-info">Cargando modelos sagrados...</div>
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR CIUDAD v17.0</div>
+        <div id="st-muni">🏛️ Municipalidad: <span style="color:gray;">Buscando...</span></div>
+        <div id="st-inten">🏛️ Intendencia: <span style="color:gray;">Buscando...</span></div>
+        <div id="st-info">Esperando órdenes...</div>
     </div>
 
     <div class="top-ui">
@@ -77,21 +64,20 @@
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
-
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
         <button class="btn" onclick="verHistorial()" title="Mis Reportes"><i class="fas fa-clipboard-list"></i></button>
-        <button class="btn btn-main" onclick="abrirReporte()" title="Nueva Incidencia"><i class="fas fa-camera"></i></button>
+        <button class="btn btn-main" onclick="abrirReporte()" title="Reportar"><i class="fas fa-camera"></i></button>
         <button class="btn" onclick="resetCamara()" title="Centrar Serenito"><i class="fas fa-street-view"></i></button>
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando GPS...</p>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Activando GPS...</p>
         <video id="cam" autoplay playsinline muted></video>
         <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR INCIDENCIA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
@@ -102,7 +88,7 @@
     </div></div>
 
     <script>
-        // 1. FIREBASE CONFIG
+        // 1. FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -126,7 +112,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D BABYLON
+        // 2. MOTOR BABYLON 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -137,7 +123,6 @@
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
-            // Cámara con límites para no ver el abismo
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
@@ -150,27 +135,32 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // --- RESTAURACIÓN DE EDIFICIOS (Ubicación Sagrada) ---
-            const loadEdificio = (file, x, z, scaleFactor, rotation) => {
+            // --- CARGA DE MONUMENTOS (UBICACIÓN BLINDADA) ---
+            const loadEdificio = (file, x, z, scaleFactor, rotation, statusId) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
                     let root = new BABYLON.TransformNode("root_" + file, s);
                     meshes.forEach(m => m.parent = root);
-                    const bounds = meshes[0].getHierarchyBoundingVectors(true);
+                    const bounds = root.getHierarchyBoundingVectors(true);
                     const size = bounds.max.subtract(bounds.min);
                     const factor = scaleFactor / Math.max(size.x, size.y, size.z);
+                    
                     root.scaling = new BABYLON.Vector3(factor, factor, factor);
                     root.rotation.y = rotation;
-                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z); // Blindaje hundimiento
+                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z); // Blindaje de suelo
+                    
                     meshes.forEach(m => m.checkCollisions = true);
+                    document.getElementById(statusId).innerHTML = file + ': <span style="color:lime;">Listo</span>';
+                }, null, (e) => {
+                    document.getElementById(statusId).innerHTML = file + ': <span style="color:red;">Error</span>';
                 });
             };
 
             // Municipalidad (610, 160) | Rotación 180 (Math.PI)
-            loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI);
+            loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI, "st-muni");
             // Intendencia (430, 410)
-            loadEdificio("intendencia.glb", 430, 410, 190, 0);
+            loadEdificio("intendencia.glb", 430, 410, 190, 0, "st-inten");
 
-            // --- SERENITO (Tanque Blindado) ---
+            // --- SERENITO TANQUE ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
                 serenito.rotationQuaternion = null; 
@@ -180,15 +170,10 @@
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
-                document.getElementById('st-info').innerText = "Tanque listo. Selecciona destino.";
             });
 
-            // 🛑 LÓGICA TANQUE ESTRICTA (Giro -> Alto -> Avance)
-            s.onPointerDown = (evt, pick) => { 
-                if(pick.hit && pick.pickedMesh === suelo) {
-                    destinoFinal = pick.pickedPoint;
-                }
-            };
+            // 🛑 LÓGICA TANQUE ESTRICTA
+            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
@@ -201,21 +186,21 @@
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // == FASE 1: GIRO PURO (Freno de mano puesto) ==
+                    // FASE 1: GIRO PURO (Pies pegados al suelo)
                     if(Math.abs(rotDiff) > 0.08) { 
-                        document.getElementById('st-info').innerText = "🔄 Girando tanque...";
+                        document.getElementById('st-info').innerText = "🔄 Rotando cuerpo...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
                         if(animCaminar) animCaminar.stop(); 
                     } 
-                    // == FASE 2: AVANCE ==
+                    // FASE 2: AVANCE (Solo tras alineación)
                     else {
-                        document.getElementById('st-info').innerText = "🚶 Caminando a destino";
+                        document.getElementById('st-info').innerText = "🚶 Avanzando...";
                         serenito.rotation.y = angleDest; 
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    document.getElementById('st-info').innerText = "✅ Detenido";
+                    document.getElementById('st-info').innerText = "✅ Posición alcanzada";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -225,7 +210,7 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. CÁMARA + GPS + REPORTE
+        // 3. CÁMARA + GPS
         let streamActivo = null;
         let coordsGlobal = null;
 
@@ -233,14 +218,12 @@
             if(!userActual) return alert("Por favor, inicia sesión con Google.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            // GPS Prioridad
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
-                document.getElementById('gps-status').innerText = "📍 Ubicación capturada con éxito";
+                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
                 document.getElementById('gps-status').style.color = "#00ff00";
             });
 
-            // Cámara Prioridad
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
