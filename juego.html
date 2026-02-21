@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Serenito Natural</title>
+    <title>LA❤️SERENA - Serenito Corregido</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Sistema Anti-Deslizamiento...</div>
+    <div id="ui-status">Cargando Corrección de Espalda...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -80,21 +80,19 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (POSICIÓN FIJA RODRIGO: 610, 160)
+        // 2. MUNICIPALIDAD (Posición Fija 610, 160)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // Posición exacta que recuperamos
-            // Math.PI = 180 grados
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Fija (610, 160)";
+            statusDiv.innerHTML += "<br>✅ Muni Fija";
         });
 
-        // 3. INTENDENCIA (POSICIÓN FIJA)
+        // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia Fija";
         });
 
-        // 4. SERENITO (SISTEMA DE GIRO CORREGIDO)
+        // 4. SERENITO
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
@@ -115,37 +113,37 @@
             }
         };
 
-        // --- CEREBRO DE MOVIMIENTO "HUMANO" ---
+        // --- CEREBRO CORREGIDO (GIRA 180 PARA NO CAMINAR DE ESPALDA) ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
 
-            if (diff.length() > 1.0) { // Si estamos a más de 1 metro
+            if (diff.length() > 1.0) {
                 diff.normalize();
                 
-                // 1. CALCULAR ÁNGULO
-                let anguloObjetivo = Math.atan2(diff.x, diff.z);
-                let rotacionActual = personaje.rotation.y;
+                // 1. CÁLCULO DE ÁNGULO CON CORRECCIÓN DE ESPALDA
+                // Math.PI es la clave: Le sumamos 180 grados para que el frente sea el frente.
+                let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
                 
-                // Corrección matemática para que gire por el lado más corto
+                let rotacionActual = personaje.rotation.y;
                 let diferencia = anguloObjetivo - rotacionActual;
+                
+                // Normalizar ángulo entre -PI y PI
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. GIRAR
-                // Velocidad de giro: 0.15 (suficiente para que no sea instantáneo pero tampoco lento)
-                personaje.rotation.y += diferencia * 0.15;
+                // 2. GIRO SUAVE
+                personaje.rotation.y += diferencia * 0.1;
 
-                // 3. REGLA DE ORO: ¿PUEDO CAMINAR?
-                // Solo camina si la diferencia de ángulo es MENOR a 0.2 radianes (unos 10 grados)
-                // Es decir, solo avanza si está mirando casi de frente al objetivo.
+                // 3. REGLA: PRIMERO GIRO, LUEGO CAMINO
+                // Solo camina si la diferencia es pequeña (ya está mirando al frente)
                 if (Math.abs(diferencia) < 0.25) {
                     personaje.moveWithCollisions(diff.scale(1.2)); // Avanza
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 } else {
-                    // Si está girando mucho, NO AVANZA (Detiene el deslizamiento)
+                    // Si está girando, pies quietos
                     if (animCaminar) animCaminar.stop();
                 }
 
