@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Posiciones Restauradas...</div>
+    <div id="ui-status">Cargando La Serena 3D...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -66,6 +66,7 @@
 
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
+            // CANDADO DE SUELO
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.lowerRadiusLimit = 20; 
             camera.upperRadiusLimit = 800;
@@ -83,17 +84,18 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (Restaurada a Rotación 0 para separar)
+        // 2. MUNICIPALIDAD (GIRADA 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            // Volvemos a '0' en rotación, ya que Math.PI la desplazaba encima del otro
-            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Separada";
+            // TRUCO: Al girar (Math.PI), el edificio salta a la izquierda.
+            // Lo compensamos moviendo X de 735 a 1080.
+            colocarEdificio(meshes[0], 1080, 187, Math.PI, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Girada";
         });
 
-        // 3. INTENDENCIA (Posición segura)
+        // 3. INTENDENCIA (RESTAURADA A SU POSICIÓN CORRECTA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            // Giramos 180° (Math.PI) y compensamos el salto moviendo X a 1050
-colocarEdificio(meshes[0], 1050, 187, Math.PI, 150);
+            // Volvemos a los valores que funcionaban bien: 430 y 410
+            colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -163,5 +165,3 @@ colocarEdificio(meshes[0], 1050, 187, Math.PI, 150);
     </script>
 </body>
 </html>
-
-
