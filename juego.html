@@ -86,7 +86,7 @@
         // 2. MUNICIPALIDAD (Restaurada a Rotación 0 para separar)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             // Volvemos a '0' en rotación, ya que Math.PI la desplazaba encima del otro
-            colocarEdificio(meshes[0], 735, 187, 0, 150);
+            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Muni Separada";
         });
 
@@ -162,3 +162,4 @@
     </script>
 </body>
 </html>
+
