@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Smart City</title>
+    <title>LA❤️SERENA - Tanque Serenito</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,6 +18,12 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
+        /* DIAGNÓSTICO (Para que sepas qué pasa) */
+        #debug-log {
+            position: absolute; top: 70px; left: 10px; color: yellow; background: rgba(0,0,0,0.5); 
+            padding: 5px; font-size: 12px; pointer-events: none; max-width: 300px; z-index: 500;
+        }
+
         /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
@@ -52,6 +58,8 @@
     </style>
 </head>
 <body>
+
+    <div id="debug-log">Iniciando sistema...</div>
 
     <div class="top-ui">
         <div class="radio-card">
@@ -91,6 +99,12 @@
     </div></div>
 
     <script>
+        // LOG DE ERRORES (Para saber si falla algo)
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('debug-log').innerText = msg;
+        }
+
         // 1. FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
@@ -100,27 +114,31 @@
             messagingSenderId: "283725387947",
             appId: "1:283725387947:web:898aa22c80c2fadbe8bfee"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        let userCurrent = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const auth = firebase.auth();
+            let userCurrent = null;
+            log("Firebase OK. Conectando usuario...");
 
-        auth.onAuthStateChanged(u => {
-            if(u) {
-                userCurrent = u;
-                document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
-                document.getElementById('u-img').src = u.photoURL;
-            } else {
-                userCurrent = null;
-                document.getElementById('u-name').innerText = "Acceder";
-                document.getElementById('u-img').src = "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
-            }
-        });
+            auth.onAuthStateChanged(u => {
+                if(u) {
+                    userCurrent = u;
+                    document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
+                    document.getElementById('u-img').src = u.photoURL;
+                    log("Usuario conectado: " + u.displayName);
+                } else {
+                    userCurrent = null;
+                    document.getElementById('u-name').innerText = "Acceder";
+                    log("Esperando login...");
+                }
+            });
 
-        window.login = () => {
-            if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
-            else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
-        };
+            window.login = () => {
+                if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
+                else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
+            };
+        } catch (e) { log("Error Firebase: " + e.message); }
 
         // 2. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
@@ -130,17 +148,16 @@
 
         const createScene = function () {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // CIELO AZUL
+            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
             light.intensity = 1.0;
 
-            // CÁMARA BLINDADA (No mirar bajo el piso)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.lowerRadiusLimit = 20; 
-            camera.upperBetaLimit = Math.PI / 2.2; // LÍMITE HORIZONTE
+            camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             
             // PISO
@@ -150,9 +167,10 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // EDIFICIOS (INTOCABLES)
+            // EDIFICIOS
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
+                    if(!m || m.length===0) return;
                     let root = new BABYLON.TransformNode("r", s);
                     m[0].parent = root;
                     const b = m[0].getHierarchyBoundingVectors(true);
@@ -160,28 +178,31 @@
                     m[0].scaling = new BABYLON.Vector3(scale, scale, scale);
                     root.rotation.y = r;
                     root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
-                });
+                    log("Edificio cargado: " + f);
+                }, null, (e) => log("Error " + f));
             };
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO (Aparición segura)
+            // SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 2, 0);
+                personaje.position = new BABYLON.Vector3(0, 5, 0);
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
                 personaje.applyGravity = true;
                 camera.lockedTarget = personaje;
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
-            });
+                log("Serenito listo para la acción");
+            }, null, (e) => log("Error Serenito: " + e));
 
-            // === LÓGICA TANQUE ESTRICTA (EL CEREBRO DEL MOVIMIENTO) ===
+            // === LÓGICA TANQUE ESTRICTA ===
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destino = pick.pickedPoint;
+                    log("Destino fijado. Moviendo...");
                 }
             };
             
@@ -189,33 +210,29 @@
                 if(!personaje || !destino) return;
                 
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Ignorar altura
+                diff.y = 0; 
 
-                if(diff.length() > 1.5) { // Si no estamos en el destino...
+                if(diff.length() > 1.5) { 
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
                     
-                    // Normalizar -PI a PI
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // == FASE 1: GIRO EXCLUSIVO ==
-                    // Si el ángulo es mayor a 5 grados, SOLO GIRAMOS
+                    // FASE 1: GIRO (Si > 5 grados)
                     if(Math.abs(rotDiff) > 0.1) {
-                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; // Velocidad de giro
-                        if(anim) anim.stop(); // ¡QUIETO! Solo gira
+                        personaje.rotation.y += Math.sign(rotDiff) * 0.15; 
+                        if(anim) anim.stop(); 
                     } 
-                    // == FASE 2: AVANCE ==
-                    // Si ya mira al frente, CAMINA
+                    // FASE 2: AVANCE
                     else {
-                        personaje.rotation.y = angle; // Ajuste fino
+                        personaje.rotation.y = angle; 
                         personaje.moveWithCollisions(diff.normalize().scale(0.8));
                         if(anim && !anim.isPlaying) anim.play(true);
                     }
                 } else {
-                    // LLEGADA
                     if(anim) anim.stop();
-                    destino = null; // Borrar destino para dejar de procesar
+                    destino = null;
                 }
             });
             return s;
@@ -242,20 +259,17 @@
             if(!userCurrent) return alert("🔒 Debes ACCEDER para reportar.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            // Solicitud Agresiva de Cámara
-            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(function(stream) {
-                    videoStream = stream;
-                    let video = document.getElementById('cam');
-                    video.srcObject = stream;
-                    video.play();
-                })
-                .catch(function(err) {
-                    console.log(err);
-                    alert("⚠️ No se pudo abrir la cámara. Revisa permisos.");
-                });
-            }
+            navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}})
+            .then(s => {
+                videoStream = s; 
+                let vid = document.getElementById('cam');
+                vid.srcObject = s;
+                vid.play(); // Forzar play
+            })
+            .catch(e => {
+                log("Cámara error: " + e);
+                alert("Permite la cámara en tu navegador.");
+            });
 
             navigator.geolocation.getCurrentPosition(pos => {
                 gpsData = pos.coords;
@@ -276,19 +290,22 @@
                 cv.getContext('2d').drawImage(vid, 0, 0);
             }
             
-            db.collection("incidencias").add({
-                uid: userCurrent.uid,
-                vecino: userCurrent.displayName,
-                foto: userCurrent.photoURL,
-                desc: desc,
-                lat: gpsData ? gpsData.latitude : 0,
-                lon: gpsData ? gpsData.longitude : 0,
-                estado: "Ingresado",
-                fecha: new Date(),
-                fecha_fmt: new Date().toLocaleDateString()
-            }).then(() => {
-                alert("✅ Enviado"); cerrarModal('modal-rep');
-            });
+            // Subir a Firebase
+            try {
+                db.collection("incidencias").add({
+                    uid: userCurrent.uid,
+                    vecino: userCurrent.displayName,
+                    foto: userCurrent.photoURL,
+                    desc: desc,
+                    lat: gpsData ? gpsData.latitude : 0,
+                    lon: gpsData ? gpsData.longitude : 0,
+                    estado: "Ingresado",
+                    fecha: new Date(),
+                    fecha_fmt: new Date().toLocaleDateString()
+                }).then(() => {
+                    alert("✅ Enviado"); cerrarModal('modal-rep');
+                });
+            } catch(e) { alert("Error al enviar: " + e.message); }
         };
 
         window.verHistorial = () => {
