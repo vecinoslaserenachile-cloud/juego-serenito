@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v21 Versión Final Blindada</title>
+    <title>LA❤️SERENA - v22 Tanque Definitivo</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,7 +18,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* PANEL DE ESTADO IZQUIERDO */
+        /* PANEL DE ESTADO */
         #status-panel {
             position: absolute; top: 100px; left: 15px; z-index: 500;
             background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
@@ -40,18 +40,18 @@
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
+        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
         
-        /* HISTORIAL */
+        /* ESTILO HISTORIAL */
         .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
         .admin-reply { background: #000; border: 1px dashed #ffd700; padding: 10px; margin-top: 10px; border-radius: 5px; color: #ffd700; font-size: 13px; }
-        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">CIUDAD DIGITAL v21.0</div>
-        <div id="st-info">Sincronizando con Firebase...</div>
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR TANQUE v22.0</div>
+        <div id="st-info">Sincronizando ciudad...</div>
     </div>
 
     <div class="top-ui">
@@ -77,10 +77,10 @@
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Buscando señal GPS...</p>
+        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Esperando ubicación...</p>
         <video id="cam" autoplay playsinline muted></video>
-        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas?">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR AHORA</button>
+        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué sucede?">
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
@@ -115,7 +115,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D BABYLON
+        // 2. MOTOR BABYLON 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -137,53 +137,72 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // RESTAURACIÓN DE EDIFICIOS (UBICACIÓN SAGRADA)
-            const load = (f, x, z, sc, r) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
-                    let root = new BABYLON.TransformNode("r", s);
-                    m[0].parent = root;
-                    const b = m[0].getHierarchyBoundingVectors(true);
-                    const scale = sc / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
-                    root.scaling = new BABYLON.Vector3(scale, scale, scale);
-                    root.rotation.y = r;
-                    root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
+            // --- RESTAURACIÓN DE EDIFICIOS (UBICACIÓN BLINDADA) ---
+            const loadEdificio = (file, x, z, scaleFactor, rotation) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
+                    let root = new BABYLON.TransformNode("root_" + file, s);
+                    meshes.forEach(m => m.parent = root);
+                    const bounds = root.getHierarchyBoundingVectors(true);
+                    const size = bounds.max.subtract(bounds.min);
+                    const factor = scaleFactor / Math.max(size.x, size.y, size.z);
+                    root.scaling = new BABYLON.Vector3(factor, factor, factor);
+                    root.rotation.y = rotation;
+                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z); // Fix hundimiento
+                    meshes.forEach(m => m.checkCollisions = true);
                 });
             };
-            load("municipalidad.glb", 610, 160, 170, Math.PI); // 180 grados blindados
-            load("intendencia.glb", 430, 410, 190, 0);
 
-            // SERENITO TANQUE
+            loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI); 
+            loadEdificio("intendencia.glb", 430, 410, 190, 0);
+
+            // --- SERENITO (CEREBRO TANQUE) ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
+                serenito.rotationQuaternion = null; // Necesario para rotation.y
                 serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
-                document.getElementById('st-info').innerText = "Todo listo. Haz clic para moverte.";
+                document.getElementById('st-info').innerText = "Tanque listo.";
             });
 
-            // LÓGICA TANQUE ESTRICTA (GIRO -> AVANCE)
-            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+            // 🛑 LÓGICA TANQUE ESTRICTA (Giro -> Alto -> Avance)
+            s.onPointerDown = (evt, pick) => { 
+                if(pick.hit && pick.pickedMesh === suelo) {
+                    destinoFinal = pick.pickedPoint;
+                }
+            };
+            
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
+                
                 let diff = destinoFinal.subtract(serenito.position);
-                diff.y = 0;
-                if(diff.length() > 1.2) {
-                    let angle = Math.atan2(diff.x, diff.z);
-                    let rotDiff = angle - serenito.rotation.y;
+                diff.y = 0; 
+
+                if(diff.length() > 1.2) { 
+                    let angleDest = Math.atan2(diff.x, diff.z);
+                    let rotDiff = angleDest - serenito.rotation.y;
+                    
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-                    if(Math.abs(rotDiff) > 0.08) {
+
+                    // == FASE 1: GIRO PURO (Bloqueo de avance) ==
+                    if(Math.abs(rotDiff) > 0.05) { 
+                        document.getElementById('st-info').innerText = "🔄 Rotando cuerpo...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop();
-                    } else {
-                        serenito.rotation.y = angle;
+                        if(animCaminar) animCaminar.stop(); 
+                    } 
+                    // == FASE 2: MARCHA ==
+                    else {
+                        document.getElementById('st-info').innerText = "🚶 Caminando...";
+                        serenito.rotation.y = angleDest; // Alineación perfecta
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
+                    document.getElementById('st-info').innerText = "✅ Detenido";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -193,31 +212,32 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES & HISTORIAL (VERSIÓN FIJADA)
+        // 3. REPORTES & HISTORIAL
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Identifícate primero.");
+            if(!userActual) return alert("Accede con Google.");
             document.getElementById('modal-rep').style.display = 'flex';
             navigator.geolocation.getCurrentPosition(pos => { 
                 coordsGlobal = pos.coords;
                 document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
-                document.getElementById('gps-status').style.color = "#00ff00";
+                document.getElementById('gps-status').style.color = "lime";
             });
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Permite el acceso a la cámara."); }
+            } catch (err) { alert("Acceso a cámara denegado."); }
         }
 
         function enviarReporte() {
+            if(!coordsGlobal) return alert("Esperando señal GPS...");
             db.collection("incidencias").add({
                 uid: userActual.uid,
                 vecino: userActual.displayName,
                 descripcion: document.getElementById('desc').value,
-                lat: coordsGlobal ? coordsGlobal.latitude : 0,
-                lon: coordsGlobal ? coordsGlobal.longitude : 0,
+                lat: coordsGlobal.latitude,
+                lon: coordsGlobal.longitude,
                 estado: "Ingresado",
                 fecha: new Date(),
                 respuesta_admin: "" 
@@ -225,23 +245,22 @@
         }
 
         function verHistorial() {
-            if(!userActual) return alert("Accede para ver tu historial.");
+            if(!userActual) return alert("Inicia sesión primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const lista = document.getElementById('lista');
-            lista.innerHTML = "<p style='color:gold;'>Cargando tus reportes...</p>";
+            lista.innerHTML = "<p style='color:gold;'>Cargando reportes...</p>";
 
-            // CONSULTA CON ÍNDICE COMPUESTO
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
                 .orderBy("fecha", "desc")
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "<p>No tienes reportes aún.</p>"; return; }
+                    if(snap.empty) { lista.innerHTML = "No hay registros."; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
-                        const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString() : "S/F";
-                        const respuesta = d.respuesta_admin ? `<div class="admin-reply"><b>Municipalidad responde:</b> ${d.respuesta_admin}</div>` : "";
+                        const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString() : "---";
+                        const respuesta = d.respuesta_admin ? `<div class="admin-reply"><b>Muni responde:</b> ${d.respuesta_admin}</div>` : "";
                         lista.innerHTML += `
                             <div class="report-card">
                                 <b>📅 ${fecha}</b><br>
@@ -253,7 +272,7 @@
                 })
                 .catch(err => {
                     console.error(err);
-                    lista.innerHTML = `<p style='color:red;'>Error al cargar. Asegúrate de que el índice en Firebase esté 'Habilitado'.</p>`;
+                    lista.innerHTML = `<p style='color:red;'>Error: Revisa los índices en Firebase.</p>`;
                 });
         }
 
@@ -264,8 +283,10 @@
 
         window.toggleRadio = () => {
             const a = document.getElementById('audio-player');
-            if(a.paused) a.play(); else a.pause();
+            if(a.paused) { a.play(); document.getElementById('icon-play').className="fas fa-stop"; }
+            else { a.pause(); document.getElementById('icon-play').className="fas fa-play"; }
         };
+
         window.resetCamara = () => { if(serenito) camera.lockedTarget = serenito; };
         window.addEventListener("resize", () => engine.resize());
 
