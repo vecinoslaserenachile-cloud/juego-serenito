@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Rescate Muni</title>
+    <title>LA❤️SERENA - Final</title>
     
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
+
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
@@ -19,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Sistema Básico...</div>
+    <div id="ui-status">Cargando La Serena...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -37,24 +39,20 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- FUNCIÓN BÁSICA ORIGINAL (LA QUE FUNCIONA SIEMPRE) ---
+        // --- FUNCIÓN BÁSICA ---
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            // 1. Calcular tamaño
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
             
-            // 2. Aplicar escala
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
             
-            // 3. Posición Simple (Forzamos Y=0 si el cálculo falla)
             let nivelSuelo = -bound.min.y * factor;
-            if (isNaN(nivelSuelo)) nivelSuelo = 0; // Seguridad anti-desaparición
+            if (isNaN(nivelSuelo)) nivelSuelo = 0;
             
             mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
             mesh.rotation.y = rotacion; 
 
-            // 4. Colisiones
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -90,16 +88,12 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-   // 2. MUNICIPALIDAD (ROTADA 180 GRADOS)
+        // 2. MUNICIPALIDAD (CORREGIDA A 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            
-            // CAMBIO CLAVE:
-            // 1. Math.PI = Gira 180 grados.
-            // 2. 1080 = Movemos la X a la derecha porque al girar el edificio "salta".
-            // Si queda muy lejos, baja el 1080. Si queda encima de la Intendencia, súbelo.
-            
-            // Bajamos de 1080 a 900 para traerla de vuelta a la esquina correcta
-        colocarEdificio(meshes[0], 610, 160, Math.PI / 2, 150);
+            // CORRECCIÓN FINAL:
+            // X = 850 (Para que no choque con la intendencia al girar)
+            // Rotación = Math.PI (180 Grados exactos)
+            colocarEdificio(meshes[0], 850, 160, Math.PI, 150);
             
             statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
         });
@@ -177,13 +171,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
