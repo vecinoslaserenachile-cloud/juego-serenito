@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Proyecto Vecinos 3D</title>
+    <title>LA❤️SERENA - Rescate Muni</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
-
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     
@@ -16,13 +14,12 @@
         #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; border: 1px solid lime; }
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
         .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
-        .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #b39700; }
         .btn-rescate { background: #ff3333; color: white; box-shadow: 0 4px 0 #990000; }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">Cargando La Serena 3D...</div>
+    <div id="ui-status">Cargando Sistema Básico...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,16 +37,24 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // Función estándar para colocar y escalar
-        const colocarEdificio = (mesh, x, z, escala) => {
+        // --- FUNCIÓN BÁSICA ORIGINAL (LA QUE FUNCIONA SIEMPRE) ---
+        const colocarEdificio = (mesh, x, z, rotacion, escala) => {
+            // 1. Calcular tamaño
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
             
+            // 2. Aplicar escala
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
-            const nivelSuelo = -bound.min.y * factor; 
+            
+            // 3. Posición Simple (Forzamos Y=0 si el cálculo falla)
+            let nivelSuelo = -bound.min.y * factor;
+            if (isNaN(nivelSuelo)) nivelSuelo = 0; // Seguridad anti-desaparición
+            
             mesh.position = new BABYLON.Vector3(x, nivelSuelo, z);
+            mesh.rotation.y = rotacion; 
 
+            // 4. Colisiones
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -85,28 +90,17 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (ROTACIÓN 180 GRADOS)
+        // 2. MUNICIPALIDAD (MODO RESCATE)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            let muni = meshes[0];
-            
-            // 1. La colocamos en su sitio
+            // Ponemos ROTACIÓN 0 para encontrarla primero.
+            // Una vez que aparezca, aplicaremos el giro de 180 manual.
             colocarEdificio(meshes[0], 735, 187, 0, 150);
-            // 2. CORRECCIÓN DE EJE PARA QUE GIRE EN SU LUGAR
-            // Forzamos el punto de pivote al centro geométrico del edificio
-            let center = muni.getBoundingInfo().boundingBox.centerWorld;
-            muni.setPivotPoint(center, BABYLON.Space.WORLD);
-
-            // 3. APLICAMOS EL GIRO DE 180 GRADOS (Math.PI)
-            muni.rotation.y = Math.PI;
-
-            statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
+            statusDiv.innerHTML += "<br>✅ Muni Encontrada";
         });
 
         // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            let intendencia = meshes[0];
-            colocarEdificio(intendencia, 430, 410, 180);
-            intendencia.rotation.y = 0; // Sin rotación
+            colocarEdificio(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -124,6 +118,7 @@
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
+        // 5. MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
@@ -176,5 +171,3 @@
     </script>
 </body>
 </html>
-
-
