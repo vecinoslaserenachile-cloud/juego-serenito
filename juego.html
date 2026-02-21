@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Giro Estricto</title>
+    <title>LA❤️SERENA - Giro Pivote</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Sistema: Primero Giro, Luego Camino</div>
+    <div id="ui-status">Modo: Pivote Estricto (Girar -> Luego Caminar)</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -99,7 +99,7 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            personaje.position = new BABYLON.Vector3(0, 8, 0); // Nace en el aire para no enterrarse
+            personaje.position = new BABYLON.Vector3(0, 8, 0); // Nace en el aire
             
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
             personaje.checkCollisions = true;
@@ -119,49 +119,50 @@
             }
         };
 
-        // --- CEREBRO ESTRICTO (SOLUCIÓN DEFINITIVA DE GIRO) ---
+        // --- CEREBRO ESTRICTO TIPO "RESIDENT EVIL" ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
 
-            // Si estamos lejos del destino
             if (diff.length() > 1.0) {
                 diff.normalize();
                 
-                // 1. CÁLCULO DE ÁNGULO (Con corrección de espalda + Math.PI)
+                // 1. CALCULAR GIRO (Con corrección de espalda + Math.PI)
                 let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
                 let rotacionActual = personaje.rotation.y;
                 
-                // Matemáticas para buscar el giro corto
+                // Normalizar ángulo (-PI a PI) para giro corto
                 let diferencia = anguloObjetivo - rotacionActual;
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. DECISIÓN DE MOVIMIENTO
-                // Umbral MUY estricto: 0.15 radianes (aprox 8 grados).
-                // Si la diferencia es mayor a esto, está "desalineado".
+                // 2. EL SEMÁFORO ESTRICTO
+                // Umbral muy bajo: 0.1 radianes (aprox 5 grados).
                 
-                if (Math.abs(diferencia) > 0.15) {
-                    // ESTADO: SOLO GIRANDO
-                    // Gira rápido para no aburrir (0.2)
-                    personaje.rotation.y += diferencia * 0.2;
+                if (Math.abs(diferencia) > 0.1) {
+                    // --- FASE 1: SOLO GIRAR ---
+                    // Rotamos el personaje
+                    personaje.rotation.y += diferencia * 0.15;
                     
-                    // FRENOS ACTIVADOS: No se mueve de posición
+                    // ¡PIERNAS QUIETAS! Forzamos stop a la animación
                     if (animCaminar) animCaminar.stop(); 
                     
                 } else {
-                    // ESTADO: ALINEADO Y CAMINANDO
-                    // Solo cuando ya mira al frente, ajustamos fino y caminamos.
-                    personaje.rotation.y += diferencia * 0.1; // Ajuste fino
-                    personaje.moveWithCollisions(diff.scale(1.2)); // Caminar
+                    // --- FASE 2: SOLO CAMINAR ---
+                    // Ya estamos mirando al frente.
+                    // Snap final: Igualamos rotación exacta para que no vibre
+                    personaje.rotation.y = anguloObjetivo; 
                     
+                    // AHORA SÍ movemos el cuerpo
+                    personaje.moveWithCollisions(diff.scale(1.2)); 
+                    
+                    // Activamos animación de caminar
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
 
             } else {
-                // Llegó al destino
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
             }
