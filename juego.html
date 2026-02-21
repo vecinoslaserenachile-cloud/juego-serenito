@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Versión Final</title>
+    <title>LA❤️SERENA - Tanque Serenito</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -177,37 +177,46 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // === LÓGICA TANQUE DEFINITIVA (Separación de Estados) ===
-            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destino = pick.pickedPoint; };
+            // === LÓGICA TANQUE MILITAR (BLINDADA) ===
+            // 1. Capturar destino
+            s.onPointerDown = (evt, pick) => { 
+                if(pick.hit && pick.pickedMesh === suelo) {
+                    destino = pick.pickedPoint;
+                }
+            };
             
+            // 2. Bucle de Movimiento
             s.onBeforeRenderObservable.add(() => {
                 if(!personaje || !destino) return;
                 
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Ignorar altura
+                diff.y = 0; // Solo nos importa el plano horizontal
 
-                if(diff.length() > 1.5) {
+                if(diff.length() > 1.5) { // Si estamos lejos del destino
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
                     
-                    // Normalizar -PI a PI
+                    // Normalizar ángulo (-PI a PI)
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // ESTADO A: GIRO (Si el ángulo está desalineado más de ~3 grados)
+                    // == FASE 1: GIRO EXCLUSIVO ==
+                    // Si el ángulo es mayor a 0.05 radianes (aprox 3 grados), SOLO GIRAMOS
                     if(Math.abs(rotDiff) > 0.05) {
-                        personaje.rotation.y += rotDiff * 0.15; // Girar
-                        if(anim) anim.stop(); // PIES QUIETOS
+                        personaje.rotation.y += Math.sign(rotDiff) * 0.1; // Girar a velocidad constante
+                        if(anim) anim.stop(); // ¡QUIETO! No camines
                     } 
-                    // ESTADO B: MARCHA (Solo si está alineado)
+                    // == FASE 2: MARCHA ==
+                    // Si ya estamos alineados, CAMINAMOS
                     else {
-                        personaje.rotation.y = angle; // Snap perfecto
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
-                        if(anim && !anim.isPlaying) anim.play(true);
+                        personaje.rotation.y = angle; // Fijar ángulo perfecto
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Avanzar
+                        if(anim && !anim.isPlaying) anim.play(true); // Animar
                     }
                 } else {
+                    // LLEGADA
                     if(anim) anim.stop();
-                    destino = null;
+                    destino = null; // Borrar destino para que no siga calculando
                 }
             });
             return s;
