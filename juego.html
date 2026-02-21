@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Giro Desbloqueado</title>
+    <title>LA❤️SERENA - Serenito Definitivo</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -39,11 +39,8 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // Función para colocar edificios
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            // Aseguramos que los edificios también se puedan rotar liberando su Quaternion
             mesh.rotationQuaternion = null; 
-            
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
@@ -98,14 +95,12 @@
             colocarEdificio(meshes[0], 430, 410, 0, 180);
         });
 
-        // 4. SERENITO (CON EL CANDADO ROTO)
+        // 4. SERENITO (CANDADO ROTO + ALTURA OK)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             
-            // --- LA LÍNEA MÁGICA ---
-            // Esto rompe el bloqueo del archivo 3D y permite que gire.
+            // ROMPEMOS EL BLOQUEO DE GIRO
             personaje.rotationQuaternion = null; 
-            // -----------------------
 
             personaje.scaling = new BABYLON.Vector3(10, 10, 10);
             personaje.position = new BABYLON.Vector3(0, 8, 0); 
@@ -119,17 +114,17 @@
                 animCaminar = anims[0];
                 animCaminar.stop(); 
             }
-            statusDiv.innerHTML += "<br>✅ Serenito Desbloqueado";
+            statusDiv.innerHTML += "<br>✅ Serenito Listo. Haz clic.";
         });
 
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
-                statusDiv.innerHTML = "🔄 INICIANDO GIRO...";
+                statusDiv.innerHTML = "🔄 INICIANDO...";
             }
         };
 
-        // --- CEREBRO DE GIRO ESTRICTO ---
+        // --- CEREBRO DE MOVIMIENTO (CORREGIDO AL FRENTE) ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
@@ -138,8 +133,11 @@
 
             if (diff.length() > 1.5) {
                 
-                // 1. CÁLCULO DE ÁNGULO (Con corrección de espalda + Math.PI)
-                let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
+                // 1. CÁLCULO DE ÁNGULO (¡SIN Math.PI!)
+                // Al quitarle Math.PI, invertimos la dirección 180 grados.
+                // Ahora mirará hacia el destino, no al revés.
+                let anguloObjetivo = Math.atan2(diff.x, diff.z); 
+                
                 let rotacionActual = personaje.rotation.y;
                 
                 // Buscar el giro corto
@@ -147,35 +145,30 @@
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. SEMÁFORO DE MOVIMIENTO
-                // Si la diferencia es mayor a 5 grados (0.1 radianes)
+                // 2. SEMÁFORO ESTRICTO
                 if (Math.abs(diferencia) > 0.1) {
                     // --- FASE 1: SOLO ROTAR ---
-                    statusDiv.innerHTML = "🔄 GIRANDO CUERPO...";
+                    statusDiv.innerHTML = "🔄 GIRANDO AL FRENTE...";
                     
-                    // Giramos el cuerpo (Ahora sí funcionará porque rompimos el Quaternion)
                     personaje.rotation.y += diferencia * 0.1; 
                     
-                    // FRENOS PUESTOS: Animación quieta
                     if (animCaminar) animCaminar.stop(); 
                     
                 } else {
-                    // --- FASE 2: CAMINAR ---
+                    // --- FASE 2: CAMINAR DE FRENTE ---
                     statusDiv.innerHTML = "🚶 AVANZANDO...";
                     
-                    // Ajuste fino y marcha
                     personaje.rotation.y = anguloObjetivo;
                     diff.normalize();
                     personaje.moveWithCollisions(diff.scale(1.2)); 
                     
-                    // Play animación
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
 
             } else {
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
-                statusDiv.innerHTML = "✅ DESTINO ALCANZADO";
+                statusDiv.innerHTML = "✅ LLEGADA";
             }
         });
 
@@ -195,7 +188,7 @@
             if(!personaje) return;
             destinoFinal = null;
             personaje.position = new BABYLON.Vector3(0, 8, 0); 
-            personaje.rotationQuaternion = null; // Nos aseguramos de romperlo al rescatar también
+            personaje.rotationQuaternion = null; 
             camaraSerenito();
             statusDiv.innerHTML = "🚨 Rescate OK";
         }
@@ -205,150 +198,3 @@
     </script>
 </body>
 </html>
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 2.0;
-
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
-            camera.attachControl(canvas, true);
-            camera.upperBetaLimit = Math.PI / 2.2; 
-            camera.lowerRadiusLimit = 20; 
-            camera.upperRadiusLimit = 800;
-            camera.checkCollisions = true;
-            return scene;
-        };
-
-        scene = crearEscena();
-
-        // 1. CARGAR MAPA
-        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
-        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
-        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
-        suelo.material = matSuelo;
-        suelo.checkCollisions = true;
-        statusDiv.innerHTML = "✅ Mapa Cargado...";
-
-        // 2. MUNICIPALIDAD (POSICIÓN FIJA 610, 160)
-        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Fija";
-        });
-
-        // 3. INTENDENCIA (FIJA)
-        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 430, 410, 0, 180);
-        });
-
-        // 4. SERENITO (SIN ENTERRAR)
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
-            personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(10, 10, 10);
-            personaje.position = new BABYLON.Vector3(0, 8, 0); // Altura 8 para no nacer enterrado
-            
-            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
-            personaje.checkCollisions = true;
-            personaje.applyGravity = true; 
-
-            camera.lockedTarget = personaje;
-            if (anims && anims.length > 0) {
-                animCaminar = anims[0];
-                animCaminar.stop(); // Nace quieto
-            }
-            statusDiv.innerHTML += "<br>✅ Serenito Listo. Haz clic.";
-        });
-
-        // DETECTAR CLIC EN EL SUELO
-        scene.onPointerDown = (evt, pick) => {
-            if (pick.hit && pick.pickedMesh === suelo) {
-                destinoFinal = pick.pickedPoint;
-                statusDiv.innerHTML = "🛑 CALCULANDO RUTA...";
-            }
-        };
-
-        // --- CEREBRO MAESTRO DE MOVIMIENTO ---
-        // Este bloque se ejecuta 60 veces por segundo
-        scene.onBeforeRenderObservable.add(() => {
-            // Si no hay personaje o no hay destino, no hacemos nada
-            if (!personaje || !destinoFinal) return;
-            
-            // Calculamos la dirección hacia el destino
-            let diff = destinoFinal.subtract(personaje.position);
-            diff.y = 0; // Ignoramos la altura
-
-            // Si estamos lejos del destino (más de 1.5 metros)
-            if (diff.length() > 1.5) {
-                
-                // 1. MATEMÁTICAS DE ROTACIÓN
-                // Calculamos hacia dónde debe mirar (+ Math.PI para corregir la espalda)
-                let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
-                let rotacionActual = personaje.rotation.y;
-                
-                // Ajuste para girar por el lado más corto (izquierda o derecha)
-                let diferencia = anguloObjetivo - rotacionActual;
-                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
-                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
-
-                // 2. EL SEMÁFORO (LA LÓGICA ESTRICTA)
-                // Si la diferencia de ángulo es mayor a 0.1 (aprox 5 grados),
-                // significa que NO estamos mirando al destino.
-                
-                if (Math.abs(diferencia) > 0.1) {
-                    // --- FASE DE GIRO ---
-                    statusDiv.innerHTML = "🔄 GIRANDO SOBRE EL EJE...";
-                    
-                    // Giramos el personaje
-                    personaje.rotation.y += diferencia * 0.1; 
-                    
-                    // ¡IMPORTANTE! PROHIBIDO MOVER LAS PIERNAS
-                    // Detenemos la animación y no usamos moveWithCollisions
-                    if (animCaminar) animCaminar.stop(); 
-                    
-                } else {
-                    // --- FASE DE CAMINATA ---
-                    statusDiv.innerHTML = "🚶 CAMINANDO DE FRENTE...";
-                    
-                    // Ya estamos mirando al frente. 
-                    // Movemos el personaje hacia adelante
-                    diff.normalize();
-                    personaje.moveWithCollisions(diff.scale(1.2)); 
-                    
-                    // Ahora sí, activamos la animación
-                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
-                }
-
-            } else {
-                // LLEGAMOS AL DESTINO
-                if (animCaminar) animCaminar.stop();
-                destinoFinal = null;
-                statusDiv.innerHTML = "✅ LLEGADA (Quieto)";
-            }
-        });
-
-        // --- FUNCIONES DE LOS BOTONES ---
-        window.camaraSerenito = function() {
-            if(!personaje) return;
-            camera.lockedTarget = personaje;
-            camera.radius = 100;
-        }
-
-        window.camaraAerea = function() {
-            camera.lockedTarget = null;
-            camera.setPosition(new BABYLON.Vector3(500, 600, 500));
-            camera.setTarget(new BABYLON.Vector3(500, 0, 300));
-        }
-
-        window.rescatar = function() {
-            if(!personaje) return;
-            destinoFinal = null;
-            // Lo ponemos en el aire para resetear físicas
-            personaje.position = new BABYLON.Vector3(0, 8, 0); 
-            camaraSerenito();
-            statusDiv.innerHTML = "🚨 Rescate OK";
-        }
-
-        // --- BUCLE DE RENDERIZADO ---
-        engine.runRenderLoop(() => { scene.render(); });
-        window.addEventListener("resize", () => { engine.resize(); });
-    </script>
-</body>
-</html>
-
