@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Giro Real</title>
+    <title>LA❤️SERENA - Giro Desbloqueado</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -13,7 +13,6 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100vw; height: 100vh; display: block; outline: none; }
-        /* Panel de Estado para ver qué hace el personaje */
         #ui-status { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 5px; font-size: 14px; pointer-events: none; border: 1px solid lime; font-weight: bold; }
         #toolbar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
         .btn { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #b39700; font-size: 13px; transition: transform 0.1s; }
@@ -22,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Esperando clic...</div>
+    <div id="ui-status">Esperando destino...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -42,6 +41,9 @@
 
         // Función para colocar edificios
         const colocarEdificio = (mesh, x, z, rotacion, escala) => {
+            // Aseguramos que los edificios también se puedan rotar liberando su Quaternion
+            mesh.rotationQuaternion = null; 
+            
             const bound = mesh.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = escala / Math.max(size.x, size.y, size.z);
@@ -61,8 +63,148 @@
             scene = new BABYLON.Scene(engine);
             scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
             scene.collisionsEnabled = true;
-            scene.gravity = new BABYLON.Vector3(0, -0.9, 0); // Gravedad activada
+            scene.gravity = new BABYLON.Vector3(0, -0.9, 0); 
 
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 2.0;
+
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 200, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+            camera.upperBetaLimit = Math.PI / 2.2; 
+            camera.lowerRadiusLimit = 20; 
+            camera.upperRadiusLimit = 800;
+            camera.checkCollisions = true;
+            return scene;
+        };
+
+        scene = crearEscena();
+
+        // 1. CARGAR MAPA
+        const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
+        const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
+        matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
+        suelo.material = matSuelo;
+        suelo.checkCollisions = true;
+        statusDiv.innerHTML = "✅ Mapa Cargado...";
+
+        // 2. MUNICIPALIDAD (FIJA 610, 160)
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
+            statusDiv.innerHTML += "<br>✅ Muni Fija";
+        });
+
+        // 3. INTENDENCIA (FIJA)
+        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
+            colocarEdificio(meshes[0], 430, 410, 0, 180);
+        });
+
+        // 4. SERENITO (CON EL CANDADO ROTO)
+        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
+            personaje = meshes[0];
+            
+            // --- LA LÍNEA MÁGICA ---
+            // Esto rompe el bloqueo del archivo 3D y permite que gire.
+            personaje.rotationQuaternion = null; 
+            // -----------------------
+
+            personaje.scaling = new BABYLON.Vector3(10, 10, 10);
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            
+            personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
+            personaje.checkCollisions = true;
+            personaje.applyGravity = true; 
+
+            camera.lockedTarget = personaje;
+            if (anims && anims.length > 0) {
+                animCaminar = anims[0];
+                animCaminar.stop(); 
+            }
+            statusDiv.innerHTML += "<br>✅ Serenito Desbloqueado";
+        });
+
+        scene.onPointerDown = (evt, pick) => {
+            if (pick.hit && pick.pickedMesh === suelo) {
+                destinoFinal = pick.pickedPoint;
+                statusDiv.innerHTML = "🔄 INICIANDO GIRO...";
+            }
+        };
+
+        // --- CEREBRO DE GIRO ESTRICTO ---
+        scene.onBeforeRenderObservable.add(() => {
+            if (!personaje || !destinoFinal) return;
+            
+            let diff = destinoFinal.subtract(personaje.position);
+            diff.y = 0; 
+
+            if (diff.length() > 1.5) {
+                
+                // 1. CÁLCULO DE ÁNGULO (Con corrección de espalda + Math.PI)
+                let anguloObjetivo = Math.atan2(diff.x, diff.z) + Math.PI;
+                let rotacionActual = personaje.rotation.y;
+                
+                // Buscar el giro corto
+                let diferencia = anguloObjetivo - rotacionActual;
+                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
+                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
+
+                // 2. SEMÁFORO DE MOVIMIENTO
+                // Si la diferencia es mayor a 5 grados (0.1 radianes)
+                if (Math.abs(diferencia) > 0.1) {
+                    // --- FASE 1: SOLO ROTAR ---
+                    statusDiv.innerHTML = "🔄 GIRANDO CUERPO...";
+                    
+                    // Giramos el cuerpo (Ahora sí funcionará porque rompimos el Quaternion)
+                    personaje.rotation.y += diferencia * 0.1; 
+                    
+                    // FRENOS PUESTOS: Animación quieta
+                    if (animCaminar) animCaminar.stop(); 
+                    
+                } else {
+                    // --- FASE 2: CAMINAR ---
+                    statusDiv.innerHTML = "🚶 AVANZANDO...";
+                    
+                    // Ajuste fino y marcha
+                    personaje.rotation.y = anguloObjetivo;
+                    diff.normalize();
+                    personaje.moveWithCollisions(diff.scale(1.2)); 
+                    
+                    // Play animación
+                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                }
+
+            } else {
+                if (animCaminar) animCaminar.stop();
+                destinoFinal = null;
+                statusDiv.innerHTML = "✅ DESTINO ALCANZADO";
+            }
+        });
+
+        window.camaraSerenito = function() {
+            if(!personaje) return;
+            camera.lockedTarget = personaje;
+            camera.radius = 100;
+        }
+
+        window.camaraAerea = function() {
+            camera.lockedTarget = null;
+            camera.setPosition(new BABYLON.Vector3(500, 600, 500));
+            camera.setTarget(new BABYLON.Vector3(500, 0, 300));
+        }
+
+        window.rescatar = function() {
+            if(!personaje) return;
+            destinoFinal = null;
+            personaje.position = new BABYLON.Vector3(0, 8, 0); 
+            personaje.rotationQuaternion = null; // Nos aseguramos de romperlo al rescatar también
+            camaraSerenito();
+            statusDiv.innerHTML = "🚨 Rescate OK";
+        }
+
+        engine.runRenderLoop(() => { scene.render(); });
+        window.addEventListener("resize", () => { engine.resize(); });
+    </script>
+</body>
+</html>
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
             light.intensity = 2.0;
 
@@ -209,3 +351,4 @@
     </script>
 </body>
 </html>
+
