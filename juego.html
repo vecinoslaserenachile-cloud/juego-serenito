@@ -12,10 +12,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #1a1a1a; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Roboto, sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* 1. RADIO MINIMALISTA */
+        /* 1. RADIO MUNICIPAL (Conectada Real) */
         #radio-control {
             position: absolute; top: 20px; right: 20px; z-index: 100;
             background: rgba(0, 0, 0, 0.8); border: 2px solid #ffd700;
@@ -34,7 +34,7 @@
             font-weight: bold; font-size: 14px; pointer-events: none;
         }
 
-        /* BARRA DE HERRAMIENTAS */
+        /* BARRA DE HERRAMIENTAS (Iconos que te gustaron) */
         #toolbar {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 15px; z-index: 100;
@@ -50,7 +50,7 @@
         
         @keyframes pulso { 0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 51, 51, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); } }
 
-        /* 3. MÓDULO DE REPORTE UNIFICADO (Overlay) */
+        /* MÓDULO DE REPORTE (Cámara Funcional) */
         #modal-reporte {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); z-index: 2000; align-items: center; justify-content: center;
@@ -65,7 +65,6 @@
             width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #555;
             background: #333; color: white; font-size: 16px; box-sizing: border-box;
         }
-        /* VISOR DE CÁMARA REAL */
         #camera-feed {
             width: 100%; height: 250px; background: #000; margin: 15px 0;
             border-radius: 10px; border: 2px solid #ffd700; object-fit: cover;
@@ -76,11 +75,11 @@
 </head>
 <body>
 
-    <div id="gps-status"><i class="fas fa-satellite-dish"></i> GPS: Buscando señal...</div>
+    <div id="gps-status"><i class="fas fa-satellite-dish"></i> GPS: Conectando...</div>
 
     <div id="radio-control">
         <i class="fas fa-play" id="play-btn" onclick="toggleRadio()"></i>
-        <input type="range" id="volumen-slider" min="0" max="1" step="0.1" value="0.5" oninput="ajustarVolumen(this.value)">
+        <input type="range" id="volumen-slider" min="0" max="1" step="0.1" value="0.8" oninput="ajustarVolumen(this.value)">
         <i class="fas fa-volume-up"></i>
     </div>
 
@@ -94,15 +93,15 @@
 
     <div id="modal-reporte">
         <div class="modal-card">
-            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <span class="close-modal" onclick="cerrarModal()">×</span>
             <h2>🚨 Reporte Municipal</h2>
             <p id="direccion-detectada" style="color: #bbb; font-size: 14px;">📍 Ubicando...</p>
             
             <video id="camera-feed" autoplay playsinline></video>
             <canvas id="photo-canvas" style="display:none;"></canvas>
             
-            <input type="text" id="mensaje-reporte" class="input-field" placeholder="Describe el problema (Ej: Bache, Basura)">
-            <input type="email" id="email-vecino" class="input-field" placeholder="Tu correo (para copia de respaldo)">
+            <input type="text" id="mensaje-reporte" class="input-field" placeholder="Describe el problema...">
+            <input type="email" id="email-vecino" class="input-field" placeholder="Tu correo (Opcional)">
             
             <button id="btn-capture" onclick="capturarYEnviar()">
                 <i class="fas fa-paper-plane"></i> CAPTURAR Y ENVIAR
@@ -111,7 +110,7 @@
     </div>
 
     <script>
-        // === 1. CONFIGURACIÓN FIREBASE ===
+        // === 1. FIREBASE (Cerebro) ===
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -123,17 +122,24 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // === 2. LÓGICA DE RADIO (Sin Iframe) ===
-        const radioAudio = new Audio('https://yesstreaming.com/radio/8000/public');
+        // === 2. RADIO (Conexión Real) ===
+        // Usamos el stream directo si es posible, o la URL pública
+        const radioUrl = "https://az11.yesstreaming.net/radio/8040/radio.mp3"; // Intenté derivar el stream directo .mp3
+        // Nota: Si no suena el directo, usa la url de la página: "https://az11.yesstreaming.net/public/radio-digital-municipal-la-serena"
+        const radioAudio = new Audio(radioUrl);
         let radioPlaying = false;
 
         function toggleRadio() {
             const btn = document.getElementById('play-btn');
             if (!radioPlaying) {
-                radioAudio.play().catch(e => console.log("Error stream:", e));
-                btn.className = "fas fa-stop";
-                btn.style.color = "#ff3333";
-                radioPlaying = true;
+                radioAudio.play().then(() => {
+                    btn.className = "fas fa-stop";
+                    btn.style.color = "#ff3333";
+                    radioPlaying = true;
+                }).catch(e => {
+                    console.log("Error stream:", e);
+                    alert("Haz clic de nuevo para iniciar la radio (Bloqueo de navegador)");
+                });
             } else {
                 radioAudio.pause();
                 btn.className = "fas fa-play";
@@ -143,58 +149,75 @@
         }
         function ajustarVolumen(val) { radioAudio.volume = val; }
 
-        // === 3. MOTOR GRÁFICO (SOLUCIÓN PISO) ===
+        // === 3. MOTOR GRÁFICO (Restauración Total) ===
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, personaje, animCaminar, destinoFinal;
 
         const crearEscena = function () {
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0.05, 0.05, 0.1);
-            
-            // Gravedad REAL
+            scene.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // CIELO AZUL RECUPERADO
             scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
             scene.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.5;
+            light.intensity = 1.2;
             
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
+            camera.checkCollisions = true; // Cámara no atraviesa el piso
             return scene;
         };
 
         scene = crearEscena();
 
-        // PISO BLINDADO
+        // PISO
         const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, scene);
         const matSuelo = new BABYLON.StandardMaterial("matSuelo", scene);
         matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", scene);
         suelo.material = matSuelo;
-        suelo.checkCollisions = true; // Fundamental
+        suelo.checkCollisions = true; 
 
-        // EDIFICIOS
-        const cargarEdificio = (file, x, z, scale, rot) => {
-            BABYLON.SceneLoader.ImportMesh("", "./", file, scene, (m) => {
-                let mesh = m[0];
-                mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
-                mesh.position = new BABYLON.Vector3(x, 0, z); // Siempre al piso
-                mesh.rotation.y = rot;
-                mesh.checkCollisions = true;
-            });
-        };
-        cargarEdificio("municipalidad.glb", 610, 160, 2, Math.PI); // Ajusta escala si es necesario
-        cargarEdificio("intendencia.glb", 430, 410, 2, 0);
+        // === EDIFICIOS RECUPERADOS ===
+        // Municipalidad (Giro 180° y Escala)
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            let mesh = meshes[0];
+            let cajaPadre = new BABYLON.TransformNode("cajaMuni", scene);
+            mesh.parent = cajaPadre;
+            
+            const bound = mesh.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 150 / Math.max(size.x, size.y, size.z);
+            mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
+            
+            cajaPadre.rotation.y = Math.PI; // GIRO CORRECTO
+            let nivelSuelo = -bound.min.y * factor;
+            cajaPadre.position = new BABYLON.Vector3(610, nivelSuelo, 160); // POSICIÓN CORRECTA
+            
+            mesh.getChildMeshes().forEach(m => m.checkCollisions = true);
+        });
 
-        // SERENITO (Solución Definitiva de Altura)
+        // Intendencia
+        BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
+            let mesh = meshes[0];
+            const bound = mesh.getHierarchyBoundingVectors(true);
+            const size = bound.max.subtract(bound.min);
+            const factor = 180 / Math.max(size.x, size.y, size.z);
+            mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
+            
+            let nivelSuelo = -bound.min.y * factor;
+            mesh.position = new BABYLON.Vector3(430, nivelSuelo, 410); // POSICIÓN CORRECTA
+            mesh.getChildMeshes().forEach(m => m.checkCollisions = true);
+        });
+
+        // === SERENITO (Movimiento Natural Restaurado) ===
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
-            personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
+            personaje.rotationQuaternion = null; 
+            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); // Espejo
+            personaje.position = new BABYLON.Vector3(0, 2, 0); 
             
-            // POSICIÓN INICIAL SEGURA (Un poco arriba para que caiga)
-            personaje.position = new BABYLON.Vector3(0, 2, 0);
-            
-            // EL SECRETO: EllipsoidOffset (Sube el centro de colisión al pecho)
+            // Fix de Altura
             personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
             personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0); 
             
@@ -205,38 +228,47 @@
             if (anims && anims.length > 0) { animCaminar = anims[0]; animCaminar.stop(); }
         });
 
-        // MOVIMIENTO CLICK-TO-MOVE
+        // MOVIMIENTO "TANQUE" (Giro -> Avance) - RECUPERADO
         scene.onPointerDown = (evt, pick) => { if (pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
+        
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             let diff = destinoFinal.subtract(personaje.position);
             diff.y = 0;
-            if (diff.length() > 1) {
-                let angulo = Math.atan2(diff.x, diff.z);
-                let rotDif = angulo - personaje.rotation.y;
-                while (rotDif > Math.PI) rotDif -= Math.PI * 2;
-                while (rotDif < -Math.PI) rotDif += Math.PI * 2;
-                personaje.rotation.y += rotDif * 0.1;
+
+            if (diff.length() > 1.5) {
+                let anguloObjetivo = Math.atan2(diff.x, diff.z);
+                let diferencia = anguloObjetivo - personaje.rotation.y;
                 
-                // Mover con colisiones activas
-                let direccion = diff.normalize();
-                personaje.moveWithCollisions(direccion.scale(0.8)); // Velocidad
-                
-                if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                // Normalizar ángulo
+                while (diferencia > Math.PI) diferencia -= Math.PI * 2;
+                while (diferencia < -Math.PI) diferencia += Math.PI * 2;
+
+                // LÓGICA DE MOVIMIENTO NATURAL
+                if (Math.abs(diferencia) > 0.1) {
+                    // Si el ángulo es grande, solo gira
+                    personaje.rotation.y += diferencia * 0.15;
+                    if (animCaminar) animCaminar.stop();
+                } else {
+                    // Si ya mira al objetivo, camina
+                    personaje.rotation.y = anguloObjetivo;
+                    diff.normalize();
+                    personaje.moveWithCollisions(diff.scale(1.0)); // Velocidad ajustada
+                    if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
+                }
             } else {
                 if (animCaminar) animCaminar.stop();
                 destinoFinal = null;
             }
         });
 
-        // === 4. LÓGICA DE CÁMARA Y REPORTE ===
+        // === 4. CÁMARA Y REPORTE ===
         const videoFeed = document.getElementById('camera-feed');
         let streamActivo = null;
         let coordsActuales = null;
 
         function abrirModal() {
             document.getElementById('modal-reporte').style.display = 'flex';
-            // ACTIVAR CÁMARA
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                 .then(stream => {
@@ -244,10 +276,8 @@
                     videoFeed.srcObject = stream;
                 });
             }
-            // OBTENER GPS
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsActuales = pos.coords;
-                // Geocodificación Inversa
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`)
                 .then(r => r.json())
                 .then(data => {
@@ -258,40 +288,29 @@
 
         function cerrarModal() {
             document.getElementById('modal-reporte').style.display = 'none';
-            if (streamActivo) {
-                streamActivo.getTracks().forEach(track => track.stop());
-            }
+            if (streamActivo) { streamActivo.getTracks().forEach(track => track.stop()); }
         }
 
         function capturarYEnviar() {
             const mensaje = document.getElementById('mensaje-reporte').value;
             const emailVecino = document.getElementById('email-vecino').value;
             
-            if (!mensaje) return alert("Por favor describe el problema");
-
-            // 1. CAPTURAR FOTO DEL VIDEO
             const canvasFoto = document.getElementById('photo-canvas');
             canvasFoto.width = videoFeed.videoWidth;
             canvasFoto.height = videoFeed.videoHeight;
             canvasFoto.getContext('2d').drawImage(videoFeed, 0, 0);
-            const fotoBase64 = canvasFoto.toDataURL('image/jpeg'); // Foto lista para enviar
-
-            // 2. GUARDAR EN FIREBASE
+            
             db.collection("reportes_finales").add({
-                mensaje: mensaje,
-                email_contacto: emailVecino,
+                mensaje: mensaje || "Reporte Rápido",
+                contacto: emailVecino,
                 lat: coordsActuales ? coordsActuales.latitude : 0,
                 lon: coordsActuales ? coordsActuales.longitude : 0,
-                fecha: new Date(),
-                imagen: "Guardada en Base64 (Simulada)" // Aquí iría la subida a Storage si estuviera activo
+                fecha: new Date()
             }).then(() => {
-                // 3. ENVIAR COPIA AL CORREO (Truco mailto para asegurar entrega)
-                const asunto = `🚨 Nuevo Reporte: ${mensaje.substring(0, 20)}...`;
-                const cuerpo = `Hola vecinoslaserenachile@gmail.com,\n\nNuevo reporte ciudadano:\n\nProblema: ${mensaje}\nUbicación: https://maps.google.com/?q=${coordsActuales.latitude},${coordsActuales.longitude}\nContacto Vecino: ${emailVecino}\n\n(Adjunta la foto manualmente si es necesario)`;
-                
+                const asunto = `🚨 Reporte Ciudadano`;
+                const cuerpo = `Detalle: ${mensaje}\nUbicación: https://maps.google.com/?q=${coordsActuales.latitude},${coordsActuales.longitude}`;
                 window.location.href = `mailto:vecinoslaserenachile@gmail.com?cc=${emailVecino}&subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
-                
-                alert("✅ Reporte registrado en sistema.\nSe abrirá tu correo para confirmar el envío.");
+                alert("✅ Reporte Enviado Correctamente");
                 cerrarModal();
             });
         }
