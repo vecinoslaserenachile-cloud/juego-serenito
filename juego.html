@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA❤️SERENA - Serenito Definitivo</title>
+    <title>LA❤️SERENA - Serenito Final</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -21,7 +21,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Esperando destino...</div>
+    <div id="ui-status">Sistema Listo</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -84,27 +84,31 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (FIJA 610, 160)
+        // 2. MUNICIPALIDAD (BLOQUEADA EN 610, 160)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 610, 160, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Muni Fija";
         });
 
-        // 3. INTENDENCIA (FIJA)
+        // 3. INTENDENCIA (BLOQUEADA)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
             colocarEdificio(meshes[0], 430, 410, 0, 180);
         });
 
-        // 4. SERENITO (CANDADO ROTO + ALTURA OK)
+        // 4. SERENITO (CAMBIO DE ESCALA PARA CORREGIR TEXTO)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, function (meshes, ps, sk, anims) {
             personaje = meshes[0];
             
-            // ROMPEMOS EL BLOQUEO DE GIRO
+            // ROMPEMOS EL CANDADO DE GIRO (NO TOCAR)
             personaje.rotationQuaternion = null; 
 
-            personaje.scaling = new BABYLON.Vector3(10, 10, 10);
+            // --- AQUÍ ESTÁ EL ARREGLO DEL TEXTO ---
+            // Cambiamos 10 por -10 en el primer número (Eje X)
+            // Esto voltea al personaje como un espejo, arreglando la polera y el sombrero.
+            personaje.scaling = new BABYLON.Vector3(-10, 10, 10); 
+            // ---------------------------------------
+
             personaje.position = new BABYLON.Vector3(0, 8, 0); 
-            
             personaje.ellipsoid = new BABYLON.Vector3(2, 4, 2);
             personaje.checkCollisions = true;
             personaje.applyGravity = true; 
@@ -114,7 +118,7 @@
                 animCaminar = anims[0];
                 animCaminar.stop(); 
             }
-            statusDiv.innerHTML += "<br>✅ Serenito Listo. Haz clic.";
+            statusDiv.innerHTML += "<br>✅ Serenito Listo (Texto OK)";
         });
 
         scene.onPointerDown = (evt, pick) => {
@@ -124,7 +128,7 @@
             }
         };
 
-        // --- CEREBRO DE MOVIMIENTO (CORREGIDO AL FRENTE) ---
+        // --- CEREBRO MAESTRO BLOQUEADO (NO TOCAR) ---
         scene.onBeforeRenderObservable.add(() => {
             if (!personaje || !destinoFinal) return;
             
@@ -133,35 +137,27 @@
 
             if (diff.length() > 1.5) {
                 
-                // 1. CÁLCULO DE ÁNGULO (¡SIN Math.PI!)
-                // Al quitarle Math.PI, invertimos la dirección 180 grados.
-                // Ahora mirará hacia el destino, no al revés.
+                // LÓGICA DE GIRO (ESTO YA FUNCIONA PERFECTO)
                 let anguloObjetivo = Math.atan2(diff.x, diff.z); 
-                
                 let rotacionActual = personaje.rotation.y;
-                
-                // Buscar el giro corto
                 let diferencia = anguloObjetivo - rotacionActual;
+                
                 while (diferencia > Math.PI) diferencia -= Math.PI * 2;
                 while (diferencia < -Math.PI) diferencia += Math.PI * 2;
 
-                // 2. SEMÁFORO ESTRICTO
+                // SEMÁFORO ESTRICTO
                 if (Math.abs(diferencia) > 0.1) {
-                    // --- FASE 1: SOLO ROTAR ---
-                    statusDiv.innerHTML = "🔄 GIRANDO AL FRENTE...";
-                    
+                    // FASE 1: SOLO ROTAR
+                    statusDiv.innerHTML = "🔄 GIRANDO...";
                     personaje.rotation.y += diferencia * 0.1; 
-                    
                     if (animCaminar) animCaminar.stop(); 
                     
                 } else {
-                    // --- FASE 2: CAMINAR DE FRENTE ---
+                    // FASE 2: CAMINAR DE FRENTE
                     statusDiv.innerHTML = "🚶 AVANZANDO...";
-                    
                     personaje.rotation.y = anguloObjetivo;
                     diff.normalize();
                     personaje.moveWithCollisions(diff.scale(1.2)); 
-                    
                     if (animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                 }
 
