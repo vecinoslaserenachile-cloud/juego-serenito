@@ -83,35 +83,32 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-       // 2. MUNICIPALIDAD (LÓGICA "AYER" - DIRECTA Y SIN RODEOS)
+      // 2. MUNICIPALIDAD (FUERZA BRUTA - QUATERNION)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             let muni = meshes[0];
 
-            // --- LA LÍNEA MÁGICA QUE BUSCAS ---
-            muni.rotationQuaternion = null; 
-            // ----------------------------------
-
             // 1. ESCALA (Tamaño 150)
-            // Usamos un cálculo simple para asegurar el tamaño 150 que te gusta
             const bound = muni.getHierarchyBoundingVectors(true);
             const size = bound.max.subtract(bound.min);
             const factor = 150 / Math.max(size.x, size.y, size.z);
             muni.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-            // 2. ROTACIÓN (180 GRADOS / MEDIA VUELTA)
-            muni.rotation.y = Math.PI;
+            // 2. ROTACIÓN (LA SOLUCIÓN DEFINITIVA)
+            // En vez de borrar el candado, le damos la llave exacta.
+            // Math.PI = 180 grados.
+            muni.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
 
             // 3. POSICIÓN (TUS COORDENADAS)
-            // Ajustamos Y a 0 para que no flote ni se entierre
             muni.position = new BABYLON.Vector3(610, 0, 160);
 
-            // 4. COLISIONES (Para que Serenito no la atraviese)
+            // 4. COLISIONES
             muni.checkCollisions = true;
             muni.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
+                if(m.material) m.material.backFaceCulling = false;
             });
 
-            statusDiv.innerHTML += "<br>✅ Muni: Giro 180° ACTIVADO";
+            statusDiv.innerHTML += "<br>✅ Muni: Quaternion 180° OK";
         });
 
         // 3. INTENDENCIA (BLOQUEADA)
@@ -206,5 +203,6 @@
     </script>
 </body>
 </html>
+
 
 
