@@ -92,7 +92,7 @@
 
         // 3. INTENDENCIA (Se mantiene igual)
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 430, 410, 0, 180);
+            colocarEdificio(meshes[0], 735, 187, Math.PI, 150);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -162,3 +162,4 @@
     </script>
 </body>
 </html>
+
