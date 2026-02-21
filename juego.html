@@ -22,7 +22,7 @@
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        /* RADIO + VOLUMEN */
+        /* RADIO CON VOLUMEN (Recuperada) */
         .radio-card {
             background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
             display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
@@ -48,6 +48,8 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #222; width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; color: white; text-align: center; border: 1px solid #444; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #333; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box; }
+        
+        /* Video Cámara */
         #cam { width: 100%; height: 250px; background: black; border: 2px solid gold; border-radius: 8px; object-fit: cover; margin-bottom: 10px; }
     </style>
 </head>
@@ -75,21 +77,25 @@
         <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
     </div>
 
-    <div id="modal-rep" class="modal"><div class="box">
-        <h2 style="color:gold;">📷 Nuevo Reporte</h2>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando...</p>
-        <video id="cam" autoplay playsinline></video>
-        <canvas id="snap" style="display:none;"></canvas>
-        <input type="text" id="desc" placeholder="Describe el problema...">
-        <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black;">ENVIAR AHORA</button>
-        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
-    </div></div>
+    <div id="modal-rep" class="modal">
+        <div class="box">
+            <h2 style="color:gold; margin-top:0;">📷 Nuevo Reporte</h2>
+            <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Activando GPS...</p>
+            <video id="cam" autoplay playsinline></video>
+            <canvas id="snap" style="display:none;"></canvas>
+            <input type="text" id="desc" placeholder="Describe el problema...">
+            <button onclick="enviar()" style="width:100%; padding:15px; background:gold; border:none; font-weight:bold; cursor:pointer; color:black; border-radius:5px;">ENVIAR AHORA</button>
+            <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cancelar</button>
+        </div>
+    </div>
 
-    <div id="modal-hist" class="modal"><div class="box">
-        <h3>📂 Mis Reportes</h3>
-        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
-        <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
-    </div></div>
+    <div id="modal-hist" class="modal">
+        <div class="box">
+            <h3>📂 Mis Reportes</h3>
+            <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;">Cargando...</div>
+            <button onclick="cerrarModal('modal-hist')" style="margin-top:15px; background:none; border:none; color:#aaa; cursor:pointer;">Cerrar</button>
+        </div>
+    </div>
 
     <script>
         // 1. FIREBASE
@@ -114,11 +120,12 @@
             } else {
                 userCurrent = null;
                 document.getElementById('u-name').innerText = "Acceder";
+                document.getElementById('u-img').src = "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
             }
         });
 
         window.login = () => {
-            if(userCurrent) { if(confirm("¿Salir?")) auth.signOut(); }
+            if(userCurrent) { if(confirm("¿Cerrar sesión?")) auth.signOut(); }
             else { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert(e.message)); }
         };
 
@@ -137,9 +144,10 @@
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
             light.intensity = 1.0;
 
+            // CÁMARA BLINDADA (No atraviesa el piso)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
-            camera.lowerRadiusLimit = 20; 
-            camera.upperBetaLimit = Math.PI / 2.2; 
+            camera.lowerRadiusLimit = 20; // No acercarse demasiado
+            camera.upperBetaLimit = Math.PI / 2.2; // NO BAJAR DEL PISO
             camera.attachControl(canvas, true);
             
             // PISO
@@ -223,7 +231,7 @@
         window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. REPORTES
+        // 4. CÁMARA Y REPORTES
         let videoStream = null;
         let gpsData = null;
 
