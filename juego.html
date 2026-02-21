@@ -139,7 +139,7 @@
 
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.lowerRadiusLimit = 20; 
-            camera.upperBetaLimit = Math.PI / 2.2; 
+            camera.upperBetaLimit = Math.PI / 2.2; // LÍMITE PISO
             camera.attachControl(canvas, true);
             
             // PISO
@@ -164,11 +164,12 @@
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO
+            // SERENITO (Recuperado y Blindado)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 5, 0);
+                // Nace a 10 metros de altura para asegurar que caiga AL piso y no BAJO él
+                personaje.position = new BABYLON.Vector3(0, 10, 0); 
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
@@ -177,46 +178,44 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // === LÓGICA TANQUE MILITAR (BLINDADA) ===
-            // 1. Capturar destino
+            // === LÓGICA TANQUE ESTRICTA (EL CORAZÓN DEL PROBLEMA) ===
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destino = pick.pickedPoint;
                 }
             };
             
-            // 2. Bucle de Movimiento
             s.onBeforeRenderObservable.add(() => {
                 if(!personaje || !destino) return;
                 
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Solo nos importa el plano horizontal
+                diff.y = 0; // Ignorar altura, solo plano X-Z
 
-                if(diff.length() > 1.5) { // Si estamos lejos del destino
+                if(diff.length() > 1.5) { // Si no hemos llegado...
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
                     
-                    // Normalizar ángulo (-PI a PI)
+                    // Normalizar ángulo -PI a PI
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
                     // == FASE 1: GIRO EXCLUSIVO ==
-                    // Si el ángulo es mayor a 0.05 radianes (aprox 3 grados), SOLO GIRAMOS
-                    if(Math.abs(rotDiff) > 0.05) {
-                        personaje.rotation.y += Math.sign(rotDiff) * 0.1; // Girar a velocidad constante
-                        if(anim) anim.stop(); // ¡QUIETO! No camines
+                    // Si el ángulo es mayor a 5 grados (0.1 rad), SOLO ROTA.
+                    if(Math.abs(rotDiff) > 0.1) {
+                        personaje.rotation.y += Math.sign(rotDiff) * 0.1; // Girar
+                        if(anim) anim.stop(); // ¡Patas quietas!
                     } 
-                    // == FASE 2: MARCHA ==
-                    // Si ya estamos alineados, CAMINAMOS
+                    // == FASE 2: AVANCE ==
+                    // Si ya está alineado, ENTONCES avanza.
                     else {
-                        personaje.rotation.y = angle; // Fijar ángulo perfecto
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Avanzar
-                        if(anim && !anim.isPlaying) anim.play(true); // Animar
+                        personaje.rotation.y = angle; // Ajuste fino
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
+                        if(anim && !anim.isPlaying) anim.play(true); // Activar animación
                     }
                 } else {
                     // LLEGADA
                     if(anim) anim.stop();
-                    destino = null; // Borrar destino para que no siga calculando
+                    destino = null; // Borrar destino
                 }
             });
             return s;
@@ -243,9 +242,15 @@
             if(!userCurrent) return alert("🔒 Debes ACCEDER para reportar.");
             document.getElementById('modal-rep').style.display = 'flex';
             
-            navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}}).then(s => {
+            // Try/Catch para permisos de cámara
+            navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}})
+            .then(s => {
                 videoStream = s; document.getElementById('cam').srcObject = s;
-            }).catch(e => alert("Cámara bloqueada: " + e));
+            })
+            .catch(e => {
+                console.log(e);
+                alert("⚠️ No se pudo acceder a la cámara. Revisa el icono de candado en tu navegador.");
+            });
 
             navigator.geolocation.getCurrentPosition(pos => {
                 gpsData = pos.coords;
@@ -260,8 +265,11 @@
             const desc = document.getElementById('desc').value;
             const vid = document.getElementById('cam');
             const cv = document.getElementById('snap');
-            cv.width = vid.videoWidth; cv.height = vid.videoHeight;
-            cv.getContext('2d').drawImage(vid, 0, 0);
+            // Capturar foto si hay video, si no, enviar negro
+            if (vid.srcObject) {
+                cv.width = vid.videoWidth; cv.height = vid.videoHeight;
+                cv.getContext('2d').drawImage(vid, 0, 0);
+            }
             
             db.collection("incidencias").add({
                 uid: userCurrent.uid,
