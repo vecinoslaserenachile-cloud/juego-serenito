@@ -22,7 +22,7 @@
 </head>
 <body>
 
-    <div id="ui-status">Cargando Sistema de Contenedores...</div>
+    <div id="ui-status">Cargando Nuevo Sistema de Giro...</div>
 
     <div id="toolbar">
         <button class="btn" onclick="camaraSerenito()">🚶 Seguir a Serenito</button>
@@ -40,39 +40,45 @@
         let scene, camera, personaje, animCaminar;
         let destinoFinal = null;
 
-        // --- FUNCIÓN MAESTRA: TÉCNICA DEL CONTENEDOR (INFALIBLE) ---
-        const colocarEdificio = (mesh, x, z, rotacion, escala) => {
-            // 1. Limpieza inicial: quitamos padres antiguos
+        // --- NUEVA FUNCIÓN: LA "CAJA INVISIBLE" (Esta es la que arregla el giro) ---
+        const colocarConPivoteReal = (mesh, targetX, targetZ, rotacionDeseada, escala) => {
+            // 1. Limpiamos cualquier padre anterior
             mesh.setParent(null);
-            
-            // 2. Calculamos el tamaño y centro del edificio tal como viene
+
+            // 2. Calculamos el centro REAL del edificio (Bounding Box)
             let bounds = mesh.getHierarchyBoundingVectors();
             let size = bounds.max.subtract(bounds.min);
             let center = bounds.max.add(bounds.min).scale(0.5);
 
-            // 3. Calculamos el factor de escala
+            // 3. Calculamos cuánto hay que achicarlo o agrandarlo
             let maxDim = Math.max(size.x, size.y, size.z);
             let factor = escala / maxDim;
 
-            // 4. CREAMOS EL CONTENEDOR (PIVOTE REAL)
-            // Este es un punto invisible que pondremos exactamente donde tú quieres
-            let pivote = new BABYLON.TransformNode("pivote_" + mesh.name);
-            pivote.position = new BABYLON.Vector3(x, 0, z); // Aquí es donde estará el edificio
-            pivote.rotation.y = rotacion; // Aquí aplicamos el giro
+            // 4. CREAMOS EL PIVOTE MAESTRO (Un punto invisible en el mapa)
+            // Este punto lo ponemos EXACTAMENTE donde quieres el edificio (735, 187)
+            let pivote = new BABYLON.TransformNode("PivoteMaestro_" + mesh.name);
+            pivote.position = new BABYLON.Vector3(targetX, 0, targetZ);
             
-            // 5. METEMOS EL EDIFICIO AL CONTENEDOR
+            // 5. METEMOS EL EDIFICIO DENTRO DEL PIVOTE
             mesh.parent = pivote;
-            
-            // 6. CENTRAMOS EL EDIFICIO DENTRO DEL CONTENEDOR
-            // Lo movemos lo opuesto a su centro para que quede alineado al (0,0,0) del pivote
-            // Y ajustamos la altura para que el piso quede en 0
-            mesh.position = new BABYLON.Vector3(-center.x * factor, -bounds.min.y * factor, -center.z * factor);
-            
-            // 7. APLICAMOS LA ESCALA
-            // Escalamos el edificio, no el pivote, para evitar distorsiones raras
+
+            // 6. CENTRADO FORZOSO
+            // Movemos el edificio "hacia atrás" relativo al pivote para que su centro quede en (0,0,0)
+            // Es decir, alineamos el centro del edificio con el centro del pivote.
+            mesh.position = new BABYLON.Vector3(
+                -center.x * factor, // Compensamos X
+                -bounds.min.y * factor, // Compensamos altura para que pise suelo
+                -center.z * factor  // Compensamos Z
+            );
+
+            // 7. APLICAMOS LA ESCALA (Al edificio, no al pivote)
             mesh.scaling = new BABYLON.Vector3(factor, factor, factor);
 
-            // 8. ACTIVAR COLISIONES
+            // 8. ¡AHORA SÍ GIRAMOS EL PIVOTE!
+            // Al girar el pivote, el edificio gira con él como un satélite perfecto.
+            pivote.rotation.y = rotacionDeseada;
+
+            // 9. Activamos colisiones
             mesh.checkCollisions = true;
             mesh.getChildMeshes().forEach(m => {
                 m.checkCollisions = true;
@@ -108,18 +114,19 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // 2. MUNICIPALIDAD (Usando Contenedor)
+        // 2. MUNICIPALIDAD - ¡ATENCIÓN AQUÍ!
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
+            // Usamos la nueva función 'colocarConPivoteReal'
             // Posición: 735, 187
-            // Rotación: -Math.PI / 2 (90° Izquierda)
-            // Esta vez GIRARÁ SI O SÍ sobre su centro gracias al contenedor.
-            colocarEdificio(meshes[0], 735, 187, -Math.PI / 2, 150);
-            statusDiv.innerHTML += "<br>✅ Muni Girada y Fija";
+            // Rotación: -Math.PI / 2 (90° Izquierda / Contra reloj)
+            colocarConPivoteReal(meshes[0], 735, 187, -Math.PI / 2, 150);
+            statusDiv.innerHTML += "<br>✅ Muni ROTADA 90° IZQ";
         });
 
         // 3. INTENDENCIA
         BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", scene, function (meshes) {
-            colocarEdificio(meshes[0], 430, 410, 0, 180);
+            // Usamos la misma lógica para que quede firme también
+            colocarConPivoteReal(meshes[0], 430, 410, 0, 180);
             statusDiv.innerHTML += "<br>✅ Intendencia OK";
         }, null, function() {
             statusDiv.innerHTML += "<br>⚠️ Falta archivo intendencia.glb";
@@ -137,6 +144,7 @@
             statusDiv.innerHTML += "<br>✅ Serenito Listo";
         });
 
+        // 5. LÓGICA DE MOVIMIENTO
         scene.onPointerDown = (evt, pick) => {
             if (pick.hit && pick.pickedMesh === suelo) {
                 destinoFinal = pick.pickedPoint;
