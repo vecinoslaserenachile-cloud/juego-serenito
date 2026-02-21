@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v13 Escala y Tanque</title>
+    <title>LA❤️SERENA - Tanque Blindado v14</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,22 +18,23 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
+        /* PANEL DE ESTADO */
         #status-panel {
-            position: absolute; top: 100px; left: 15px; z-index: 500;
-            background: rgba(0,0,0,0.8); border-left: 5px solid #ffd700;
+            position: absolute; top: 80px; left: 15px; z-index: 500;
+            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
             padding: 12px; border-radius: 0 10px 10px 0; color: white;
-            font-size: 12px; pointer-events: none;
+            font-size: 11px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
         }
 
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
         .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
-        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; }
+        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
 
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
         .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
-        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-15px); }
+        .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
@@ -44,8 +45,8 @@
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700;">MOTOR v13.0</div>
-        <div id="st-info">Esperando...</div>
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR CIUDAD v14.0</div>
+        <div id="st-info">Sincronizando modelos...</div>
     </div>
 
     <div class="top-ui">
@@ -64,22 +65,28 @@
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn" onclick="verHistorial()"><i class="fas fa-list-ul"></i></button>
+        <button class="btn" onclick="verHistorial()"><i class="fas fa-history"></i></button>
         <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
-        <button class="btn" onclick="resetCamara()"><i class="fas fa-walking"></i></button>
+        <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando ubicación...</p>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Ubicando GPS...</p>
         <video id="cam" autoplay playsinline muted></video>
         <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR AHORA</button>
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
+    <div id="modal-hist" class="modal"><div class="box">
+        <h3>📂 MIS REPORTES</h3>
+        <div id="lista" style="text-align:left; max-height:300px; overflow-y:auto;"></div>
+        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cerrar</button>
+    </div></div>
+
     <script>
-        // 1. FIREBASE
+        // 1. CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -103,7 +110,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. BABYLON 3D
+        // 2. MOTOR 3D BABYLON
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -126,22 +133,35 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // CARGA DE EDIFICIOS CON ESCALA CORREGIDA (MÁS GRANDES)
-            const loadEdificio = (name, x, z, scale, rotation) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", name, s, (meshes) => {
-                    let mesh = meshes[0];
-                    mesh.position = new BABYLON.Vector3(x, 0, z);
-                    mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
-                    mesh.rotation.y = rotation;
+            // CARGA DE EDIFICIOS (CORRECCIÓN DE ESCALA Y HUNDIMIENTO)
+            const loadEdificio = (file, x, z, scaleFactor, rotation) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
+                    let root = new BABYLON.TransformNode("root_" + file, s);
+                    meshes.forEach(m => m.parent = root);
+                    
+                    const bounds = meshes[0].getHierarchyBoundingVectors(true);
+                    const size = bounds.max.subtract(bounds.min);
+                    const factor = scaleFactor / Math.max(size.x, size.y, size.z);
+                    
+                    root.scaling = new BABYLON.Vector3(factor, factor, factor);
+                    root.rotation.y = rotation;
+                    // El secreto para que no se hundan: ajustar la posición Y basada en el punto más bajo del modelo
+                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z);
+                    
+                    meshes.forEach(m => m.checkCollisions = true);
                 });
             };
-            loadEdificio("municipalidad.glb", 610, 160, 150, Math.PI);
-            loadEdificio("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO CON ESCALA CORREGIDA (MÁS PEQUEÑO)
+            // Municipalidad: Posición (610, 160) y Rotación 180 (Math.PI)
+            loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI);
+            // Intendencia: Posición (430, 410)
+            loadEdificio("intendencia.glb", 430, 410, 190, 0);
+
+            // SERENITO (ESCALA AJUSTADA Y TANQUE)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
-                serenito.scaling = new BABYLON.Vector3(-5, 5, 5); // Escala reducida a la mitad
+                serenito.rotationQuaternion = null; // Necesario para usar rotation.y
+                serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
                 serenito.applyGravity = true;
@@ -149,7 +169,7 @@
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // 🛑 LÓGICA TANQUE REFORZADA (GIRO -> STOP -> AVANCE)
+            // 🛑 LÓGICA TANQUE ESTRICTA (GIRO -> PARAR -> CAMINAR)
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destinoFinal = pick.pickedPoint;
@@ -162,28 +182,28 @@
                 let diff = destinoFinal.subtract(serenito.position);
                 diff.y = 0; 
 
-                if(diff.length() > 1.0) { 
+                if(diff.length() > 1.5) { 
                     let angleDest = Math.atan2(diff.x, diff.z);
                     let rotDiff = angleDest - serenito.rotation.y;
                     
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // == FASE 1: GIRO PURO (Bloqueo de movimiento) ==
-                    if(Math.abs(rotDiff) > 0.1) { // Si el error es mayor a ~5 grados
-                        document.getElementById('st-info').innerText = "🔄 Alineando cuerpo...";
+                    // == FASE 1: GIRO PURO (Freno de mano puesto) ==
+                    if(Math.abs(rotDiff) > 0.1) { // Si hay más de 5 grados de diferencia
+                        document.getElementById('st-info').innerText = "🔄 Rotando cuerpo...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop(); // No camina mientras gira
+                        if(animCaminar) animCaminar.stop(); // No mueve los pies mientras gira
                     } 
                     // == FASE 2: AVANCE (Solo si está alineado) ==
                     else {
-                        document.getElementById('st-info').innerText = "🚶 Caminando...";
+                        document.getElementById('st-info').innerText = "🚶 Avanzando a destino";
                         serenito.rotation.y = angleDest; // Alineación perfecta
-                        serenito.moveWithCollisions(diff.normalize().scale(0.8));
+                        serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    document.getElementById('st-info').innerText = "✅ Detenido";
+                    document.getElementById('st-info').innerText = "✅ Posición alcanzada";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -193,41 +213,61 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES
+        // 3. REPORTES CIUDADANOS
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Inicia sesión primero.");
+            if(!userActual) return alert("Por favor, inicia sesión con Google primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
-                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
+                document.getElementById('gps-status').innerText = "📍 Ubicación capturada con éxito";
                 document.getElementById('gps-status').style.color = "#00ff00";
             });
 
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Cámara necesaria para el reporte."); }
+            } catch (err) { alert("Acceso a cámara denegado."); }
         }
 
         function enviarReporte() {
+            if(!coordsGlobal) return alert("Esperando señal GPS...");
             db.collection("incidencias").add({
                 uid: userActual.uid,
                 vecino: userActual.displayName,
                 descripcion: document.getElementById('desc').value,
-                lat: coordsGlobal ? coordsGlobal.latitude : 0,
-                lon: coordsGlobal ? coordsGlobal.longitude : 0,
+                lat: coordsGlobal.latitude,
+                lon: coordsGlobal.longitude,
                 estado: "Ingresado",
                 fecha: new Date()
-            }).then(() => { alert("Reporte enviado."); cerrarModal('modal-rep'); });
+            }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
         }
 
         function cerrarModal(id) {
             document.getElementById(id).style.display = 'none';
             if(streamActivo) streamActivo.getTracks().forEach(t => t.stop());
+        }
+
+        function verHistorial() {
+            if(!userActual) return alert("Inicia sesión primero.");
+            document.getElementById('modal-hist').style.display = 'flex';
+            const l = document.getElementById('lista');
+            l.innerHTML = "Cargando...";
+            db.collection("incidencias").where("uid", "==", userActual.uid).orderBy("fecha", "desc").get()
+            .then(snap => {
+                l.innerHTML = "";
+                if(snap.empty) l.innerHTML = "No tienes reportes.";
+                snap.forEach(d => {
+                    const da = d.data();
+                    l.innerHTML += `<div style="background:#222; padding:10px; margin:5px 0; border-radius:8px;">
+                        <b>${da.fecha.toDate().toLocaleDateString()}</b>: ${da.descripcion}<br>
+                        <small style="color:gold">Estado: ${da.estado}</small>
+                    </div>`;
+                });
+            });
         }
 
         window.toggleRadio = () => {
@@ -236,7 +276,7 @@
             else { a.pause(); document.getElementById('icon-play').className = "fas fa-play"; }
         };
 
-        window.resetCamara = () => { if(serenito) { camera.lockedTarget = serenito; camera.radius = 140; } };
+        window.resetCamara = () => { if(serenito) { camera.lockedTarget = serenito; camera.radius = 130; } };
         window.addEventListener("resize", () => engine.resize());
 
     </script>
