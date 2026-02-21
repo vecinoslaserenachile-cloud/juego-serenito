@@ -15,29 +15,44 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* PANEL DE ESTADO */
+        /* PANEL DE ESTADO IZQUIERDO */
         #status-panel {
-            position: absolute; top: 80px; left: 15px; z-index: 500;
+            position: absolute; top: 100px; left: 15px; z-index: 500;
             background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
             padding: 12px; border-radius: 0 10px 10px 0; color: white;
             font-size: 11px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
         }
 
+        /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
 
-        .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
-        .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
+        /* RADIO MLS */
+        .radio-card {
+            background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px;
+            display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto;
+        }
 
+        /* LOGIN */
+        .login-card {
+            background: white; color: #333; padding: 8px 15px; border-radius: 50px;
+            font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); pointer-events: auto; border: 2px solid white;
+        }
+
+        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
+        .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; transition: 0.2s; }
+        .btn:active { transform: scale(0.9); }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
+        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
+        .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
         .input-std { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
     </style>
@@ -45,13 +60,13 @@
 <body>
 
     <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">CIUDAD BLINDADA v15.0</div>
-        <div id="st-info">Cargando elementos...</div>
+        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR CIUDAD v16.0</div>
+        <div id="st-info">Cargando modelos sagrados...</div>
     </div>
 
     <div class="top-ui">
         <div class="radio-card">
-            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
+            <i class="fas fa-play" id="icon-play" onclick="toggleRadio()" style="cursor:pointer;"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
             <input type="range" style="width:60px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
@@ -62,17 +77,18 @@
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+
     <canvas id="renderCanvas"></canvas>
 
     <div id="toolbar">
-        <button class="btn" onclick="verHistorial()"><i class="fas fa-history"></i></button>
-        <button class="btn btn-main" onclick="abrirReporte()"><i class="fas fa-camera"></i></button>
-        <button class="btn" onclick="resetCamara()"><i class="fas fa-street-view"></i></button>
+        <button class="btn" onclick="verHistorial()" title="Mis Reportes"><i class="fas fa-clipboard-list"></i></button>
+        <button class="btn btn-main" onclick="abrirReporte()" title="Nueva Incidencia"><i class="fas fa-camera"></i></button>
+        <button class="btn" onclick="resetCamara()" title="Centrar Serenito"><i class="fas fa-street-view"></i></button>
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Buscando ubicación...</p>
+        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
+        <p id="gps-status" style="font-size:12px; color:#aaa;">📍 Esperando GPS...</p>
         <video id="cam" autoplay playsinline muted></video>
         <input type="text" id="desc" class="input-std" placeholder="Describe el problema...">
         <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
@@ -86,7 +102,7 @@
     </div></div>
 
     <script>
-        // 1. CONFIGURACIÓN FIREBASE
+        // 1. FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
             authDomain: "laserena-d1263.firebaseapp.com",
@@ -121,6 +137,7 @@
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
+            // Cámara con límites para no ver el abismo
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
@@ -133,30 +150,27 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // --- RESTAURACIÓN DE EDIFICIOS (UBICACIÓN SAGRADA) ---
+            // --- RESTAURACIÓN DE EDIFICIOS (Ubicación Sagrada) ---
             const loadEdificio = (file, x, z, scaleFactor, rotation) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
                     let root = new BABYLON.TransformNode("root_" + file, s);
                     meshes.forEach(m => m.parent = root);
-                    
                     const bounds = meshes[0].getHierarchyBoundingVectors(true);
                     const size = bounds.max.subtract(bounds.min);
                     const factor = scaleFactor / Math.max(size.x, size.y, size.z);
-                    
                     root.scaling = new BABYLON.Vector3(factor, factor, factor);
                     root.rotation.y = rotation;
-                    // Fix de altura para que no se hundan
-                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z);
+                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z); // Blindaje hundimiento
                     meshes.forEach(m => m.checkCollisions = true);
                 });
             };
 
-            // Municipalidad (Ubicación blindada y rotación 180)
+            // Municipalidad (610, 160) | Rotación 180 (Math.PI)
             loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI);
-            // Intendencia
+            // Intendencia (430, 410)
             loadEdificio("intendencia.glb", 430, 410, 190, 0);
 
-            // --- SERENITO (MOVIMIENTO TANQUE BLINDADO) ---
+            // --- SERENITO (Tanque Blindado) ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
                 serenito.rotationQuaternion = null; 
@@ -166,10 +180,10 @@
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
-                document.getElementById('st-info').innerText = "Todo listo. Toca el mapa.";
+                document.getElementById('st-info').innerText = "Tanque listo. Selecciona destino.";
             });
 
-            // 🛑 LÓGICA TANQUE ESTRICTA (RESTAURADA)
+            // 🛑 LÓGICA TANQUE ESTRICTA (Giro -> Alto -> Avance)
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destinoFinal = pick.pickedPoint;
@@ -178,32 +192,30 @@
             
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
-                
                 let diff = destinoFinal.subtract(serenito.position);
                 diff.y = 0; 
 
                 if(diff.length() > 1.5) { 
                     let angleDest = Math.atan2(diff.x, diff.z);
                     let rotDiff = angleDest - serenito.rotation.y;
-                    
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
                     // == FASE 1: GIRO PURO (Freno de mano puesto) ==
-                    if(Math.abs(rotDiff) > 0.1) { 
+                    if(Math.abs(rotDiff) > 0.08) { 
                         document.getElementById('st-info').innerText = "🔄 Girando tanque...";
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop(); // No camina hasta estar alineado
+                        if(animCaminar) animCaminar.stop(); 
                     } 
                     // == FASE 2: AVANCE ==
                     else {
-                        document.getElementById('st-info').innerText = "🚶 Avanzando...";
+                        document.getElementById('st-info').innerText = "🚶 Caminando a destino";
                         serenito.rotation.y = angleDest; 
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    document.getElementById('st-info').innerText = "✅ Posición alcanzada";
+                    document.getElementById('st-info').innerText = "✅ Detenido";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -213,28 +225,30 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES CIUDADANOS (CÁMARA + GPS)
+        // 3. CÁMARA + GPS + REPORTE
         let streamActivo = null;
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Por favor, accede con Google.");
+            if(!userActual) return alert("Por favor, inicia sesión con Google.");
             document.getElementById('modal-rep').style.display = 'flex';
             
+            // GPS Prioridad
             navigator.geolocation.getCurrentPosition(pos => {
                 coordsGlobal = pos.coords;
-                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
+                document.getElementById('gps-status').innerText = "📍 Ubicación capturada con éxito";
                 document.getElementById('gps-status').style.color = "#00ff00";
             });
 
+            // Cámara Prioridad
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Acceso a cámara denegado."); }
+            } catch (err) { alert("Acceso a cámara necesario para el reporte."); }
         }
 
         function enviarReporte() {
-            if(!coordsGlobal) return alert("Esperando GPS...");
+            if(!coordsGlobal) return alert("Esperando señal GPS...");
             db.collection("incidencias").add({
                 uid: userActual.uid,
                 vecino: userActual.displayName,
@@ -243,7 +257,7 @@
                 lon: coordsGlobal.longitude,
                 estado: "Ingresado",
                 fecha: new Date()
-            }).then(() => { alert("Reporte enviado con éxito."); cerrarModal('modal-rep'); });
+            }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
         }
 
         function cerrarModal(id) {
@@ -252,17 +266,17 @@
         }
 
         function verHistorial() {
-            if(!userActual) return alert("Accede primero.");
+            if(!userActual) return alert("Inicia sesión primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const l = document.getElementById('lista');
             l.innerHTML = "Cargando...";
             db.collection("incidencias").where("uid", "==", userActual.uid).orderBy("fecha", "desc").get()
             .then(snap => {
                 l.innerHTML = "";
-                if(snap.empty) l.innerHTML = "No tienes reportes.";
+                if(snap.empty) l.innerHTML = "No tienes reportes registrados.";
                 snap.forEach(d => {
                     const da = d.data();
-                    l.innerHTML += `<div style="background:#222; padding:10px; margin:5px 0; border-radius:8px;">
+                    l.innerHTML += `<div style="background:#222; padding:10px; margin:5px 0; border-radius:8px; border-left: 4px solid #ffd700;">
                         <b>${da.fecha.toDate().toLocaleDateString()}</b>: ${da.descripcion}<br>
                         <small style="color:gold">Estado: ${da.estado}</small>
                     </div>`;
