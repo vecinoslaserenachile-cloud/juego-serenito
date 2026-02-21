@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - Tanque Serenito</title>
+    <title>LA❤️SERENA - Smart City</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -130,16 +130,17 @@
 
         const createScene = function () {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
+            s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92); // CIELO AZUL
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
             light.intensity = 1.0;
 
+            // CÁMARA BLINDADA (No mirar bajo el piso)
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.lowerRadiusLimit = 20; 
-            camera.upperBetaLimit = Math.PI / 2.2; 
+            camera.upperBetaLimit = Math.PI / 2.2; // LÍMITE HORIZONTE
             camera.attachControl(canvas, true);
             
             // PISO
@@ -149,7 +150,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // EDIFICIOS
+            // EDIFICIOS (INTOCABLES)
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -164,11 +165,11 @@
             load("municipalidad.glb", 610, 160, 150, Math.PI);
             load("intendencia.glb", 430, 410, 180, 0);
 
-            // SERENITO
+            // SERENITO (Aparición segura)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 personaje = m[0];
                 personaje.scaling = new BABYLON.Vector3(-10, 10, 10);
-                personaje.position = new BABYLON.Vector3(0, 5, 0);
+                personaje.position = new BABYLON.Vector3(0, 2, 0);
                 personaje.ellipsoid = new BABYLON.Vector3(1, 2, 1);
                 personaje.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
                 personaje.checkCollisions = true;
@@ -177,7 +178,7 @@
                 if(a && a.length > 0) { anim = a[0]; anim.stop(); }
             });
 
-            // === LÓGICA TANQUE ESTRICTA (Separada por Fases) ===
+            // === LÓGICA TANQUE ESTRICTA (EL CEREBRO DEL MOVIMIENTO) ===
             s.onPointerDown = (evt, pick) => { 
                 if(pick.hit && pick.pickedMesh === suelo) {
                     destino = pick.pickedPoint;
@@ -188,31 +189,33 @@
                 if(!personaje || !destino) return;
                 
                 let diff = destino.subtract(personaje.position);
-                diff.y = 0; // Solo nos importa el plano horizontal
+                diff.y = 0; // Ignorar altura
 
-                if(diff.length() > 1.5) { // Si estamos lejos del destino...
+                if(diff.length() > 1.5) { // Si no estamos en el destino...
                     let angle = Math.atan2(diff.x, diff.z);
                     let rotDiff = angle - personaje.rotation.y;
                     
-                    // Normalizar ángulo (-PI a PI)
+                    // Normalizar -PI a PI
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // FASE 1: GIRO (Si el ángulo es mayor a ~5 grados)
+                    // == FASE 1: GIRO EXCLUSIVO ==
+                    // Si el ángulo es mayor a 5 grados, SOLO GIRAMOS
                     if(Math.abs(rotDiff) > 0.1) {
                         personaje.rotation.y += Math.sign(rotDiff) * 0.15; // Velocidad de giro
                         if(anim) anim.stop(); // ¡QUIETO! Solo gira
                     } 
-                    // FASE 2: AVANCE (Solo si ya miramos al frente)
+                    // == FASE 2: AVANCE ==
+                    // Si ya mira al frente, CAMINA
                     else {
-                        personaje.rotation.y = angle; // Ajuste fino final
-                        personaje.moveWithCollisions(diff.normalize().scale(0.8)); // Avanzar
-                        if(anim && !anim.isPlaying) anim.play(true); // Animar
+                        personaje.rotation.y = angle; // Ajuste fino
+                        personaje.moveWithCollisions(diff.normalize().scale(0.8));
+                        if(anim && !anim.isPlaying) anim.play(true);
                     }
                 } else {
                     // LLEGADA
                     if(anim) anim.stop();
-                    destino = null; // Borrar destino para dejar de calcular
+                    destino = null; // Borrar destino para dejar de procesar
                 }
             });
             return s;
@@ -231,7 +234,7 @@
         window.ajustarVolumen = (v) => { document.getElementById('audio-player').volume = v; };
         window.resetCamara = () => { if(personaje) { camera.lockedTarget = personaje; camera.radius = 140; } };
 
-        // 4. REPORTES (CÁMARA FORZADA)
+        // 4. REPORTES
         let videoStream = null;
         let gpsData = null;
 
@@ -249,8 +252,8 @@
                     video.play();
                 })
                 .catch(function(err) {
-                    console.log("Error Cámara: " + err);
-                    alert("⚠️ Error: Permite el acceso a la cámara en tu navegador.");
+                    console.log(err);
+                    alert("⚠️ No se pudo abrir la cámara. Revisa permisos.");
                 });
             }
 
@@ -268,7 +271,6 @@
             const vid = document.getElementById('cam');
             const cv = document.getElementById('snap');
             
-            // Capturar frame actual
             if (vid.srcObject) {
                 cv.width = vid.videoWidth; cv.height = vid.videoHeight;
                 cv.getContext('2d').drawImage(vid, 0, 0);
