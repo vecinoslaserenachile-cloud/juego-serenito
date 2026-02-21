@@ -83,18 +83,24 @@
         suelo.checkCollisions = true;
         statusDiv.innerHTML = "✅ Mapa Cargado...";
 
-        // --- 2. MUNICIPALIDAD (AQUÍ ESTÁ LA CIRUGÍA) ---
+        // 2. MUNICIPALIDAD (CON CORRECCIÓN DE PIVOTE)
         BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, function (meshes) {
             let muni = meshes[0];
-            
-            // CIRUGÍA 1: Romper el candado de rotación
-            muni.rotationQuaternion = null; 
-            
-            // CIRUGÍA 2: Math.PI = 180 grados (Media vuelta)
-            // Mantenemos coordenadas fijas: 610, 160
+
+            // 1. Desbloqueamos rotación
+            muni.rotationQuaternion = null;
+
+            // 2. TRUCO MAESTRO: Calculamos el centro real y forzamos el eje ahí
+            // Esto corrige el error de que el edificio gire "desde la esquina"
+            let centroReal = muni.getBoundingInfo().boundingBox.center;
+            muni.setPivotPoint(centroReal);
+
+            // 3. Ahora sí, giramos 180 grados
+            // Nota: Al cambiar el pivote, a veces la posición se ajusta sola.
+            // Si ves que se mueve un poco, ajusta el 610/160.
             colocarEdificio(muni, 610, 160, Math.PI, 150);
             
-            statusDiv.innerHTML += "<br>✅ Muni Girada 180°";
+            statusDiv.innerHTML += "<br>✅ Muni Girada (Pivote Corregido)";
         });
 
         // 3. INTENDENCIA (BLOQUEADA)
@@ -189,3 +195,4 @@
     </script>
 </body>
 </html>
+
