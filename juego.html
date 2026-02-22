@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Renacimiento v81</title>
+    <title>VLS - Rescate Definitivo v82</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,7 +20,7 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET */
+        /* RESET TOTAL */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
@@ -28,27 +28,34 @@
             width: 100%; height: 100%;
         }
 
-        /* --- ESCRITORIO (3 COLUMNAS FIJAS - LA BELLEZA ORIGINAL) --- */
+        /* --- ESCRITORIO (3 COLUMNAS FIJAS) --- */
         @media (min-width: 1024px) {
-            body { overflow: hidden; } /* Fijo, sin scroll global */
+            body { overflow: hidden; } 
             #main-layout {
                 display: grid; width: 100vw; height: 100vh;
-                grid-template-columns: 340px 1fr 320px; /* Izq | Mapa | Der */
+                grid-template-columns: 350px 1fr 320px;
                 grid-template-rows: 1fr;
             }
-            #sidebar, #right-col { overflow-y: auto; } /* Scroll solo en paneles */
+            #sidebar, #right-col { overflow-y: auto; }
         }
 
-        /* --- MÓVIL (SCROLL INFINITO) --- */
+        /* --- MÓVIL (SCROLL INFINITO - REPARADO) --- */
         @media (max-width: 1023px) {
+            /* Forzar altura automática para permitir scroll */
             body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
+            
             #main-layout {
-                display: flex; flex-direction: column; width: 100%; min-height: 100vh;
+                display: flex; 
+                flex-direction: column; 
+                width: 100%; 
+                min-height: 100vh; /* Asegura que cubra al menos la pantalla */
             }
-            /* Orden: Radio -> Mapa -> Formulario */
+            
+            /* Órdenes y Alturas Móviles */
             #sidebar { order: 1; width: 100%; height: auto; padding: 15px; box-sizing: border-box; }
+            /* Mapa con altura fija para que no desaparezca */
             #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; }
-            #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 60px; }
+            #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
         }
 
         /* --- ESTILOS COMPONENTES --- */
@@ -61,12 +68,14 @@
         }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .station-title { font-family: 'Oswald', sans-serif; font-size: 20px; color: white; text-transform: uppercase; margin-bottom: 5px; line-height: 1.1; letter-spacing: 1px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 34px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .station-title { font-family: 'Oswald', sans-serif; font-size: 18px; color: white; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
         .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
-        /* Módulos (Calendario & Clima - Estilo v67 recuperado) */
+        .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; }
+        
+        /* Módulos (Estilo v67 recuperado) */
         .module-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
         .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; }
 
@@ -145,6 +154,11 @@
                     <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
                 </div>
                 <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            </div>
+
+            <div class="city-news-box" id="city-ticker">
+                <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
+                <span id="ticker-text">...</span>
             </div>
 
             <div class="module-box">
@@ -246,7 +260,7 @@
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
         
-        // 1. RELOJ & FECHA (Robustez Prioritaria)
+        // 1. RELOJ START
         setInterval(() => {
             const el = document.getElementById('clock');
             if(el) el.innerText = new Date().toLocaleTimeString('es-CL');
@@ -266,13 +280,13 @@
         }
         initCal();
 
-        // 3. CLIMA ASYNC (No bloquea la carga)
+        // 3. CLIMA ASYNC (No bloqueante)
         async function w(){ try{ 
             let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
             document.getElementById('w-temp').innerText=d.current_weather.temperature;
             document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
         }catch(e){} } 
-        setTimeout(w, 100);
+        setTimeout(w, 500);
 
         // 4. MAPA & GEOCODING
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
@@ -400,7 +414,7 @@
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes escribir el número de la casa.");
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
