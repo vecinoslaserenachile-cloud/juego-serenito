@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Muni La Serena - Reporte Georeferenciado</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root { --serena-red: #e63946; --serena-gold: #ffd700; --dark: #1a1a1a; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: white; overflow: hidden; }
+        
+        #map { height: 40vh; width: 100%; border-bottom: 3px solid var(--serena-red); }
+        
+        .main-container { height: 60vh; overflow-y: auto; padding: 20px; box-sizing: border-box; background: #222; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 1000; box-shadow: 0 -10px 20px rgba(0,0,0,0.5); }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 11px; color: var(--serena-gold); text-transform: uppercase; font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; }
+        input, textarea { width: 100%; padding: 12px; background: #333; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; font-size: 15px; }
+        input:focus { border-color: var(--serena-gold); outline: none; }
+
+        .media-grid { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; }
+        .media-slot { min-width: 80px; height: 80px; background: #444; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; border: 2px dashed #666; }
+        .media-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+
+        .btn-submit { width: 100%; padding: 18px; background: var(--serena-red); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-submit:active { transform: scale(0.98); background: #c12a36; }
+
+        .nav-header { position: absolute; top: 15px; left: 15px; z-index: 2000; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; color: white; border: 1px solid var(--serena-red); }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="nav-header"><i class="fas fa-chevron-left"></i></a>
+    
+    <div id="map"></div>
+
+    <div class="main-container">
+        <div id="gps-info" style="font-size: 12px; color: #888; margin-bottom: 15px;"><i class="fas fa-location-dot"></i> Ubicación GPS detectada</div>
+        
+        <div class="form-group">
+            <label>Nombre y Apellido</label>
+            <input type="text" id="nombre" placeholder="Nombre completo">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Celular (+56)</label>
+                <input type="tel" id="telefono" placeholder="9 1234 5678">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>WhatsApp</label>
+                <input type="tel" id="whatsapp" placeholder="9 1234 5678">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Dirección (Opcional)</label>
+            <input type="text" id="direccion" placeholder="Calle, número, depto o villa">
+        </div>
+
+        <div class="form-group">
+            <label>Descripción de la Situación</label>
+            <textarea id="descripcion" rows="3" placeholder="Explique brevemente lo que ocurre..."></textarea>
+        </div>
+
+        <label>Evidencia Fotográfica (Máx 5)</label>
+        <div class="media-grid" id="photo-grid">
+            <div class="media-slot" onclick="document.getElementById('file-input').click()">
+                <i class="fas fa-camera fa-2x"></i>
+            </div>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*" style="display: none;" onchange="handleFiles(this.files)">
+
+        <div class="form-group">
+            <label>Video Corto (Opcional)</label>
+            <button onclick="document.getElementById('video-input').click()" style="background:#444; color:white; border:none; padding:10px; border-radius:10px; width:100%;">
+                <i class="fas fa-video"></i> Agregar Video Comprimido
+            </button>
+            <input type="file" id="video-input" accept="video/*" capture="environment" style="display: none;">
+        </div>
+
+        <button class="btn-submit" onclick="enviarGestion()">ENVIAR REPORTE AHORA</button>
+        <div style="height: 40px;"></div>
+    </div>
+
+    <canvas id="comp-canvas" style="display: none;"></canvas>
+
+    <script>
+        // CONFIGURACIÓN FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4",
+            authDomain: "laserena-d1263.firebaseapp.com",
+            projectId: "laserena-d1263",
+            storageBucket: "laserena-d1263.firebasestorage.app",
+            messagingSenderId: "283725387947",
+            appId: "1:283725387947:web:898aa22c80c2fadbe8bfee"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // INICIALIZAR MAPA REAL
+        let map, serenitoMarker;
+        let userCoords = { lat: -29.9027, lon: -71.2520 }; // La Serena
+
+        function initMap() {
+            map = L.map('map').setView([userCoords.lat, userCoords.lon], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            // Icono de Serenito
+            const serenitoIcon = L.icon({
+                iconUrl: 'serenito_marker.png', // Necesitarás subir un PNG de Serenito
+                iconSize: [50, 50],
+                iconAnchor: [25, 50]
+            });
+
+            serenitoMarker = L.marker([userCoords.lat, userCoords.lon], { icon: serenitoIcon }).addTo(map);
+
+            // GEOLOCALIZACIÓN REAL
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    userCoords = { lat, lon };
+                    serenitoMarker.setLatLng([lat, lon]);
+                    map.setView([lat, lon]);
+                });
+            }
+        }
+        initMap();
+
+        // MOTOR COMPRESOR DE FOTOS (MÁX 5)
+        let fotosProcesadas = [];
+        async function handleFiles(files) {
+            const grid = document.getElementById('photo-grid');
+            if (fotosProcesadas.length + files.length > 5) return alert("Máximo 5 fotos.");
+
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.getElementById('comp-canvas');
+                        canvas.width = 640;
+                        canvas.height = 480;
+                        canvas.getContext('2d').drawImage(img, 0, 0, 640, 480);
+                        const base64 = canvas.toDataURL('image/jpeg', 0.5);
+                        fotosProcesadas.push(base64);
+                        
+                        // Agregar al UI
+                        const slot = document.createElement('div');
+                        slot.className = 'media-slot';
+                        slot.innerHTML = `<img src="${base64}">`;
+                        grid.appendChild(slot);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ENVÍO DE GESTIÓN
+        async function enviarGestion() {
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                telefono: document.getElementById('telefono').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                direccion: document.getElementById('direccion').value,
+                descripcion: document.getElementById('descripcion').value,
+                coords: userCoords,
+                fotos: fotosProcesadas,
+                fecha: new Date(),
+                estado: "Pendiente"
+            };
+
+            if(!data.nombre || !data.telefono || !data.descripcion) return alert("Campos obligatorios incompletos.");
+
+            try {
+                await db.collection("incidencias").add(data);
+                alert("¡Reporte enviado exitosamente a la Municipalidad!");
+                window.location.href = "index.html";
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
