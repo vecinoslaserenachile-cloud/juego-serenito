@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Viajero Preciso v68</title>
+    <title>VLS - Versión Maestra 68.5</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -19,16 +19,77 @@
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
+        
+        /* RESET BÁSICO */
+        body, html { 
+            margin: 0; padding: 0; 
+            font-family: 'Roboto', sans-serif; 
+            background: var(--dark); color: white;
+            width: 100%; height: 100%; 
+        }
 
-        /* LAYOUT */
-        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 1fr; }
-        @media (max-width: 1023px) { #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } }
+        /* --- ESCRITORIO (3 COLUMNAS FIJAS) --- */
+        @media (min-width: 1024px) {
+            body { overflow: hidden; } /* En PC no scrollea el body, solo los paneles */
+            #main-layout {
+                display: grid; width: 100vw; height: 100vh;
+                grid-template-columns: 350px 1fr 320px;
+                grid-template-rows: 1fr;
+            }
+            #sidebar, #form-panel { overflow-y: auto; }
+        }
+
+        /* --- MÓVIL (CORRECCIÓN CRÍTICA DE SCROLL) --- */
+        @media (max-width: 1023px) {
+            /* Permitir que la página crezca */
+            body, html { height: auto !important; overflow-y: auto !important; overflow-x: hidden; }
+            
+            #main-layout {
+                display: flex; 
+                flex-direction: column; 
+                width: 100%; 
+                min-height: 100vh;
+                height: auto;
+            }
+
+            /* Orden: 1.Radio/Clima, 2.Mapa, 3.Formulario */
+            #sidebar { 
+                order: 1; 
+                width: 100%; 
+                height: auto !important; 
+                padding: 15px; 
+                box-sizing: border-box; 
+            }
+            
+            #stage-area { 
+                order: 2; 
+                width: 100%; 
+                height: 500px !important; /* ALTURA FORZADA PARA QUE EL MAPA SE VEA */
+                position: relative; 
+                z-index: 1;
+            }
+            
+            #form-panel { 
+                order: 3; 
+                width: 100%; 
+                height: auto !important; 
+                padding: 15px; 
+                box-sizing: border-box; 
+                margin-bottom: 50px; 
+            }
+        }
+
+        /* --- ESTILOS COMPONENTES (VERSION 68 ORIGINAL) --- */
 
         /* IZQUIERDA */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto; }
+        #sidebar { 
+            background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); 
+            padding: 20px; display: flex; flex-direction: column; gap: 15px; 
+            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; 
+        }
+        
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
         .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
@@ -40,7 +101,6 @@
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* CHIPS DESLIZABLES */
         .chip-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #333; }
         .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
@@ -52,23 +112,27 @@
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* CENTRO */
-        #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
+        #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
+        
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         .btn-tour:hover { transform: scale(1.05); }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+        
         .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; white-space: nowrap; }
 
         /* DERECHA */
-        #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
-        @media (max-width: 1023px) { #form-panel { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; border-top: 4px solid var(--serena-gold); } }
+        #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; }
+        @media (max-width: 1023px) { #form-panel { border-left: none; border-top: 4px solid var(--serena-gold); } }
+        
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
+        
         .f-input { width: 100%; padding: 10px; margin-bottom: 4px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         .f-input:focus { border-color: var(--serena-gold); background: #222; outline: none; }
         .f-input.alert { border-color: #ff3d00; background: rgba(255, 61, 0, 0.1); }
-        .vereda-detail { font-size: 10px; color: #888; margin-bottom: 10px; font-style: italic; text-align: right; }
         .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
 
         #step-2-details { display: none; }
@@ -202,6 +266,7 @@
 
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
+        // RELOJ
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
         // 1. CLIMA & TICKER
@@ -238,7 +303,6 @@
 
         // 3. RUTAS (DIRECTO Y BÚSQUEDA)
         function calcDirect(lat, lon, name) {
-            // Función directa para chips con coordenadas precisas
             const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
