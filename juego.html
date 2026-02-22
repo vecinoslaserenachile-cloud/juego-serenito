@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Ambiente Total v67</title>
+    <title>VLS - Viajero Preciso v68</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23b71c1c%22/><text y=%22.9em%22 font-size=%2280%22 font-weight=%22bold%22 font-family=%22Arial%22 fill=%22white%22>LS</text></svg>">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -25,58 +25,40 @@
         #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 1fr; }
         @media (max-width: 1023px) { #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } }
 
-        /* --- IZQUIERDA --- */
-        #sidebar {
-            background: linear-gradient(180deg, #8a0000 0%, #300000 100%); /* Rojo más sobrio */
-            padding: 20px; display: flex; flex-direction: column; gap: 15px;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto;
-        }
-        
-        .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-        .escudo-img { width: 60px; margin-bottom: 10px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        
-        .station-title { font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 1px; color: white; margin-bottom: 5px; text-transform: uppercase; }
-        
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; color: white; }
-        
-        .vol-slider { width: 100%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(255,255,255,0.2); margin-top: 10px; cursor: pointer; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
+        /* IZQUIERDA */
+        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto; }
+        .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
-        /* MÓDULOS IZQUIERDA */
-        .module-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 3px solid var(--serena-gold); margin-bottom: 10px; }
-        .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; font-weight: bold; }
-
-        /* Calendario */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 10px; }
-        .cal-day { padding: 4px; color: #888; }
-        .cal-num { padding: 4px; }
-        .cal-today { background: var(--serena-red); color: white; border-radius: 50%; font-weight: bold; }
-
-        /* Clima Avanzado */
-        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; }
-        .env-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
-        .env-val { font-weight: bold; font-size: 13px; color: white; margin-top: 2px; }
-        .sun-times { display: flex; justify-content: space-between; font-size: 10px; color: #ccc; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; }
-
-        /* Rutas */
+        .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; transition: opacity 0.5s; }
+        .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
+        
+        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
-        .go-btn { background: #333; color: white; border: 1px solid white; padding: 0 10px; border-radius: 4px; cursor: pointer; }
-        .quick-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-        .chip { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; font-size: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .chip:hover { border-color: white; background: rgba(255,255,255,0.2); }
+        .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        /* CHIPS DESLIZABLES */
+        .chip-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #333; }
+        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
+        
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 200px; }
-        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; }
-        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
-        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
+        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .trans-val { font-weight: bold; font-size: 14px; color: white; }
+        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* CENTRO */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; }
+        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .btn-tour:hover { transform: scale(1.05); }
         .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+        .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
 
         /* DERECHA */
         #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
@@ -89,6 +71,11 @@
         .vereda-detail { font-size: 10px; color: #888; margin-bottom: 10px; font-style: italic; text-align: right; }
         .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
 
+        #step-2-details { display: none; }
+        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .back-link { color: #aaa; font-size: 11px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 10px; }
+
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; }
         .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: white; cursor: pointer; border-radius: 5px; font-weight: bold; z-index: 10001; color: black; }
@@ -99,11 +86,6 @@
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
 
-        #step-2-details { display: none; }
-        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        .back-link { color: #aaa; font-size: 11px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 10px; }
-
     </style>
 </head>
 <body>
@@ -112,56 +94,51 @@
 
         <div id="sidebar">
             <div class="radio-header">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/Escudo_de_La_Serena.svg" class="escudo-img">
-                <div class="station-title">RADIO DIGITAL MUNICIPAL<br>LA SERENA</div>
-                <div class="digital-clock" id="clock">00:00</div>
-                <div style="font-size:11px; color:#ccc; text-transform:uppercase;" id="date-display">...</div>
-                
-                <div style="margin-top:15px; display:flex; justify-content:center;">
+                <i class="fas fa-tower-broadcast"></i> RADIO MUNICIPAL<br>
+                <div class="digital-clock" id="clock">00:00:00</div>
+                <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
                     <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
                 </div>
-                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value" style="margin-top:10px;">
             </div>
 
-            <div class="module-box">
-                <span class="mod-title">AGENDA - <span id="cal-month">MES</span></span>
-                <div class="calendar-grid">
-                    <div class="cal-day">L</div><div class="cal-day">M</div><div class="cal-day">M</div><div class="cal-day">J</div><div class="cal-day">V</div><div class="cal-day">S</div><div class="cal-day">D</div>
-                </div>
-                <div class="calendar-grid" id="cal-days" style="margin-top:5px; color:white;">
-                    </div>
+            <div class="city-news-box" id="city-ticker">
+                <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
+                <span id="ticker-text">...</span>
             </div>
 
-            <div class="module-box">
-                <span class="mod-title">AMBIENTE Y ENTORNO</span>
-                <div style="font-size:28px; font-weight:bold; font-family:'Oswald'; margin-bottom:10px;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+            <div class="weather-advanced">
+                 <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
+                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
+            </div>
+
+            <div class="route-box">
+                <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px;">📍 DESDE: PLAZA DE ARMAS</div>
                 
-                <div class="env-grid">
-                    <div class="env-item"><i class="fas fa-wind" style="color:cyan;"></i><span class="env-val" id="w-wind">--</span><span style="font-size:9px; color:#aaa;">Viento</span></div>
-                    <div class="env-item"><i class="fas fa-umbrella-beach" style="color:orange;"></i><span class="env-val" id="w-uv">--</span><span style="font-size:9px; color:#aaa;">Índice UV</span></div>
-                    <div class="env-item"><i class="fas fa-water" style="color:cornflowerblue;"></i><span class="env-val" id="w-tide">Baja</span><span style="font-size:9px; color:#aaa;">Marea (Est)</span></div>
-                    <div class="env-item"><i class="fas fa-leaf" style="color:#00e676;"></i><span class="env-val">Bueno</span><span style="font-size:9px; color:#aaa;">Aire</span></div>
-                </div>
-                
-                <div class="sun-times">
-                    <span><i class="fas fa-arrow-up"></i> Salida: <strong id="w-sunrise">--:--</strong></span>
-                    <span><i class="fas fa-arrow-down"></i> Puesta: <strong id="w-sunset">--:--</strong></span>
-                </div>
-            </div>
-
-            <div class="module-box" style="border-left-color: white;">
-                <span class="mod-title">PLANIFICADOR DE VIAJES</span>
                 <div class="search-row">
-                    <input type="text" id="city-input" class="city-input" placeholder="¿A dónde vas?">
+                    <input type="text" id="city-input" class="city-input" placeholder="Destino...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
-                <div class="quick-chips">
-                    <div class="chip" onclick="setDest('Coquimbo, Chile')">Coquimbo</div>
-                    <div class="chip" onclick="setDest('Vicuña, Coquimbo')">Vicuña</div>
-                    <div class="chip" onclick="setDest('Ovalle, Chile')">Ovalle</div>
-                    <div class="chip" onclick="setDest('Santiago, Chile')">Santiago</div>
+                
+                <div class="chip-scroll-container">
+                    <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo (Puerto)')">Coquimbo</div>
+                    <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
+                    <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
+                    <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
+                    <div class="chip" onclick="calcDirect(-36.8201, -73.0444, 'Concepción')">Concepción</div>
+                    <div class="chip" onclick="calcDirect(-41.4689, -72.9345, 'Puerto Montt')">P. Montt</div>
+                    <div class="chip" onclick="calcDirect(-18.4783, -70.3126, 'Arica')">Arica</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-31.5375, -68.5364, 'San Juan (ARG)')">San Juan</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-34.9011, -56.1645, 'Montevideo (URU)')">Montevideo</div>
                 </div>
-                <div class="route-list" id="route-output"></div>
+
+                <div class="route-list" id="route-output">
+                    <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>
+                </div>
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> CERRAR RUTA</button>
             </div>
         </div>
@@ -170,7 +147,7 @@
             <div id="map"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
             <canvas id="renderCanvas"></canvas>
-            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la dirección en el puntero</div>
+            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la incidencia en el centro</div>
             <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO</button>
         </div>
 
@@ -180,22 +157,25 @@
             </div>
 
             <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:white;">PASO 1: CONFIRMAR DIRECCIÓN</h4>
-                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Mueve el mapa...">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: CONFIRMAR DIRECCIÓN</h4>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
+                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
                 <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
                 <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
             </div>
 
             <div id="step-2-details">
-                <h4 style="margin:0 0 10px 0; color:white;">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:8px; font-size:12px; margin-bottom:10px; border-left:3px solid gold;" id="locked-addr">Dir</div>
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
+                <div style="background:#333; padding:5px; font-size:11px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
                 <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono (Contacto)">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
-                <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe qué sucede..."></textarea>
-                <label style="display:block; background:#333; padding:15px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:15px; border-radius:6px;">
-                    <i class="fas fa-camera fa-lg"></i> SUBIR EVIDENCIA
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
+                
+                <label style="display:block; background:#333; padding:12px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px; border-radius:6px; color:#ccc;">
+                    <i class="fas fa-camera fa-lg"></i> <i class="fas fa-images fa-lg"></i> FOTO O GALERÍA
                     <input type="file" hidden accept="image/*,video/*" id="evidencia-file">
                 </label>
+                
                 <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
                 <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
             </div>
@@ -209,71 +189,27 @@
     </div>
     <div id="hist-modal" class="modal">
         <div class="hist-box">
-            <h3 style="color:var(--serena-gold); margin-top:0;">HISTORIAL</h3>
+            <h3>MIS REPORTES</h3>
             <div id="hist-content">Cargando...</div>
-            <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:15px; background:#444; color:white; border:none; margin-top:10px; font-weight:bold;">CERRAR</button>
+            <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px;">Cerrar</button>
         </div>
     </div>
     <div id="img-modal" onclick="this.style.display='none'">
         <img id="img-full" src="">
     </div>
 
-    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous" autoplay></audio>
+    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
-        
-        // 1. CALENDARIO Y FECHA
-        function initCalendar() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString('es-CL');
-            document.getElementById('date-display').innerText = now.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
-            
-            // Mes y Días
-            const months = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
-            document.getElementById('cal-month').innerText = months[now.getMonth()];
-            
-            const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-            const startDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay() || 7; // 1=Lunes
-            
-            let html = "";
-            for(let i=1; i<startDay; i++) html+=`<div></div>`;
-            for(let i=1; i<=daysInMonth; i++) {
-                let cls = (i === now.getDate()) ? "cal-num cal-today" : "cal-num";
-                html += `<div class="${cls}">${i}</div>`;
-            }
-            document.getElementById('cal-days').innerHTML = html;
-        }
-        setInterval(initCalendar, 1000); initCalendar();
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
-        // 2. CLIMA API AVANZADA
-        async function fetchWeather() {
-            try {
-                // Pedimos Temp, Viento, UV, Sol
-                const url = "https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true&daily=sunrise,sunset,uv_index_max&timezone=auto";
-                const r = await fetch(url);
-                const d = await r.json();
-                
-                // Actual
-                document.getElementById('w-temp').innerText = d.current_weather.temperature;
-                document.getElementById('w-wind').innerText = d.current_weather.windspeed + " km/h";
-                document.getElementById('w-uv').innerText = d.daily.uv_index_max[0];
-                
-                // Sol (Formato Hora)
-                const sunrise = new Date(d.daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const sunset = new Date(d.daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('w-sunrise').innerText = sunrise;
-                document.getElementById('w-sunset').innerText = sunset;
-                
-                // Marea Simulada (Cambio cada 6 horas)
-                const h = new Date().getHours();
-                document.getElementById('w-tide').innerText = (h%12 < 6) ? "Baja" : "Alta";
+        // 1. CLIMA & TICKER
+        const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro Monumental.", "Fono Seguridad: 1455"];
+        let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
+        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-            } catch(e) { console.log("Error clima"); }
-        }
-        fetchWeather();
-
-        // 3. MAPA & GEOCODING
+        // 2. MAPA & GEOCODING
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
@@ -300,39 +236,46 @@
             } catch(e) {}
         });
 
-        // 4. RUTAS
-        function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
-        async function buscarYCalcular(){
-            const q = document.getElementById('city-input').value; if(!q)return;
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`);
-                const d = await res.json(); if(!d.length)return;
-                const lat=parseFloat(d[0].lat), lon=parseFloat(d[0].lon);
-                
-                const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
-                const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
-
-                const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
-                
-                let h = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${d[0].display_name.split(',')[0]}</div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div>${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div>${tBus} h</div> <div style="font-size:9px">Bus</div></div>
-                    <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div>${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div>${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
-                if(dist>350) h+=`<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div>${(dist/800+2).toFixed(1)} h</div> <div style="font-size:9px">Avión</div></div>`;
-                h+=`<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Dist: ${Math.round(dist)} km</div>`;
-                
-                document.getElementById('route-output').innerHTML = h;
-                document.getElementById('btn-reset-route').style.display = 'block';
-                if(routePolyline) map.removeLayer(routePolyline);
-                routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'red', dashArray:'10,10'}).addTo(map);
-                map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
-            } catch(e){}
+        // 3. RUTAS (DIRECTO Y BÚSQUEDA)
+        function calcDirect(lat, lon, name) {
+            // Función directa para chips con coordenadas precisas
+            const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
+            const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
+            renderRouteResult(dist, name, lat, lon);
         }
+
+        function buscarYCalcular(){
+            const q = document.getElementById('city-input').value; if(!q)return;
+            document.getElementById('route-output').innerHTML = "Calculando...";
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
+                .then(r=>r.json())
+                .then(d=>{
+                    if(!d.length) { document.getElementById('route-output').innerHTML = "No encontrado"; return; }
+                    calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
+                });
+        }
+
+        function renderRouteResult(dist, name, lat, lon) {
+            const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
+            let h = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${name}</div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
+                <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
+            if(dist>350) h+=`<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div class="trans-val">${(dist/800+2).toFixed(1)} h</div> <div style="font-size:9px">Avión</div></div>`;
+            h+=`<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Dist: ${Math.round(dist)} km</div>`;
+            
+            document.getElementById('route-output').innerHTML = h;
+            document.getElementById('btn-reset-route').style.display = 'block';
+            if(routePolyline) map.removeLayer(routePolyline);
+            routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
+            map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
+        }
+
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); document.getElementById('route-output').innerHTML=""; }
 
-        // 5. MOTOR 3D PRINCIPAL (SERENITO OVERLAY)
+        // 4. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -352,7 +295,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 6. PASEO HISTÓRICO (EDIFICIOS ENTERRADOS y=-2)
+        // 5. PASEO HISTÓRICO
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -369,9 +312,8 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // EDIFICIOS ATERRIZADOS (Y=-2)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=-2; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=-2; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
@@ -384,7 +326,7 @@
             }
         }
 
-        // 7. AUTH & FLUJO
+        // 6. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -393,17 +335,18 @@
         auth.onAuthStateChanged(u => {
             if(u) {
                 user = u;
-                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px; flex-grow:1;"><b>${u.displayName}</b> <br> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Historial</a></div>`;
+                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Historial</a></div>`;
                 document.getElementById('step-1-location').style.opacity = "1";
                 document.getElementById('step-1-location').style.pointerEvents = "auto";
                 document.getElementById('r-email').value = u.email;
             }
         });
 
+        // VALIDACIÓN
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes mover el mapa o escribir el número.");
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
@@ -423,9 +366,8 @@
                 list.innerHTML = snap.empty ? "Sin reportes." : "";
                 snap.forEach(doc => { 
                     const d=doc.data();
-                    const tid = d.fecha.seconds ? `#${d.fecha.seconds.toString().substr(-5)}` : "N/A";
                     let imgHTML = d.foto_evidencia ? `<img src="${d.foto_evidencia}" class="hist-thumb" onclick="expandImg('${d.foto_evidencia}')">` : "";
-                    list.innerHTML += `<div class="hist-card"><div style="display:flex; justify-content:space-between; color:#aaa; font-size:10px;"><span>${d.fecha.toDate().toLocaleDateString()}</span><span style="color:gold;">${tid}</span></div><b>${d.direccion}</b><br>${d.descripcion}<div>${imgHTML}</div><div style="font-size:10px; background:#444; padding:2px 5px; border-radius:3px; display:inline-block; margin-top:5px;">${d.estado || 'Ingresado'}</div></div>`; 
+                    list.innerHTML += `<div class="hist-card"><b>${d.direccion}</b><br>${d.descripcion}<div>${imgHTML}</div></div>`; 
                 });
             });
         }
@@ -446,7 +388,7 @@
                 });
             }
             await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: phone, direccion: dir, descripcion: desc, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
-            alert("✅ Reporte Enviado Correctamente");
+            alert("✅ Enviado");
             volverPaso1();
         }
 
