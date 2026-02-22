@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Viajero Universal v51</title>
+    <title>VLS - Precisión & Flujo v52</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -19,7 +19,7 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
 
-        /* GRID MAESTRO */
+        /* GRID LAYOUT */
         #main-layout {
             display: grid; width: 100vw; height: 100vh;
             grid-template-columns: 340px 1fr; grid-template-rows: 1fr;
@@ -28,7 +28,7 @@
             #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
         }
 
-        /* --- IZQUIERDA: HUB DE TRANSPORTE --- */
+        /* --- IZQUIERDA: HUB --- */
         #sidebar {
             background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
             padding: 20px; display: flex; flex-direction: column; gap: 15px;
@@ -37,32 +37,37 @@
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
 
-        /* Widget Rutas Universal */
+        /* Widget Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         
-        /* Buscador Global */
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* Botones Rápidos (Chips) */
+        /* Botones Rápidos */
         .quick-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
         .chip { 
             background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; 
             font-size: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;
         }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.2); }
-        .chip.active { background: var(--serena-gold); color: black; font-weight: bold; }
 
-        /* Lista de Resultados */
+        /* Lista Resultados */
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 250px; }
-        .trans-row { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; 
-        }
-        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); } /* Estilo Bici */
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; }
+        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
         .trans-icon { font-size: 16px; width: 30px; text-align: center; }
+
+        /* BOTÓN RESET RUTA (NUEVO) */
+        .reset-route-btn {
+            background: #d32f2f; color: white; border: none; padding: 8px; width: 100%;
+            border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px;
+            font-size: 11px; display: none; /* Oculto por defecto */
+        }
+        .reset-route-btn:hover { background: #ff5252; }
 
         /* --- CENTRO: MAPA --- */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
@@ -76,7 +81,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px;
         }
 
-        /* --- DERECHA: USUARIO --- */
+        /* --- DERECHA: REPORTE --- */
         #form-panel {
             position: absolute; bottom: 20px; right: 20px; width: 320px;
             background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333;
@@ -106,31 +111,33 @@
             <div class="radio-header">
                 <i class="fas fa-tower-broadcast"></i> RADIO MUNICIPAL<br>
                 <div class="digital-clock" id="clock">00:00:00</div>
-                <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
+                <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+                    <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
+                </div>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value" style="margin-top:10px;">
             </div>
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
                 
                 <div class="search-row">
-                    <input type="text" id="city-input" class="city-input" placeholder="Cualquier ciudad del mundo...">
+                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad (Ej: Santiago, Ovalle)">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
 
-                <div style="font-size:9px; color:#aaa; margin-bottom:5px;">DESTINOS REGIONALES:</div>
                 <div class="quick-chips">
                     <div class="chip" onclick="setDest('Coquimbo, Chile')">Coquimbo</div>
-                    <div class="chip" onclick="setDest('Vicuña, Coquimbo, Chile')">Vicuña</div>
+                    <div class="chip" onclick="setDest('Vicuña, Coquimbo')">Vicuña</div>
                     <div class="chip" onclick="setDest('Ovalle, Chile')">Ovalle</div>
                     <div class="chip" onclick="setDest('Illapel, Chile')">Illapel</div>
                     <div class="chip" onclick="setDest('Santiago, Chile')">Santiago</div>
                 </div>
                 
                 <div class="route-list" id="route-output">
-                    <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">
-                        Selecciona o busca un destino para ver tiempos y distancias.
-                    </div>
+                    <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino para ver tiempos.</div>
                 </div>
+
+                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> CERRAR RUTA / VOLVER AL MAPA</button>
             </div>
             
             <div class="route-box" style="flex-grow:0;">
@@ -156,7 +163,7 @@
             </div>
 
             <div id="report-ui" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR INCIDENCIA</h4>
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR AQUÍ</h4>
                 <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación...">
                 <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle..."></textarea>
                 
@@ -187,14 +194,15 @@
 
     <script>
         // CONFIG
-        const LS_COORDS = [-29.9027, -71.2520];
+        const LS_COORDS = [-29.9027, -71.2520]; // Plaza La Serena
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
-        // 1. RUTAS UNIVERSAL
+        // 1. MAPA
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
 
+        // 2. CÁLCULO DE RUTAS PRECISO
         function setDest(city) {
             document.getElementById('city-input').value = city;
             buscarYCalcular();
@@ -203,64 +211,82 @@
         async function buscarYCalcular() {
             const query = document.getElementById('city-input').value;
             if(!query) return;
-            document.getElementById('route-output').innerHTML = '<div style="text-align:center; font-size:10px;">Buscando ruta...</div>';
+            document.getElementById('route-output').innerHTML = '<div style="text-align:center; font-size:10px;">Calculando ruta...</div>';
+            document.getElementById('btn-reset-route').style.display = 'none';
 
             try {
-                // 1. Obtener Coordenadas
+                // Nominatim
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
                 const data = await res.json();
                 
                 if(data.length === 0) {
-                    document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px; text-align:center;">Ciudad no encontrada.</div>';
+                    document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px; text-align:center;">No encontrado.</div>';
                     return;
                 }
 
                 const latDest = parseFloat(data[0].lat);
                 const lonDest = parseFloat(data[0].lon);
-                const nombreDest = data[0].display_name.split(',')[0];
+                const nameDest = data[0].display_name.split(',')[0];
 
-                // 2. Calcular Distancia (Haversine)
+                // FÓRMULA DE DISTANCIA (HAVERSINE PRECISO)
                 const R = 6371; 
                 const dLat = (latDest - LS_COORDS[0]) * Math.PI/180;
                 const dLon = (lonDest - LS_COORDS[1]) * Math.PI/180;
                 const a = Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(latDest*Math.PI/180) * Math.sin(dLon/2)**2;
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                const dist = R * c; 
-                const distRuta = dist * 1.3; // Factor carretera
+                const distLineal = R * c; 
+                
+                // Factor Tortuosidad: 1.35 para carreteras chilenas
+                const distRuta = distLineal * 1.35;
 
-                // 3. Tiempos
+                // Tiempos (Velocidades Reales)
                 const tPie = (distRuta / 5).toFixed(1);
-                const tBici = (distRuta / 15).toFixed(1);
-                const tAuto = (distRuta / 90).toFixed(1);
-                const tBus = (distRuta / 70).toFixed(1);
+                const tBici = (distRuta / 18).toFixed(1);
+                const tAuto = (distRuta / 90).toFixed(1); // 90 km/h promedio
+                const tBus = (distRuta / 75).toFixed(1); // 75 km/h bus
 
                 let html = `
-                    <div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">Hacia: ${nombreDest}</div>
+                    <div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${nameDest}</div>
                     <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div>${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
                     <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div>${tBus} h</div> <div style="font-size:9px">Bus</div></div>
                     <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div>${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div>${tPie} h</div> <div style="font-size:9px">A pie</div></div>
                 `;
 
-                if(dist > 500) {
-                     const tAvion = (dist / 800 + 2).toFixed(1);
+                // Solo mostrar avión si es lejos (> 350km)
+                if(distLineal > 350) {
+                     // Tiempo vuelo + 2h aeropuerto
+                     const tAvion = (distLineal / 800 + 2).toFixed(1);
                      html += `<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div>${tAvion} h</div> <div style="font-size:9px">Avión</div></div>`;
                 }
 
                 html += `<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Distancia: ${Math.round(distRuta)} km</div>`;
                 document.getElementById('route-output').innerHTML = html;
 
-                // 4. Dibujar en Mapa
+                // Mostrar botón RESET
+                document.getElementById('btn-reset-route').style.display = 'block';
+
+                // DIBUJAR RUTA
                 if(routePolyline) map.removeLayer(routePolyline);
                 routePolyline = L.polyline([LS_COORDS, [latDest, lonDest]], {color: '#b71c1c', weight: 4, dashArray: '10, 10'}).addTo(map);
                 map.fitBounds(routePolyline.getBounds(), {padding: [50,50]});
 
             } catch(e) {
-                document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px;">Error de conexión.</div>';
+                document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px;">Error. Intenta de nuevo.</div>';
             }
         }
 
-        // 2. MOTOR 3D PRINCIPAL
+        // 3. RESETEAR RUTA (SALIR)
+        function resetRoute() {
+            if(routePolyline) map.removeLayer(routePolyline); // Borrar línea
+            document.getElementById('route-output').innerHTML = '<div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino...</div>';
+            document.getElementById('city-input').value = "";
+            document.getElementById('btn-reset-route').style.display = 'none'; // Ocultar botón
+            
+            // Volver a La Serena (Animado)
+            map.flyTo(LS_COORDS, 17, { duration: 1.5 });
+        }
+
+        // 4. MOTOR 3D PRINCIPAL
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -280,7 +306,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // Geocoding Mapa Central
+        // Geocoding Reporte
         map.on('moveend', async () => {
             const c = map.getCenter();
             try {
@@ -293,7 +319,7 @@
             } catch(e) { document.getElementById('r-dir').value = `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`; }
         });
 
-        // 3. PASEO HISTÓRICO 3D (LEGADO)
+        // 5. PASEO HISTÓRICO (LEGADO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -305,18 +331,14 @@
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-                
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
                 const mat = new BABYLON.StandardMaterial("m", s);
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat;
-
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(10,10,10); m[0].position.x=80; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(10,10,10); m[0].position.x=-80; });
-                
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(8,8,-8); cam.lockedTarget=tSer; });
-                
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
                 s.onBeforeRenderObservable.add(()=>{
                     if(!tSer || !dest) return;
@@ -327,7 +349,7 @@
             }
         }
 
-        // 4. AUTH & FIREBASE
+        // 6. FIREBASE & AUTH
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -337,13 +359,7 @@
         auth.onAuthStateChanged(u => {
             if(u) {
                 user = u;
-                document.getElementById('user-bar').innerHTML = `
-                    <img src="${u.photoURL}" class="avatar">
-                    <div style="flex:1; font-size:12px; margin-left:10px;">
-                        <b>${u.displayName}</b><br>
-                        <a href="#" onclick="verHistorial()" style="color:gold;">Mis Reportes</a>
-                    </div>
-                `;
+                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <a href="#" onclick="verHistorial()" style="color:gold;">Historial</a></div>`;
                 document.getElementById('report-ui').style.opacity = "1";
                 document.getElementById('report-ui').style.pointerEvents = "auto";
             }
@@ -363,12 +379,7 @@
 
         async function enviar() {
             if(!user) return;
-            await db.collection("incidencias").add({
-                uid: user.uid, user: user.displayName,
-                direccion: document.getElementById('r-dir').value,
-                descripcion: document.getElementById('r-desc').value,
-                fecha: new Date(), estado: "Ingresado"
-            });
+            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, fecha: new Date(), estado: "Ingresado" });
             alert("Reporte Enviado");
         }
 
