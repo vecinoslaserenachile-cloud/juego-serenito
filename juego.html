@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Ecosistema Pro v46</title>
+    <title>VLS - Dinámica Pro v47</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,94 +16,77 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #121212; --glass: rgba(0, 0, 0, 0.6); }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; }
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #121212; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); overflow: hidden; }
 
-        /* --- LAYOUT RESPONSIVE CORREGIDO --- */
+        /* LAYOUT */
         #main-layout {
-            display: grid;
-            width: 100vw;
-            height: 100vh;
-            /* Escritorio: Columnas fijas */
+            display: grid; width: 100vw; height: 100vh;
             grid-template-columns: 320px 1fr; 
             grid-template-rows: 1fr;
-            overflow: hidden;
         }
-
         @media (max-width: 1023px) {
-            #main-layout {
-                display: flex;
-                flex-direction: column;
-                height: auto;
-                min-height: 100vh;
-                overflow-y: auto; /* PERMITE SCROLL EN MÓVIL */
-            }
+            #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
         }
 
-        /* --- ZONA 1: RADIO & DATA (IZQUIERDA) --- */
+        /* SIDEBAR (Radio + Data) */
         #sidebar {
             background: linear-gradient(180deg, #d32f2f 0%, #8e0000 100%);
             padding: 20px; display: flex; flex-direction: column; gap: 20px;
-            overflow-y: auto; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            color: white; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+        }
+        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 32px; text-align: center; }
+        
+        /* Control Volumen */
+        .vol-slider {
+            width: 100px; height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.3); -webkit-appearance: none; margin-top: 10px;
+        }
+        .vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer;
         }
 
-        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 32px; text-align: center; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-        .radio-controls { text-align: center; }
-        .play-btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; color: var(--serena-red); font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.2); transition: 0.2s; }
-        .play-btn:active { transform: scale(0.95); }
+        /* Widget Clima & Rutas */
+        .widget-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* Widget Clima */
-        .weather-widget { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .temp-display { font-size: 36px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        
-        /* Calculadora Rutas */
-        .route-widget { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; }
-        .route-input { width: 100%; padding: 8px; border-radius: 4px; border: none; margin-bottom: 5px; }
-        .transport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; font-size: 11px; }
-        .trans-item { display: flex; align-items: center; gap: 5px; color: #ddd; }
-        
-        /* --- ZONA 2: MAPA + 3D (CENTRO) --- */
-        #stage-area { position: relative; flex-grow: 1; min-height: 50vh; } 
+        /* MAPA + 3D */
+        #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #e0e0e0; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        
-        .map-ui-top {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 20; background: var(--glass); padding: 8px 20px; border-radius: 30px;
-            border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 13px;
-            display: flex; align-items: center; gap: 10px; pointer-events: auto;
-        }
 
-        /* --- ZONA 3: REPORTE & FOOTER (DERECHA/ABAJO) --- */
+        /* Botón Tour 3D */
+        .tour-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 20;
+            background: var(--serena-gold); color: #000; font-weight: bold;
+            padding: 10px 20px; border-radius: 30px; border: 2px solid white;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .tour-btn:hover { transform: scale(1.05); }
+
+        /* FORMULARIO */
         #form-container {
             position: absolute; bottom: 20px; right: 20px; width: 320px;
-            background: #1a1a1a; padding: 20px; border-radius: 15px;
-            border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            z-index: 30;
+            background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 30; color: white;
         }
-        
-        /* Ajuste Móvil para el formulario */
         @media (max-width: 1023px) {
-            #form-container {
-                position: relative; bottom: auto; right: auto; width: auto;
-                margin: 0; border-radius: 0; border: none; border-top: 4px solid var(--serena-red);
-            }
+            #form-container { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; }
         }
+        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; }
+        .btn-red { width: 100%; padding: 14px; background: var(--serena-red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
-        .btn-red { width: 100%; padding: 14px; background: var(--serena-red); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        
-        .footer { text-align: center; padding: 20px; background: #000; font-size: 10px; color: #666; }
-
-        /* MODAL DE ÉXITO */
-        #success-modal {
+        /* MODAL TOUR 3D (Apartado) */
+        #modal-tour {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center;
+            background: black; z-index: 9999;
         }
-        .modal-box {
-            background: #222; padding: 30px; border-radius: 20px; text-align: center;
-            border: 2px solid var(--serena-gold); max-width: 300px;
-        }
+        #tour-canvas { width: 100%; height: 100%; }
+        .close-tour { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; z-index: 10001; }
+
+        /* MODAL ÉXITO */
+        #success-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-box { background: #222; padding: 30px; border-radius: 20px; text-align: center; border: 2px solid var(--serena-gold); max-width: 300px; color: white; }
 
     </style>
 </head>
@@ -113,34 +96,26 @@
 
         <div id="sidebar">
             <div class="digital-clock" id="clock">00:00:00</div>
-            <div style="text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 20px;">LA SERENA CONECTADA</div>
+            <div style="text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 10px;">LA SERENA CONECTADA</div>
 
-            <div class="radio-controls">
-                <button class="play-btn" onclick="toggleRadio()"><i class="fas fa-play" id="icon-play"></i></button>
-                <div style="margin-top:10px; font-size:10px;">RADIO MUNICIPAL 24/7</div>
+            <div style="text-align:center;">
+                <button onclick="toggleRadio()" style="width:60px; height:60px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:24px; cursor:pointer;"><i class="fas fa-play" id="icon-play"></i></button>
+                <br>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
             </div>
 
-            <div class="weather-widget">
-                <div style="font-size:10px; color:var(--serena-gold); margin-bottom:5px;">CLIMA EN TIEMPO REAL</div>
-                <div class="temp-display">
-                    <i class="fas fa-sun" id="w-icon"></i> <span id="w-temp">--</span>°C
+            <div class="widget-box">
+                <div style="font-size:10px; color:var(--serena-gold);">CLIMA ACTUAL</div>
+                <div style="font-size:28px; font-weight:bold; margin-top:5px;">
+                    <i class="fas fa-sun"></i> <span id="w-temp">--</span>°C
                 </div>
-                <div id="w-desc" style="font-size:12px; color:#ccc;">Cargando datos...</div>
             </div>
 
-            <div class="route-widget">
-                <div style="font-size:10px; color:var(--serena-gold); margin-bottom:5px;">CALCULADORA DE VIAJES</div>
-                <input type="text" id="dest-input" class="route-input" placeholder="Destino (Ej: Santiago, Coquimbo)">
-                <button onclick="calcularRuta()" style="width:100%; background:#444; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">Calcular Tiempos</button>
-                
-                <div class="transport-grid" id="route-results">
-                    <div class="trans-item"><i class="fas fa-walking"></i> <span>--</span></div>
-                    <div class="trans-item"><i class="fas fa-bicycle"></i> <span>--</span></div>
-                    <div class="trans-item"><i class="fas fa-car"></i> <span>--</span></div>
-                    <div class="trans-item"><i class="fas fa-bus"></i> <span>--</span></div>
-                    <div class="trans-item"><i class="fas fa-plane"></i> <span>--</span></div>
-                    <div class="trans-item"><i class="fas fa-ship"></i> <span>--</span></div>
-                </div>
+            <div class="widget-box">
+                <div style="font-size:10px; color:var(--serena-gold); margin-bottom:5px;">CALCULADORA DE TIEMPOS</div>
+                <input type="text" id="dest" placeholder="Destino..." style="width:100%; padding:5px; border-radius:4px; border:none; margin-bottom:5px;">
+                <button onclick="calcRoute()" style="width:100%; background:#444; color:white; border:none; padding:5px; cursor:pointer; border-radius:4px;">Calcular</button>
+                <div id="route-res" style="font-size:11px; margin-top:10px; color:#ddd;"></div>
             </div>
         </div>
 
@@ -148,173 +123,188 @@
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
             
-            <div class="map-ui-top">
-                <i class="fas fa-map-marker-alt"></i> <span id="address-label">Mueve el mapa...</span>
-            </div>
+            <button class="tour-btn" onclick="openTour()">
+                <i class="fas fa-cube"></i> PASEO HISTÓRICO 3D
+            </button>
         </div>
 
-        <div style="display: flex; flex-direction: column;"> <div id="form-container">
-                <h4 style="margin:0 0 15px 0; color:var(--serena-gold);">REPORTE CIUDADANO</h4>
-                
-                <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación automática">
-                <input type="text" id="r-nom" class="f-input" placeholder="Tu Nombre">
-                
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <label style="flex:1; background:#333; color:#ccc; padding:10px; text-align:center; border-radius:6px; cursor:pointer; border:1px dashed #555;">
-                        <i class="fas fa-camera"></i> FOTO
-                        <input type="file" hidden accept="image/*" capture="environment">
-                    </label>
-                    <label style="flex:1; background:#333; color:#ccc; padding:10px; text-align:center; border-radius:6px; cursor:pointer; border:1px dashed #555;">
-                        <i class="fas fa-video"></i> VIDEO
-                        <input type="file" hidden accept="video/*" capture="environment">
-                    </label>
-                </div>
-
-                <button class="btn-red" onclick="enviarReporte()">ENVIAR REPORTE</button>
-            </div>
+        <div id="form-container">
+            <h4 style="margin:0 0 15px 0; color:var(--serena-gold);">REPORTE CIUDADANO</h4>
+            <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación...">
+            <input type="text" id="r-nom" class="f-input" placeholder="Tu Nombre">
             
-            <div class="footer">
-                VECINOS LA SERENA v46.0 | © 2026 MUNICIPALIDAD<br>
-                Desarrollado para la Comunidad
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <label style="flex:1; background:#333; color:#ccc; padding:10px; text-align:center; border-radius:6px; cursor:pointer; border:1px dashed #555;">
+                    <i class="fas fa-camera"></i> FOTO
+                    <input type="file" hidden accept="image/*" capture="environment">
+                </label>
+                <label style="flex:1; background:#333; color:#ccc; padding:10px; text-align:center; border-radius:6px; cursor:pointer; border:1px dashed #555;">
+                    <i class="fas fa-video"></i> VIDEO
+                    <input type="file" hidden accept="video/*" capture="environment">
+                </label>
             </div>
+            <button class="btn-red" onclick="enviarReporte()">ENVIAR REPORTE</button>
         </div>
 
+    </div>
+
+    <div id="modal-tour">
+        <div class="close-tour" onclick="closeTour()"><i class="fas fa-times"></i></div>
+        <div style="position:absolute; top:20px; left:20px; color:gold; font-size:20px; font-weight:bold; z-index:10002;">🏰 CENTRO HISTÓRICO</div>
+        <canvas id="tour-canvas"></canvas>
+    </div>
+
+    <div id="success-modal">
+        <div class="modal-box">
+            <i class="fas fa-check-circle fa-4x" style="color:var(--serena-gold);"></i>
+            <h2>¡RECIBIDO!</h2>
+            <p>Gracias por ayudar a cuidar La Serena.</p>
+            <button onclick="document.getElementById('success-modal').style.display='none'" class="btn-red">OK</button>
+        </div>
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
-    <div id="success-modal">
-        <div class="modal-box">
-            <i class="fas fa-check-circle fa-4x" style="color:var(--serena-gold); margin-bottom:20px;"></i>
-            <h2 style="color:white; margin:0;">¡ENVIADO!</h2>
-            <p style="color:#ccc;">Tu reporte ha sido ingresado al sistema municipal.</p>
-            <button onclick="document.getElementById('success-modal').style.display='none'" class="btn-red">ACEPTAR</button>
-        </div>
-    </div>
-
     <script>
-        // --- 1. CONFIGURACIÓN ---
-        const CENTER = [-29.9027, -71.2520];
-        const WEATHER_API = "https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true";
-
-        // --- 2. RELOJ & CLIMA ---
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL');
-        }, 1000);
-
+        // 1. DATA
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
+        
         async function fetchWeather() {
             try {
-                const res = await fetch(WEATHER_API);
-                const data = await res.json();
-                const temp = data.current_weather.temperature;
-                document.getElementById('w-temp').innerText = temp;
-                document.getElementById('w-desc').innerText = "Datos Open-Meteo";
-            } catch(e) { console.log("Error clima"); }
+                let r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true");
+                let d = await r.json();
+                document.getElementById('w-temp').innerText = d.current_weather.temperature;
+            } catch(e) {}
         }
         fetchWeather();
 
-        // --- 3. CALCULADORA DE RUTAS (Lógica Matemática) ---
-        function calcularRuta() {
-            const dest = document.getElementById('dest-input').value;
-            if(!dest) return alert("Escribe un destino");
-            
-            // Simulación basada en texto (En producción usaríamos API de Google/Mapbox)
-            // Aquí usamos una lógica aleatoria/educativa para el demo
-            // En realidad, esto calcularía lat/lon del destino y usaría Haversine
-            
-            const distBase = Math.floor(Math.random() * 500) + 10; // Demo: Distancia aleatoria
-            
-            // Velocidades Promedio
-            const tPie = (distBase / 5).toFixed(1) + " h";
-            const tBici = (distBase / 15).toFixed(1) + " h";
-            const tAuto = (distBase / 60).toFixed(1) + " h";
-            const tBus = (distBase / 50).toFixed(1) + " h";
-            const tAvion = distBase > 200 ? (distBase / 800 + 0.5).toFixed(1) + " h" : "N/A";
-            const tBarco = (distBase / 30).toFixed(1) + " h";
-
-            const html = `
-                <div class="trans-item"><i class="fas fa-walking"></i> ${tPie}</div>
-                <div class="trans-item"><i class="fas fa-bicycle"></i> ${tBici}</div>
-                <div class="trans-item"><i class="fas fa-car"></i> ${tAuto}</div>
-                <div class="trans-item"><i class="fas fa-bus"></i> ${tBus}</div>
-                <div class="trans-item"><i class="fas fa-plane"></i> ${tAvion}</div>
-                <div class="trans-item"><i class="fas fa-ship"></i> ${tBarco}</div>
-                <div style="grid-column: span 2; text-align:center; color:gold; margin-top:5px;">Distancia aprox: ${distBase} KM</div>
+        function calcRoute() {
+            let d = Math.floor(Math.random() * 400) + 10;
+            document.getElementById('route-res').innerHTML = `
+                <i class="fas fa-car"></i> Auto: ${(d/60).toFixed(1)}h <br>
+                <i class="fas fa-walking"></i> Pie: ${(d/5).toFixed(1)}h <br>
+                Distancia aprox: ${d} km
             `;
-            document.getElementById('route-results').innerHTML = html;
         }
 
-        // --- 4. RADIO ---
         const audio = document.getElementById('audio-player');
         function toggleRadio() {
-            const icon = document.getElementById('icon-play');
+            let icon = document.getElementById('icon-play');
             if(audio.paused) { audio.play(); icon.className = "fas fa-pause"; }
             else { audio.pause(); icon.className = "fas fa-play"; }
         }
 
-        // --- 5. MAPA & 3D (FUSIÓN) ---
-        const map = L.map('map', { zoomControl: false }).setView(CENTER, 17);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // 2. MAPA & SERENITO DINÁMICO
+        const map = L.map('map', { zoomControl: false }).setView([-29.9027, -71.2520], 17);
+        // Usamos CartoDB Voyager para carga rápida y limpia
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, serenito;
+        let isMoving = false; // Estado de movimiento
 
         const createScene = function() {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color4(0,0,0,0); // Transparente
+            s.clearColor = new BABYLON.Color4(0,0,0,0);
             const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
             new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s).intensity = 1.2;
 
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
                 serenito = m[0];
-                serenito.scaling = new BABYLON.Vector3(10, 10, -10);
-                serenito.position.y = -20;
+                serenito.scaling = new BABYLON.Vector3(12, 12, -12); // Tamaño normal
+                serenito.position.y = -22; // Ajuste visual
                 cam.lockedTarget = serenito;
-                s.registerBeforeRender(() => { serenito.rotation.y = Math.PI; });
+                
+                // Animación Idle
+                s.registerBeforeRender(() => {
+                    if(!isMoving) serenito.rotation.y = Math.PI; // Mirar frente
+                });
             });
             return s;
         };
         scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // GEOCODING INVERSO (Dirección)
-        map.on('moveend', async () => {
-            const c = map.getCenter();
-            document.getElementById('address-label').innerText = "Cargando...";
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
-                const data = await res.json();
-                const dir = data.address.road || data.address.suburb || "Ubicación detectada";
-                document.getElementById('address-label').innerText = dir;
-                document.getElementById('r-dir').value = dir;
-            } catch(e) {
-                document.getElementById('address-label').innerText = `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`;
-                document.getElementById('r-dir').value = `${c.lat}, ${c.lng}`;
+        // LÓGICA DINÁMICA
+        map.on('movestart', () => {
+            isMoving = true;
+            if(serenito) {
+                // Se hace pequeño y "camina"
+                serenito.scaling = new BABYLON.Vector3(6, 6, -6);
+                // Aquí podrías activar animación de caminar del GLB si tuviera
             }
         });
 
-        // --- 6. FIREBASE ---
+        map.on('moveend', async () => {
+            isMoving = false;
+            if(serenito) {
+                // Vuelve a crecer (Llegada)
+                serenito.scaling = new BABYLON.Vector3(12, 12, -12);
+            }
+            // Geocoding
+            const c = map.getCenter();
+            try {
+                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
+                let d = await r.json();
+                document.getElementById('r-dir').value = d.address.road || "Ubicación detectada";
+            } catch(e) { document.getElementById('r-dir').value = `${c.lat}, ${c.lng}`; }
+        });
+
+        // 3. TOUR 3D APARTADO
+        let engineTour, sceneTour;
+        function openTour() {
+            document.getElementById('modal-tour').style.display = 'block';
+            if(!engineTour) initTour3D();
+        }
+        function closeTour() {
+            document.getElementById('modal-tour').style.display = 'none';
+        }
+
+        function initTour3D() {
+            const cv = document.getElementById('tour-canvas');
+            engineTour = new BABYLON.Engine(cv, true);
+            const s = new BABYLON.Scene(engineTour);
+            s.clearColor = new BABYLON.Color3(0.1, 0.1, 0.2);
+            const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
+            cam.attachControl(cv, true);
+            new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
+
+            // Cargar Mapa JPG y Edificios Pesados AQUÍ
+            const ground = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
+            const mat = new BABYLON.StandardMaterial("m", s);
+            mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
+            ground.material = mat;
+
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ 
+                m[0].scaling = new BABYLON.Vector3(5,5,5); 
+                m[0].position.x = 50;
+            });
+            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ 
+                m[0].scaling = new BABYLON.Vector3(5,5,5);
+                m[0].position.x = -50; 
+            });
+
+            engineTour.runRenderLoop(() => s.render());
+        }
+
+        // 4. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         window.enviarReporte = async function() {
             const nom = document.getElementById('r-nom').value;
-            if(!nom) return alert("Ingresa tu nombre");
+            if(!nom) return alert("Falta nombre");
             const c = map.getCenter();
-            
             await db.collection("incidencias").add({
-                vecino: nom, direccion: document.getElementById('r-dir').value,
-                lat: c.lat, lon: c.lng, fecha: new Date(), tipo: "v46_pro"
+                vecino: nom, dir: document.getElementById('r-dir').value,
+                lat: c.lat, lon: c.lng, date: new Date()
             });
-            
-            // MOSTRAR MODAL PRO
-            document.getElementById('success-modal').style.flex = "flex";
-            document.getElementById('success-modal').style.display = "flex";
-        };
+            document.getElementById('success-modal').style.display = 'flex';
+        }
 
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
+        window.addEventListener("resize", () => { engine.resize(); if(engineTour) engineTour.resize(); map.invalidateSize(); });
 
     </script>
 </body>
