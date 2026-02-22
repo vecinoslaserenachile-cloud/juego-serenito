@@ -33,39 +33,30 @@
             #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 150px; }
         }
 
-        /* SIDEBAR RDMLS */
+        /* SIDEBAR */
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
-        .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; }
+        .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); display: block; margin-left: auto; margin-right: auto; }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; text-align: center; }
 
-        /* PLANIFICADOR SUDAMÉRICA */
+        /* RUTAS */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .city-input { width: 100%; padding: 8px; border-radius: 4px; border: none; font-size: 12px; background: #333; color: white; margin-bottom: 10px; }
-        .chip-scroll-container { display: flex; flex-wrap: wrap; gap: 5px; max-height: 110px; overflow-y: auto; }
-        .chip { background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 15px; font-size: 10px; cursor: pointer; transition:0.2s; border: 1px solid transparent; }
-        .chip:hover { border-color: var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 11px; margin-top:5px; }
-
-        /* MAPA Y 3D */
-        #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
-        #map { width: 100%; height: 100%; z-index: 1; }
-        #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; font-size: 11px; margin-top:5px; }
 
         /* IMÁGENES Y LUPA */
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; transition: 0.3s; object-fit: cover; }
         .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); transform: scale(1.02); }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:11000; align-items:center; justify-content:center; }
-        .close-zoom { position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; font-weight: bold; }
+        .close-zoom { position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; }
         #img-full { max-width:90%; max-height:85%; border:4px solid white; border-radius:8px; object-fit: contain; }
 
-        /* CHATBOT INTELIGENTE */
-        #btn-chat-tramites { position: fixed; bottom: 30px; right: 20px; background: linear-gradient(45deg, #2962ff, #4285f4); color: white; border: 3px solid white; border-radius: 50%; width: 75px; height: 75px; font-size: 32px; box-shadow: 0 5px 25px rgba(0,0,0,0.6); z-index: 10000; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+        /* CHATBOT & FORMULARIO INTERNO */
+        #btn-chat-tramites { position: fixed; bottom: 30px; right: 20px; background: linear-gradient(45deg, #2962ff, #4285f4); color: white; border: 3px solid white; border-radius: 50%; width: 75px; height: 75px; font-size: 32px; z-index: 10000; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        #chat-window { display: none; position: fixed; bottom: 120px; right: 20px; width: 320px; height: 480px; background: #1a1a1a; border-radius: 15px; border: 1px solid #444; z-index: 10000; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.9); overflow: hidden; }
-        .chat-btn-opt { background: #333; color: var(--serena-gold); border: 1px solid #555; padding: 6px; border-radius: 5px; font-size: 11px; margin-top: 5px; cursor: pointer; width: 100%; text-align: left; }
-        .chat-btn-opt:hover { background: #444; border-color: var(--serena-gold); }
+        #chat-window { display: none; position: fixed; bottom: 120px; right: 20px; width: 340px; height: 500px; background: #1a1a1a; border-radius: 15px; border: 1px solid #444; z-index: 10000; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.9); overflow: hidden; }
+        
+        .chat-form-box { background: #222; padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--serena-gold); }
+        .chat-form-input { width: 100%; padding: 8px; margin-bottom: 5px; background: #111; border: 1px solid #444; color: white; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+        .chat-form-btn { width: 100%; background: var(--serena-red); color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -75,9 +66,11 @@
             <div class="radio-header">
                 <img src="escudo.png" class="escudo-img">
                 <h1 class="rdmls-sigla">RDMLS</h1>
-                <h2 style="font-family:'Oswald'; font-size:12px; color:var(--serena-gold);">RADIO DIGITAL MUNICIPAL</h2>
-                <div style="font-size:28px; font-family:'Oswald'; margin:10px 0;" id="clock">00:00:00</div>
-                <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
+                <h2 style="font-family:'Oswald'; font-size:12px; color:var(--serena-gold); text-align:center;">RADIO DIGITAL MUNICIPAL</h2>
+                <div style="font-size:28px; font-family:'Oswald'; margin:10px 0; text-align:center;" id="clock">00:00:00</div>
+                <div style="text-align:center;">
+                    <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
+                </div>
             </div>
             
             <div class="weather-advanced">
@@ -86,18 +79,8 @@
             </div>
 
             <div class="route-box">
-                <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
-                <input type="text" id="city-input" class="city-input" onkeypress="if(event.key==='Enter')buscarYCalcular()" placeholder="Destino Sudamérica...">
-                <div class="chip-scroll-container">
-                    <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
-                    <div class="chip" onclick="calcDirect(-36.8201, -73.0444, 'Concepción')">Concepción</div>
-                    <div class="chip" onclick="calcDirect(-18.4783, -70.3126, 'Arica')">Arica</div>
-                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima')">Lima</div>
-                    <div class="chip" onclick="calcDirect(-34.6037, -58.3816, 'Buenos Aires')">B. Aires</div>
-                    <div class="chip" onclick="calcDirect(-34.9011, -56.1645, 'Montevideo')">Montevideo</div>
-                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza')">Mendoza</div>
-                    <div class="chip" onclick="calcDirect(-31.5375, -68.5364, 'San Juan')">San Juan</div>
-                </div>
+                <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR SUDAMÉRICA</div>
+                <input type="text" id="city-input" class="city-input" onkeypress="if(event.key==='Enter')buscarYCalcular()" placeholder="Destino...">
                 <div id="route-output"></div>
                 <button id="btn-reset-route" class="btn-red" onclick="resetRoute()" style="display:none; width:100%; margin-top:5px; padding:5px; font-size:10px;">CERRAR RUTA</button>
             </div>
@@ -122,17 +105,14 @@
 
             <div id="step-1">
                 <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">PASO 1: UBICACIÓN</h4>
-                <input type="text" id="r-dir" class="f-input" placeholder="Detectando dirección...">
+                <input type="text" id="r-dir" class="f-input" placeholder="Dirección del reporte...">
                 <div style="font-size:10px; color:gold; text-align:right;" id="gps-data">GPS: --</div>
                 <button onclick="goStep2()" class="btn-green" style="margin-top:5px; width:100%;">CONFIRMAR</button>
             </div>
 
             <div id="step-2" style="display:none;">
-                <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">PASO 2: REPORTE</h4>
-                <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
-                <input type="email" id="r-email" class="f-input" readonly>
-                <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema para el back-office..."></textarea>
-                <input type="file" id="evidencia-file" style="margin:10px 0; color:white;">
+                <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">PASO 2: DETALLES</h4>
+                <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema vecinal..."></textarea>
                 <button id="btn-enviar" onclick="enviarReporteFinal()" class="btn-red" style="width:100%;">ENVIAR A MUNICIPALIDAD</button>
                 <div onclick="goStep1()" style="text-align:center; color:#888; font-size:11px; margin-top:10px; cursor:pointer; text-decoration:underline;">Volver</div>
             </div>
@@ -140,27 +120,23 @@
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-aves.jpg" class="graphic-filler" onclick="expandImg(this.src)">
-            <img src="comic-playa.jpg" class="graphic-filler" onclick="expandImg(this.src)">
-            <img src="comic-bici.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
     </div>
 
-    <button id="btn-chat-tramites" onclick="toggleChat()">
-        <i class="fas fa-comment-dots"></i>
-    </button>
+    <button id="btn-chat-tramites" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
 
     <div id="chat-window">
         <div style="background:#4285f4; padding:15px; color:white; font-family:'Oswald'; display:flex; justify-content:space-between; align-items:center;">
-            <span><i class="fas fa-robot"></i> SERENITO SMART-ROUTER</span>
+            <span><i class="fas fa-robot"></i> SERENITO IA 2026</span>
             <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">&times;</button>
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:13px; background:#111;">
             <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%;">
-                ¡Hola! Soy Serenito. Estoy conectado al <b>Back-office Municipal 2026</b>. ¿Qué trámite necesitas gestionar hoy?
+                ¡Hola! Soy Serenito. Estoy listo para ayudarte a gestionar trámites directamente con el <b>Back-office Municipal</b>.
             </div>
         </div>
         <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
-            <input type="text" id="chat-input" placeholder="Ej: Pago de patentes..." style="flex:1; background:#111; border:1px solid #444; color:white; padding:10px; border-radius:5px;">
+            <input type="text" id="chat-input" placeholder="Pregunta por un trámite..." style="flex:1; background:#111; border:1px solid #444; color:white; padding:10px; border-radius:5px;">
             <button onclick="sendChat()" style="background:#4285f4; border:none; color:white; padding:0 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
@@ -176,20 +152,11 @@
     <div id="success-modal" class="modal">
         <div class="success-box">
             <i class="fas fa-check-circle" style="font-size:60px; color:#00e676; margin-bottom:20px;"></i>
-            <h2>¡CASO INGRESADO!</h2>
-            <p>Tu solicitud ya está en la bandeja del funcionario municipal.</p>
+            <h2>¡RECIBIDO!</h2>
+            <p>Tu requerimiento ha sido ingresado al sistema del Back-office.</p>
             <button onclick="document.getElementById('success-modal').style.display='none'; goStep1();" class="btn-green" style="width:100%;">ENTENDIDO</button>
         </div>
     </div>
-    <div id="hist-modal" class="modal">
-        <div class="hist-box">
-            <h3 style="color:var(--serena-gold); border-bottom:1px solid #444; padding-bottom:10px;">📂 MI HISTORIAL BACK-OFFICE</h3>
-            <div id="hist-content"></div>
-            <button onclick="document.getElementById('hist-modal').style.display='none'" class="btn-red" style="margin-top:10px;">CERRAR</button>
-        </div>
-    </div>
-
-    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
         // FIREBASE RDMLS
@@ -202,148 +169,82 @@
         const LS_COORDS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        let routePolyline = null;
 
         map.on('moveend', () => {
             const c = map.getCenter();
             document.getElementById('gps-data').innerText = `GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-            if(document.activeElement.id !== 'r-dir') {
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
-                    if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
-                });
-            }
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
+                if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
+            });
         });
-
-        // RUTAS SUDAMÉRICA
-        function calcDirect(lat, lon, name) {
-            const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
-            const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; 
-            const tAvion=(dist/800).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/70).toFixed(1), tBici=(dist/15).toFixed(1), tPie=(dist/5).toFixed(1);
-            document.getElementById('route-output').innerHTML = `<div style="text-align:center;font-weight:bold;margin:10px 0;">${name} (${dist.toFixed(1)} km)</div><div class="trans-row"><i class="fas fa-plane"></i> <span style="color:#29b6f6;">${tAvion} h</span> Vuelo</div><div class="trans-row"><i class="fas fa-car"></i> <span>${tAuto} h</span> Auto</div><div class="trans-row"><i class="fas fa-bus"></i> <span>${tBus} h</span> Bus</div><div class="trans-row bike"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${tBici} h</span> Bici</div><div class="trans-row"><i class="fas fa-walking"></i> <span>${tPie} h</span> Pie</div>`;
-            document.getElementById('btn-reset-route').style.display='block';
-            if(routePolyline) map.removeLayer(routePolyline);
-            routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
-            map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
-        }
-        function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); document.getElementById('route-output').innerHTML=""; }
 
         // MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        const createScene = function() {
-            const s = new BABYLON.Scene(engine); s.clearColor = new BABYLON.Color4(0,0,0,0);
-            const cam = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
-            new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
-                let ser = m[0]; ser.scaling = new BABYLON.Vector3(12,12,-12); ser.position.y = 0; cam.lockedTarget = ser;
-                s.registerBeforeRender(()=> ser.rotation.y = Math.PI);
-                map.on('movestart', () => ser.scaling = new BABYLON.Vector3(6,6,-6));
-                map.on('moveend', () => ser.scaling = new BABYLON.Vector3(12,12,-12));
-            });
-            return s;
-        };
-        const scene = createScene(); engine.runRenderLoop(() => scene.render());
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
-
-        // PASEO HISTÓRICO BLOQUEO PISO
-        let tourEngine;
-        function openTour() {
-            document.getElementById('modal-tour').style.display = 'block';
-            if(!tourEngine) {
-                const c = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(c, true);
-                const s = new BABYLON.Scene(tourEngine); s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
-                cam.attachControl(c, true); cam.upperBetaLimit = Math.PI / 2.2;
-                new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-                const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
-                const mat = new BABYLON.StandardMaterial("m", s); mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); g.material = mat; 
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; });
-                let tSer, dest;
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
-                s.onPointerDown = (e, p) => { if (p.hit && p.pickedMesh === g) dest = p.pickedPoint; };
-                s.onBeforeRenderObservable.add(()=>{
-                    if(tSer && dest) {
-                        let diff = dest.subtract(tSer.position); diff.y = 0;
-                        if(diff.length() > 1) {
-                            let dir = diff.normalize(); tSer.position.addInPlace(dir.scale(0.5));
-                            tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
-                        } else dest = null;
-                    }
-                });
-                tourEngine.runRenderLoop(() => s.render());
-            }
-        }
-
-        // CRM USUARIO
-        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-        auth.onAuthStateChanged(u => {
-            if(u) {
-                user = u;
-                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div><b>${u.displayName}</b><br><a href="#" onclick="verHistorial()" style="color:gold; font-size:11px;">📂 Mis Reportes</a></div>`;
-                document.getElementById('r-email').value = u.email;
-            }
+        const scene = new BABYLON.Scene(engine);
+        scene.clearColor = new BABYLON.Color4(0,0,0,0);
+        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
+        new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
+            let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); camera.lockedTarget = s;
+            scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
         });
+        engine.runRenderLoop(() => scene.render());
 
-        function verHistorial() {
-            document.getElementById('hist-modal').style.display = 'flex'; const list = document.getElementById('hist-content'); list.innerHTML = 'Cargando...';
-            db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get().then(snap => {
-                list.innerHTML = snap.empty ? "Sin reportes." : "";
-                snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div class="hist-item"><b>${d.direccion}</b><br>${d.descripcion}<br><small>${d.fecha.toDate().toLocaleString()}</small></div>`; });
-            });
-        }
-
-        function goStep2() { document.getElementById('step-1').style.display='none'; document.getElementById('step-2').style.display='block'; }
-        function goStep1() { document.getElementById('step-1').style.display='block'; document.getElementById('step-2').style.display='none'; }
-        
-        async function enviarReporteFinal() {
-            if(!user) return; const btn = document.getElementById('btn-enviar'); btn.innerText = "ENVIANDO..."; btn.disabled = true;
-            try {
-                const file = document.getElementById('evidencia-file').files[0]; let base64 = null;
-                if(file) { base64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); }); }
-                await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
-                document.getElementById('success-modal').style.display = 'flex';
-            } catch(e) { alert(e.message); } finally { btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false; }
-        }
-
-        function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
-        window.expandImg = function(src) { document.getElementById('img-full').src = src; document.getElementById('img-modal').style.display = 'flex'; }
-        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
-
-        // MOTOR DE INTENCIONALIDAD SERENITO-BRAIN 2026
-        const KNOWLEDGE_BASE = [
-            { keys: ["horario", "abren", "cierra"], resp: "Atendemos de Lunes a Viernes de 08:30 a 14:00 horas en Prat 451. ¿Necesitas saber de alguna delegación específica?", opts: ["Delegaciones por la tarde", "Mesa Central"] },
-            { keys: ["delegacion", "pampa", "antena", "rural", "compañias"], resp: "Las delegaciones municipales operan de 08:30 a 14:00. Para atención vespertina, comunícate con la delegación de tu sector.", opts: ["Fono Delegación Pampa", "Fono Delegación Rural"] },
-            { keys: ["seguridad", "carabinero", "delito", "policia", "fono", "telefono"], resp: "Emergencias directas: 1455 (Seguridad Ciudadana Municipal) o al 133 (Carabineros).", opts: ["Llamar al 1455"] },
-            { keys: ["contacto", "mesa", "anexo", "dideco", "obras", "transito"], resp: "Mesa Central: 51 220 6600. Anexos principales:\n- Tránsito: 6710\n- Obras: 6820\n- DIDECO: 6900.", opts: ["Derivar al Back-office"] },
-            { keys: ["tramite", "pago", "patente", "licencia", "permiso"], resp: "He derivado tu consulta técnica al Back-office. Un funcionario revisará el estado de tu trámite en sistema.", opts: ["Ver estado en mi Historial"] }
+        // CHATBOT INTELIGENTE CON FORMULARIO INTEGRADO
+        const KNOWLEDGE = [
+            { keys: ["horario", "mesa", "anexo"], resp: "Horario Municipal: 08:30 a 14:00 (Prat 451). Mesa Central: 51 220 6600. Anexos: DIDECO (6900), Tránsito (6710), Obras (6820).", hasForm: false },
+            { keys: ["tramite", "pago", "licencia", "patente", "permiso"], resp: "Para este trámite, ingresa tu consulta aquí mismo para derivarte al Back-office municipal:", hasForm: true, type: "Trámite" },
+            { keys: ["basura", "luminaria", "bache", "hoyo"], resp: "He detectado que quieres reportar una incidencia. Por favor, completa estos datos para el equipo de Obras:", hasForm: true, type: "Incidencia" }
         ];
 
-        function toggleChat() { const w = document.getElementById('chat-window'); w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none'; }
-        document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat(); });
-
         function sendChat() {
-            const inp = document.getElementById('chat-input'); const box = document.getElementById('chat-msgs'); const txt = inp.value.trim().toLowerCase(); if(!txt) return;
+            const inp = document.getElementById('chat-input');
+            const box = document.getElementById('chat-msgs');
+            const txt = inp.value.trim().toLowerCase();
+            if(!txt) return;
+
             box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; color:white;">${txt}</div>`;
             inp.value = ""; box.scrollTop = box.scrollHeight;
-            setTimeout(async () => {
-                let match = KNOWLEDGE_BASE.find(item => item.keys.some(k => txt.includes(k)));
-                let resp = match ? match.resp : "No tengo esa respuesta exacta, pero acabo de abrir un <b>Ticket en el Back-office</b> con tu duda para que un funcionario te responda pronto.";
+
+            setTimeout(() => {
+                let match = KNOWLEDGE.find(k => k.keys.some(key => txt.includes(key)));
+                let resp = match ? match.resp : "No tengo esa respuesta exacta. ¿Quieres que abra un ticket interno para que un funcionario te contacte?";
                 let html = `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">${resp}`;
-                if(match && match.opts) {
-                    match.opts.forEach(o => html += `<button class="chat-btn-opt" onclick="inpChat('${o}')">${o}</button>`);
+                
+                if(match && match.hasForm) {
+                    html += `
+                        <div class="chat-form-box">
+                            <input type="text" placeholder="Asunto" id="f-subject" class="chat-form-input">
+                            <textarea placeholder="Detalle adicional..." id="f-msg" class="chat-form-input"></textarea>
+                            <button class="chat-form-btn" onclick="submitTicket('${match.type}')">ENVIAR TICKET</button>
+                        </div>`;
+                } else if (!match) {
+                    html += `<button class="chat-form-btn" style="margin-top:10px;" onclick="inpChat('abrir ticket')">SÍ, ABRIR TICKET</button>`;
                 }
                 html += `</div>`;
                 box.innerHTML += html;
                 box.scrollTop = box.scrollHeight;
-
-                // GUARDADO EN BACK-OFFICE (NUEVA COLECCIÓN)
-                if(user) { await db.collection("tickets_ia").add({ uid: user.uid, nombre: user.displayName, consulta: txt, fecha: new Date(), estado: "Pendiente" }); }
             }, 500);
         }
-        window.inpChat = function(val) { document.getElementById('chat-input').value = val; sendChat(); }
+
+        async function submitTicket(type) {
+            if(!user) { alert("Debes acceder primero."); return; }
+            const subject = document.getElementById('f-subject').value;
+            const msg = document.getElementById('f-msg').value;
+            await db.collection("tickets_ia").add({ uid: user.uid, nombre: user.displayName, tipo: type, asunto: subject, mensaje: msg, fecha: new Date(), estado: "Pendiente" });
+            document.getElementById('success-modal').style.display = 'flex';
+        }
+
+        function toggleChat() { const w = document.getElementById('chat-window'); w.style.display = (w.style.display==='none'||w.style.display==='')?'flex':'none'; }
+        document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key==='Enter') sendChat(); });
+        function inpChat(v) { document.getElementById('chat-input').value = v; sendChat(); }
+        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        auth.onAuthStateChanged(u => { if(u) { user=u; document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div><b>${u.displayName}</b></div>`; } });
+        window.expandImg = function(src) { document.getElementById('img-full').src=src; document.getElementById('img-modal').style.display='flex'; }
+        setInterval(()=>document.getElementById('clock').innerText=new Date().toLocaleTimeString(), 1000);
+        function goStep2(){document.getElementById('step-1').style.display='none'; document.getElementById('step-2').style.display='block';}
+        function goStep1(){document.getElementById('step-1').style.display='block'; document.getElementById('step-2').style.display='none';}
     </script>
 </body>
 </html>
