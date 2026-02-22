@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Consola Municipal v54</title>
+    <title>VLS - Gold Final v55</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -30,7 +30,7 @@
             #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
         }
 
-        /* --- IZQUIERDA: HUB --- */
+        /* --- IZQUIERDA --- */
         #sidebar {
             background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
             padding: 20px; display: flex; flex-direction: column; gap: 15px;
@@ -39,14 +39,17 @@
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        
-        /* Mensajes Ciudad */
+        .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
+
+        /* Clima & Ticker */
         .city-news-box {
             background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;
             border-left: 4px solid #00e676; font-size: 11px; line-height: 1.4; min-height: 40px;
             display: flex; align-items: center; transition: opacity 0.5s;
         }
-
+        .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
+        
         /* Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
@@ -61,30 +64,27 @@
         .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
         
-        /* Botón cerrar ruta ROJO */
-        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* --- CENTRO: MAPA --- */
+        /* --- CENTRO --- */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         
-        .btn-tour {
-            position: absolute; bottom: 20px; left: 20px; z-index: 20;
-            background: var(--serena-gold); color: black; font-weight: bold;
-            padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s;
-        }
-        .btn-tour:hover { transform: scale(1.05); }
-
         .guide-msg {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px;
             border: 1px solid var(--serena-gold); color: var(--serena-gold);
             font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none;
         }
+        .btn-tour {
+            position: absolute; bottom: 20px; left: 20px; z-index: 20;
+            background: var(--serena-gold); color: black; font-weight: bold;
+            padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px;
+        }
 
-        /* --- DERECHA: FORMULARIO --- */
+        /* --- DERECHA --- */
         #form-panel {
             position: absolute; bottom: 20px; right: 20px; width: 320px;
             background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333;
@@ -114,27 +114,25 @@
                 <i class="fas fa-tower-broadcast"></i> RADIO MUNICIPAL<br>
                 <div class="digital-clock" id="clock">00:00:00</div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
-                    <button onclick="toggleRadio()" style="width:60px; height:60px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:24px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                        <i class="fas fa-play" id="play-icon"></i>
-                    </button>
+                    <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
                 </div>
-                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value" style="margin-top:10px;">
+                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
             </div>
 
             <div class="city-news-box" id="city-ticker">
                 <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
-                <span id="ticker-text">Conectando con La Serena...</span>
+                <span id="ticker-text">...</span>
             </div>
 
-            <div class="route-box" style="flex-grow:0; padding:10px;">
+            <div class="weather-advanced">
                  <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
-                 <div style="font-size:20px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
                 <div class="search-row">
-                    <input type="text" id="city-input" class="city-input" placeholder="Buscar destino...">
+                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad (Ej: Ovalle, París...)">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
                 <div class="quick-chips">
@@ -143,14 +141,10 @@
                     <div class="chip" onclick="setDest('Ovalle, Chile')">Ovalle</div>
                     <div class="chip" onclick="setDest('Santiago, Chile')">Santiago</div>
                 </div>
-                
                 <div class="route-list" id="route-output">
                     <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>
                 </div>
-                
-                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()">
-                    <i class="fas fa-times-circle"></i> CERRAR RUTA
-                </button>
+                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> CERRAR RUTA</button>
             </div>
         </div>
 
@@ -158,27 +152,18 @@
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
             
-            <div class="guide-msg">
-                <i class="fas fa-crosshairs"></i> Ubica la incidencia en el centro
-            </div>
-
-            <button class="btn-tour" onclick="openTour()">
-                <i class="fas fa-cube"></i> PASEO HISTÓRICO
-            </button>
+            <div class="guide-msg"><i class="fas fa-crosshairs"></i> Ubica la incidencia en el centro</div>
+            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO 3D</button>
         </div>
 
         <div id="form-panel">
             <div class="user-header" id="user-bar">
-                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;">
-                    <i class="fab fa-google"></i> Acceder con Google
-                </button>
+                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
-
             <div id="report-ui" style="opacity:0.5; pointer-events:none;">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR</h4>
                 <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación Detectada...">
                 <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle..."></textarea>
-                
                 <label style="display:block; background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
                     <i class="fas fa-camera"></i> FOTO EVIDENCIA
                     <input type="file" hidden accept="image/*" id="evidencia-file">
@@ -193,7 +178,6 @@
         <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER A LA APP <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
-
     <div id="hist-modal" class="modal">
         <div class="hist-box">
             <h3>MIS REPORTES</h3>
@@ -209,18 +193,13 @@
         const LS_COORDS = [-29.9027, -71.2520];
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
-        // 1. TICKER & CLIMA
+        // 1. CLIMA & TICKER
         const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro Monumental.", "Fono Seguridad: 1455"];
         let mIdx = 0;
-        setInterval(() => {
-            const el = document.getElementById('ticker-text');
-            el.style.opacity = 0;
-            setTimeout(() => { el.innerText = msgs[mIdx]; el.style.opacity = 1; mIdx=(mIdx+1)%msgs.length; }, 500);
-        }, 5000);
+        setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
+        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-        async function w() { try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
-
-        // 2. MAPA & RUTAS (A Pie incluido)
+        // 2. MAPA & RUTAS
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
@@ -244,16 +223,19 @@
                 const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
                 const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
 
-                const html = `
-                    <div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${name}</div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div>${(dist/90).toFixed(1)} h</div> <div style="font-size:9px">Auto</div></div>
-                    <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div>${(dist/18).toFixed(1)} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div>${(dist/5).toFixed(1)} h</div> <div style="font-size:9px">A pie</div></div>
-                    <div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Dist: ${Math.round(dist)} km</div>
-                `;
+                const tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1), tBici=(dist/18).toFixed(1), tPie=(dist/5).toFixed(1);
+                
+                let html = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${name}</div>
+                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div>${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
+                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div>${tBus} h</div> <div style="font-size:9px">Micro/Bus</div></div>
+                    <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-bicycle"></i></div> <div>${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
+                    <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div>${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
+                
+                if(dist>350) html+=`<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div>${(dist/800+2).toFixed(1)} h</div> <div style="font-size:9px">Avión</div></div>`;
+                html+=`<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Dist: ${Math.round(dist)} km</div>`;
+                
                 document.getElementById('route-output').innerHTML = html;
                 document.getElementById('btn-reset-route').style.display = 'block';
-
                 if(routePolyline) map.removeLayer(routePolyline);
                 routePolyline = L.polyline([LS_COORDS, [lat, lon]], {color: '#b71c1c', weight: 4, dashArray: '10, 10'}).addTo(map);
                 map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
@@ -262,36 +244,21 @@
 
         function resetRoute() {
             if(routePolyline) map.removeLayer(routePolyline);
-            document.getElementById('route-output').innerHTML = '<div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Listo.</div>';
+            document.getElementById('route-output').innerHTML = '<div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>';
+            document.getElementById('city-input').value = "";
             document.getElementById('btn-reset-route').style.display = 'none';
             map.flyTo(LS_COORDS, 17);
         }
 
-        // 3. AUDIO PLAY/PAUSE (Corregido)
+        // 3. AUDIO
         const player = document.getElementById('audio-player');
         function toggleRadio() {
             const icon = document.getElementById('play-icon');
-            if(player.paused) {
-                player.play();
-                icon.className = "fas fa-pause"; // Muestra Pause para detener
-            } else {
-                player.pause();
-                icon.className = "fas fa-play"; // Muestra Play para iniciar
-            }
+            if(player.paused) { player.play(); icon.className = "fas fa-pause"; } 
+            else { player.pause(); icon.className = "fas fa-play"; }
         }
 
-        // 4. MAPA GEOCODING
-        map.on('moveend', async () => {
-            const c = map.getCenter();
-            try {
-                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
-                let d = await r.json();
-                let addr = d.address;
-                document.getElementById('r-dir').value = (addr.road || "Calle") + " " + (addr.house_number || "");
-            } catch(e) { document.getElementById('r-dir').value = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; }
-        });
-
-        // 5. MOTOR 3D PRINCIPAL
+        // 4. MOTOR 3D PRINCIPAL (Overlay)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -311,7 +278,17 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 6. PASEO HISTÓRICO (LEGADO CORREGIDO)
+        map.on('moveend', async () => {
+            const c = map.getCenter();
+            try {
+                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
+                let d = await r.json();
+                let addr = d.address;
+                document.getElementById('r-dir').value = (addr.road || "Calle") + " " + (addr.house_number || "");
+            } catch(e) { document.getElementById('r-dir').value = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; }
+        });
+
+        // 5. PASEO HISTÓRICO (CORREGIDO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -330,30 +307,34 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat;
 
-                // Edificios MONUMENTALES (X30)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(30,30,30); m[0].position.x=80; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(30,30,30); m[0].position.x=-80; });
+                // EDIFICIOS LEVANTADOS (Y=12) y ESCALADOS (x35)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ 
+                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
+                    m[0].position.x = 80; m[0].position.y = 12; // LEVANTADO
+                });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ 
+                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
+                    m[0].position.x = -80; m[0].position.y = 12; // LEVANTADO
+                });
 
-                // Serenito Tanque
+                // SERENITO TANQUE (ROTACIÓN CORREGIDA)
                 let dest, tSer;
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(8,8,-8); cam.lockedTarget=tSer; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
 
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
                 s.onBeforeRenderObservable.add(()=>{
                     if(!tSer || !dest) return;
                     let d = dest.subtract(tSer.position); d.y=0;
                     if(d.length()>1) { 
-                        tSer.lookAt(dest); 
-                        // SIN corrección PI, si estaba invertido antes, esto debería arreglarlo (o viceversa)
-                        // Si el modelo mira hacia +Z, lookAt funciona directo.
-                        tSer.position.addInPlace(d.normalize().scale(1.0)); 
+                        tSer.lookAt(dest); // SIN MATH.PI (Para corregir inversión)
+                        tSer.position.addInPlace(d.normalize().scale(1.2)); 
                     } else dest=null;
                 });
                 tourEngine.runRenderLoop(() => s.render());
             }
         }
 
-        // 7. AUTH & FIREBASE
+        // 6. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
