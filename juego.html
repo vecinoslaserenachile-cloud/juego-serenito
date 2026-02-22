@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v31 Motor Blindado</title>
+    <title>LA❤️SERENA - v35 Motor de Compresión</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,18 +18,23 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
+        /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
         .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
 
+        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
         .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
+        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         
-        .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
+        .report-card { background: #222; padding: 15px; margin: 12px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
+        .report-img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #444; display: block; }
+        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -56,17 +61,18 @@
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700;">NUEVO REPORTE</h3>
-        <video id="cam" autoplay playsinline muted style="width:100%; border-radius:10px; border:2px solid #ffd700; height: 250px; object-fit: cover;"></video>
-        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas hoy?">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR</button>
-        <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
+        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
+        <video id="cam" autoplay playsinline muted></video>
+        <canvas id="compressor-canvas" style="display:none;"></canvas>
+        <input type="text" id="desc" style="width:100%; padding:14px; margin:10px 0; background:#222; border:1px solid #444; color:white; border-radius:10px; box-sizing: border-box;" placeholder="¿Qué sucede en este punto?">
+        <button id="btn-env" onclick="enviarReporte()" style="width:100%; padding:16px; background:#ffd700; border:none; font-weight:bold; border-radius:12px; color:black; font-size:16px;">ENVIAR REPORTE</button>
+        <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
     <div id="modal-hist" class="modal"><div class="box">
         <h3 style="color:#ffd700;">MIS REPORTES</h3>
-        <div id="lista" style="max-height:350px; overflow-y:auto;"></div>
-        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:20px; background:#444; color:white; padding:10px; border:none; border-radius:5px; width:100%;">Cerrar</button>
+        <div id="lista" style="max-height:400px; overflow-y:auto; padding-right:5px;"></div>
+        <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:20px; background:#444; color:white; padding:12px; border:none; border-radius:10px; width:100%;">Cerrar</button>
     </div></div>
 
     <script>
@@ -94,7 +100,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D
+        // 2. MOTOR 3D BABYLON (MOTOR TANQUE BLINDADO)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -105,7 +111,7 @@
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 130, BABYLON.Vector3.Zero(), s);
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
@@ -116,7 +122,6 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // CARGA DE MONUMENTOS (UBICACIÓN SAGRADA)
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -128,13 +133,12 @@
                     root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
                 });
             };
-            load("municipalidad.glb", 610, 160, 170, Math.PI); 
+            load("municipalidad.glb", 610, 160, 170, Math.PI);
             load("intendencia.glb", 430, 410, 190, 0);
 
-            // SERENITO TANQUE
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
-                serenito.rotationQuaternion = null; 
+                serenito.rotationQuaternion = null;
                 serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
@@ -143,7 +147,6 @@
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // LÓGICA TANQUE ESTRICTA (GIRA -> CAMINA)
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
@@ -155,81 +158,106 @@
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
                     if(Math.abs(rotDiff) > 0.05) {
-                        serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
+                        serenito.rotation.y += Math.sign(rotDiff) * 0.12;
                         if(animCaminar) animCaminar.stop();
                     } else {
                         serenito.rotation.y = angleDest;
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
-                } else {
-                    if(animCaminar) animCaminar.stop();
-                    destinoFinal = null;
-                }
+                } else { if(animCaminar) animCaminar.stop(); destinoFinal = null; }
             });
             return s;
         };
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES & HISTORIAL
+        // 3. MOTOR DE COMPRESIÓN MULTIMEDIA
         let streamActivo = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Accede con Google primero.");
+            if(!userActual) return alert("Por favor, accede con Google.");
             document.getElementById('modal-rep').style.display = 'flex';
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Acceso a cámara denegado."); }
+            } catch (err) { alert("Necesitamos acceso a la cámara."); }
         }
 
-        function enviarReporte() {
-            db.collection("incidencias").add({
-                uid: userActual.uid,
-                vecino: userActual.displayName,
-                descripcion: document.getElementById('desc').value,
-                fecha: new Date(),
-                estado: "Ingresado"
-            }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
+        async function enviarReporte() {
+            const btn = document.getElementById('btn-env');
+            const video = document.getElementById('cam');
+            const canvasComp = document.getElementById('compressor-canvas');
+            const desc = document.getElementById('desc').value;
+
+            if(!desc) return alert("Escribe un mensaje para la Municipalidad.");
+            btn.innerText = "COMPRIMIENDO FOTO...";
+            btn.disabled = true;
+
+            // EL MOTOR DE COMPRESIÓN:
+            // 1. Definimos una resolución balanceada (640x480)
+            canvasComp.width = 640;
+            canvasComp.height = 480;
+            const ctx = canvasComp.getContext('2d');
+            
+            // 2. Dibujamos el frame actual del video en el canvas
+            ctx.drawImage(video, 0, 0, 640, 480);
+            
+            // 3. Comprimimos a JPEG con calidad 0.5 (50%)
+            // Esto reduce el peso drásticamente sin perder la evidencia.
+            const fotoComprimida = canvasComp.toDataURL('image/jpeg', 0.5); 
+
+            try {
+                await db.collection("incidencias").add({
+                    uid: userActual.uid,
+                    vecino: userActual.displayName,
+                    descripcion: desc,
+                    foto: fotoComprimida,
+                    fecha: new Date(),
+                    estado: "Ingresado"
+                });
+                alert("¡Reporte enviado! Gracias por cuidar nuestra comuna.");
+                cerrarModal('modal-rep');
+            } catch (err) { 
+                alert("Error al enviar: " + err.message); 
+            } finally { 
+                btn.innerText = "ENVIAR REPORTE"; 
+                btn.disabled = false; 
+            }
         }
 
         function verHistorial() {
-            if(!userActual) return alert("Inicia sesión primero.");
+            if(!userActual) return alert("Accede con tu cuenta primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const lista = document.getElementById('lista');
-            lista.innerHTML = "<p style='color:gold;'>Sincronizando con La Serena...</p>";
+            lista.innerHTML = "<p style='color:gold;'>Sincronizando con la red municipal...</p>";
 
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
-                .orderBy("fecha", "desc") // AHORA COINCIDE CON EL ÍNDICE
+                .orderBy("fecha", "desc")
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "<p>No tienes reportes aún.</p>"; return; }
+                    if(snap.empty) { lista.innerHTML = "No tienes gestiones registradas."; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
+                        const img = d.foto ? `<img src="${d.foto}" class="report-img">` : "";
                         lista.innerHTML += `<div class="report-card">
-                            <b>📅 ${d.fecha ? d.fecha.toDate().toLocaleDateString() : 'S/F'}</b><br>
-                            <span>${d.descripcion}</span><br>
-                            <small style="color:gold;">Estado: ${d.estado}</small>
+                            <b>📅 ${d.fecha.toDate().toLocaleDateString()}</b><br>
+                            <span style="font-size:14px;">${d.descripcion}</span><br>
+                            ${img}
+                            <div style="margin-top:8px;"><small style="color:gold; font-weight:bold;">Estado: ${d.estado}</small></div>
                         </div>`;
                     });
-                })
-                .catch(err => {
-                    lista.innerHTML = `<p style='color:red;'>Cargando índice... Espera 2 minutos más.</p>`;
                 });
         }
 
-        function cerrarModal(id) {
-            document.getElementById(id).style.display = 'none';
-            if(streamActivo) streamActivo.getTracks().forEach(t => t.stop());
+        function cerrarModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
+            if(streamActivo) streamActivo.getTracks().forEach(t => t.stop()); 
+            document.getElementById('desc').value = ""; 
         }
-
-        window.toggleRadio = () => {
-            const a = document.getElementById('audio-player');
-            if(a.paused) a.play(); else a.pause();
-        };
+        window.toggleRadio = () => { const a = document.getElementById('audio-player'); if(a.paused) a.play(); else a.pause(); };
         window.resetCamara = () => { if(serenito) camera.lockedTarget = serenito; };
         window.addEventListener("resize", () => engine.resize());
 
