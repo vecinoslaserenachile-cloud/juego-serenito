@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back Office - Municipalidad La Serena</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #121212; --panel: #1e1e1e; }
+        
+        body { font-family: 'Roboto', sans-serif; background: var(--dark); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* SIDEBAR */
+        #sidebar { width: 250px; background: linear-gradient(180deg, #8a0000 0%, #4a0000 100%); padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 20px rgba(0,0,0,0.5); z-index: 10; }
+        .brand { text-align: center; margin-bottom: 30px; }
+        .brand img { width: 80px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .brand h2 { font-family: 'Oswald'; margin: 10px 0 0; letter-spacing: 1px; }
+        
+        .menu-item { padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; color: #ccc; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.1); color: var(--serena-gold); }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* MAIN CONTENT */
+        #main { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-card { background: var(--panel); padding: 20px; border-radius: 10px; border-left: 4px solid var(--serena-gold); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .stat-num { font-size: 32px; font-family: 'Oswald'; font-weight: bold; }
+        .stat-label { font-size: 12px; color: #aaa; text-transform: uppercase; }
+
+        /* TABLA DE REPORTES */
+        .table-container { background: var(--panel); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex: 1; }
+        .header-bar { padding: 15px 20px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 15px; background: rgba(0,0,0,0.2); color: var(--serena-gold); font-family: 'Oswald'; font-weight: normal; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .status-new { background: rgba(0, 230, 118, 0.2); color: #00e676; }
+        .status-pending { background: rgba(255, 145, 0, 0.2); color: #ff9100; }
+        
+        .btn-action { background: #333; border: 1px solid #555; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { border-color: var(--serena-gold); color: var(--serena-gold); }
+
+        /* MODAL DE DETALLE + IA */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+        .modal-content { background: #1a1a1a; width: 90%; max-width: 900px; height: 85vh; border-radius: 15px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid #333; }
+        
+        .detail-map { background: #222; position: relative; }
+        .detail-info { padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        .ai-box { background: rgba(66, 133, 244, 0.1); border: 1px solid #4285f4; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .ai-title { color: #4285f4; font-family: 'Oswald'; font-size: 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        
+        .typing { border-right: 2px solid white; animation: blink 0.7s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="brand">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/Escudo_de_La_Serena.svg">
+            <h2>BACK OFFICE<br><span style="color:var(--serena-gold); font-size:14px;">MUNICIPAL</span></h2>
+        </div>
+        <div class="menu-item active"><i class="fas fa-chart-pie"></i> Dashboard</div>
+        <div class="menu-item"><i class="fas fa-inbox"></i> Reportes <span style="background:var(--serena-red); padding:2px 6px; border-radius:10px; font-size:10px; margin-left:auto;">New</span></div>
+        <div class="menu-item"><i class="fas fa-map-marked-alt"></i> Mapa Calor</div>
+        <div class="menu-item"><i class="fas fa-robot"></i> Config IA</div>
+    </div>
+
+    <div id="main">
+        <h1 style="font-family:'Oswald'; margin:0;">PANEL DE CONTROL</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-num" id="total-count">0</div>
+                <div class="stat-label">Total Reportes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" style="color:#00e676;">0</div>
+                <div class="stat-label">Resueltos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" style="color:#ff9100;">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" style="color:#2979ff;">24h</div>
+                <div class="stat-label">Tiempo Promedio</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="header-bar">
+                <span>Últimos Ingresos</span>
+                <button class="btn-action"><i class="fas fa-download"></i> Exportar CSV</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Vecino</th>
+                        <th>Tipo (IA)</th>
+                        <th>Dirección</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-table">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="detail-map" id="modal-map"></div> <div class="detail-info">
+                <div style="display:flex; justify-content:space-between;">
+                    <h2 style="margin:0; font-family:'Oswald';" id="d-id">#ID-1234</h2>
+                    <button onclick="closeModal()" class="btn-action">Cerrar <i class="fas fa-times"></i></button>
+                </div>
+                
+                <div style="background:#222; padding:15px; border-radius:8px;">
+                    <small style="color:#888;">REPORTE ORIGINAL:</small>
+                    <p id="d-desc" style="font-style:italic; margin-top:5px;"></p>
+                    <div id="d-img-container"></div>
+                </div>
+
+                <div class="ai-box">
+                    <div class="ai-title">
+                        <i class="fas fa-sparkles"></i> ANÁLISIS GOOGLE GEMINI
+                        <button onclick="runAI()" id="btn-run-ai" style="margin-left:auto; background:#4285f4; color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer; font-weight:bold;">ANALIZAR AHORA</button>
+                    </div>
+                    <div id="ai-result" style="font-size:13px; line-height:1.6; color:#e0e0e0;">
+                        Presiona "Analizar" para categorizar, detectar urgencia y redactar respuesta automática.
+                    </div>
+                </div>
+
+                <div style="margin-top:auto; display:grid; gap:10px;">
+                    <button class="btn-action" style="background:var(--serena-red); border:none; padding:15px;">MARCAR COMO RESUELTO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. CONFIGURACIÓN FIREBASE (Misma que la App)
+        const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 2. CONFIGURACIÓN IA (Google Gemini) - ¡IMPORTANTE!
+        // En un entorno real, esto se hace en el backend. Para demo, va aquí.
+        const GEMINI_API_KEY = "TU_API_KEY_AQUI"; // <--- PEGA TU API KEY DE GOOGLE AI STUDIO AQUÍ
+
+        // Cargar Reportes
+        let currentReport = null;
+        let detailMap = null;
+
+        function loadReports() {
+            db.collection("incidencias").orderBy("fecha", "desc").onSnapshot(snap => {
+                const tbody = document.getElementById('reports-table');
+                tbody.innerHTML = "";
+                document.getElementById('total-count').innerText = snap.size;
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const date = d.fecha ? d.fecha.toDate().toLocaleDateString() : "--";
+                    const row = `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${d.user || "Anónimo"}</td>
+                            <td><span style="color:#aaa;">Pendiente IA</span></td>
+                            <td>${d.direccion.substring(0,25)}...</td>
+                            <td><span class="status-badge status-new">${d.estado}</span></td>
+                            <td><button class="btn-action" onclick='openDetail(${JSON.stringify(d).replace(/'/g, "&#39;")}, "${doc.id}")'><i class="fas fa-eye"></i></button></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+        loadReports();
+
+        // Abrir Modal
+        window.openDetail = function(data, id) {
+            currentReport = data;
+            document.getElementById('detail-modal').style.display = 'flex';
+            document.getElementById('d-id').innerText = "Ticket: " + id.substring(0,6).toUpperCase();
+            document.getElementById('d-desc').innerText = data.descripcion;
+            
+            // Imagen
+            const imgCont = document.getElementById('d-img-container');
+            imgCont.innerHTML = data.foto_evidencia ? `<img src="${data.foto_evidencia}" style="width:100%; border-radius:5px; margin-top:10px; max-height:200px; object-fit:cover;">` : "";
+
+            // Reset IA
+            document.getElementById('ai-result').innerHTML = 'Presiona "Analizar" para procesar con Google Gemini.';
+            document.getElementById('btn-run-ai').innerText = "ANALIZAR AHORA";
+            document.getElementById('btn-run-ai').disabled = false;
+
+            // Mapa Detalle
+            if(detailMap) detailMap.remove();
+            setTimeout(() => {
+                // Intentar extraer lat/lon de la dirección si no vienen puros
+                // Por ahora, centramos en La Serena genérico si no hay coords precisas
+                // En tu app 'juego.html' no guardabas lat/lon separadas, solo la dirección string.
+                // Para el futuro: guarda lat/lon en campos separados en Firebase.
+                detailMap = L.map('modal-map').setView([-29.9027, -71.2520], 15);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(detailMap);
+            }, 100);
+        }
+
+        window.closeModal = function() {
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        // 3. INTELIGENCIA ARTIFICIAL (GEMINI)
+        window.runAI = async function() {
+            if(!currentReport) return;
+            const btn = document.getElementById('btn-run-ai');
+            const output = document.getElementById('ai-result');
+            
+            if(GEMINI_API_KEY === "TU_API_KEY_AQUI") {
+                output.innerHTML = "<span style='color:red;'>⚠️ Error: Falta la API KEY de Google Gemini en el código.</span>";
+                return;
+            }
+
+            btn.innerText = "Pensando...";
+            btn.disabled = true;
+            output.innerHTML = "<span class='typing'>Analizando semántica y urgencia...</span>";
+
+            const prompt = `
+                Actúa como un funcionario municipal experto de La Serena. Analiza este reporte ciudadano:
+                "${currentReport.descripcion}"
+                
+                Genera una respuesta en formato JSON con estos campos:
+                1. categoria: (Ej: Alumbrado, Basura, Seguridad, Vialidad)
+                2. urgencia: (Baja, Media, Alta)
+                3. sentimiento: (Enojado, Preocupado, Informativo)
+                4. respuesta_sugerida: (Un borrador de respuesta formal y empático para el vecino)
+            `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                const data = await response.json();
+                const text = data.candidates[0].content.parts[0].text;
+                
+                // Limpiar formato JSON si viene con backticks
+                const jsonText = text.replace(/```json/g, '').replace(/```/g, '');
+                const result = JSON.parse(jsonText);
+
+                output.innerHTML = `
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div style="background:#333; padding:5px; border-radius:4px;"><small>CATEGORÍA</small><br><b style="color:var(--serena-gold)">${result.categoria}</b></div>
+                        <div style="background:#333; padding:5px; border-radius:4px;"><small>URGENCIA</small><br><b style="color:${result.urgencia === 'Alta' ? 'red' : 'lightgreen'}">${result.urgencia}</b></div>
+                    </div>
+                    <div style="background:#333; padding:10px; border-radius:4px; margin-bottom:10px;">
+                        <small>SENTIMIENTO DETECTADO</small><br>
+                        ${result.sentimiento}
+                    </div>
+                    <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:4px; border-left:3px solid #4285f4;">
+                        <small style="color:#4285f4">BORRADOR DE RESPUESTA:</small><br>
+                        <i>"${result.respuesta_sugerida}"</i>
+                    </div>
+                `;
+                btn.innerText = "ANALIZADO";
+
+            } catch (error) {
+                console.error(error);
+                output.innerHTML = "Error al conectar con Gemini. Verifica la consola.";
+                btn.innerText = "Error";
+            }
+        }
+
+    </script>
+</body>
+</html>
