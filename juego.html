@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Centro de Control (Estable)</title>
+    <title>VLS - Centro de Control Pro v42</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -15,43 +15,85 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #e63946; --serena-gold: #ffd700; --dark: #0f0f0f; --panel-bg: #141414; }
+        :root { --serena-red: #e63946; --serena-gold: #ffd700; --dark: #050505; --card-bg: rgba(30, 30, 30, 0.8); }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: white; overflow: hidden; }
         
+        /* GRID MAESTRO */
         #master-grid {
             display: grid;
             height: 100vh;
             width: 100vw;
             grid-template-columns: 1fr;
-            grid-template-rows: 15% 50% 35%; /* Móvil */
+            grid-template-rows: 30% 40% 30%; /* Móvil */
         }
 
         @media (min-width: 1024px) {
             #master-grid {
-                grid-template-columns: 20% 50% 30%; /* Escritorio */
+                grid-template-columns: 22% 50% 28%; /* Escritorio: Izq más ancha para contenido */
                 grid-template-rows: 1fr;
             }
         }
 
-        .panel { background: var(--panel-bg); border-right: 1px solid #333; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .panel { border-right: 1px solid #222; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* COL IZQ: HUB */
-        #panel-hub { padding: 20px; text-align: center; justify-content: center; }
-        .radio-widget { background: linear-gradient(135deg, #222, #000); padding: 20px; border-radius: 20px; border: 2px solid var(--serena-red); box-shadow: 0 0 20px rgba(230, 57, 70, 0.2); }
-        .btn-play { width: 60px; height: 60px; border-radius: 50%; border: none; background: var(--serena-gold); cursor: pointer; margin-top: 15px; font-size: 24px; color: var(--dark); transition: 0.3s; }
-        .btn-play:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--serena-gold); }
+        /* --- COLUMNA IZQUIERDA: EL HUB "LLENO DE COSAS" --- */
+        #panel-hub { 
+            padding: 15px; 
+            overflow-y: auto; 
+            background: linear-gradient(180deg, #101010 0%, #000 100%);
+        }
         
-        /* COL CENTRO: 3D */
-        #renderCanvas { width: 100%; height: 100%; outline: none; background: #000; }
-        .status-badge { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 30px; font-size: 12px; font-weight: bold; border: 1px solid var(--serena-gold); color: var(--serena-gold); letter-spacing: 1px; }
+        /* Módulos Visuales */
+        .hub-module { 
+            background: var(--card-bg); 
+            border: 1px solid #333; 
+            border-radius: 12px; 
+            padding: 12px; 
+            margin-bottom: 15px; 
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .hub-title { font-size: 11px; color: var(--serena-gold); text-transform: uppercase; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 4px; display: flex; justify-content: space-between; }
+        
+        /* Radio */
+        .radio-visual { height: 40px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+        .bar { width: 4px; background: var(--serena-red); animation: equalizer 1s infinite; }
+        @keyframes equalizer { 0% {height: 5px} 50% {height: 20px} 100% {height: 5px} }
+        
+        /* Clima */
+        .weather-display { display: flex; align-items: center; justify-content: space-around; }
+        .temp-big { font-size: 28px; font-weight: bold; }
+        
+        /* Tabla Rutas */
+        .routes-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .routes-table td { padding: 5px; border-bottom: 1px solid #222; }
+        .routes-table tr:last-child td { border: none; }
 
-        /* COL DER: GESTIÓN */
+        /* Botones Biblioteca */
+        .lib-btn { display: block; width: 100%; background: #222; border: none; padding: 8px; text-align: left; margin-top: 5px; border-radius: 5px; color: #ccc; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .lib-btn:hover { background: #333; color: white; padding-left: 12px; }
+
+        /* --- COLUMNA CENTRAL: 3D "TANK" RESTAURADO --- */
+        #renderCanvas { width: 100%; height: 100%; outline: none; background: #000; }
+        .overlay-center { pointer-events: none; position: absolute; top: 10px; width: 100%; text-align: center; z-index: 10; }
+        .location-pill { background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; display: inline-block; }
+
+        /* --- COLUMNA DERECHA: GESTIÓN PRO --- */
         #map { flex-grow: 1; width: 100%; }
-        #gestion-ui { background: #1a1a1a; padding: 20px; border-top: 3px solid var(--serena-red); }
-        .f-input { width: 100%; padding: 12px; margin: 8px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; font-size: 14px; }
-        .btn-action { width: 100%; padding: 14px; background: var(--serena-red); border: none; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 16px; transition: 0.2s; }
-        .btn-action:active { transform: scale(0.98); }
-        .btn-volver { position: absolute; top: 15px; right: 15px; z-index: 1000; background: white; color: var(--dark); border: none; padding: 10px 15px; border-radius: 30px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #gestion-ui { background: #111; padding: 15px; border-top: 3px solid var(--serena-red); box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+        
+        .f-input { width: 100%; padding: 12px; margin: 6px 0; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
+        
+        .btn-cam-big { 
+            width: 100%; padding: 15px; margin-top: 10px; 
+            background: #222; border: 2px dashed var(--serena-gold); 
+            color: var(--serena-gold); border-radius: 8px; 
+            cursor: pointer; font-weight: bold; text-align: center;
+            transition: 0.3s;
+        }
+        .btn-cam-big:hover { background: rgba(255, 215, 0, 0.1); }
+        
+        .btn-submit { width: 100%; padding: 15px; margin-top: 10px; background: var(--serena-red); border: none; color: white; font-weight: bold; border-radius: 8px; font-size: 16px; cursor: pointer; }
 
     </style>
 </head>
@@ -62,103 +104,158 @@
     <div id="master-grid">
         
         <div class="panel" id="panel-hub">
-            <div class="radio-widget">
-                <i class="fas fa-tower-broadcast fa-3x" style="color:var(--serena-red);"></i>
-                <h3 style="margin: 15px 0 5px; color:white; letter-spacing: 1px;">RADIO DIGITAL</h3>
-                <small style="color:#888; text-transform: uppercase;">Municipalidad La Serena</small>
-                <br>
-                <button class="btn-play" onclick="toggleAudio()"><i class="fas fa-play" id="play-icon"></i></button>
-            </div>
+            <div class="hub-module" style="border-color: var(--serena-red);">
+                <div class="hub-title"><span>RADIO MUNICIPAL</span> <span style="color:red">● LIVE</span></div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <button onclick="toggleAudio()" style="width:40px; height:40px; border-radius:50%; border:none; background:var(--serena-gold); cursor:pointer;"><i class="fas fa-play" id="play-btn"></i></button>
+                    <div class="radio-visual">
+                        <div class="bar" style="animation-delay: 0s"></div>
+                        <div class="bar" style="animation-delay: 0.2s"></div>
+                        <div class="bar" style="animation-delay: 0.4s"></div>
+                        <div class="bar" style="animation-delay: 0.1s"></div>
+                    </div>
+                </div>
             </div>
 
-        <div class="panel">
+            <div class="hub-module">
+                <div class="hub-title">CLIMA EN LA SERENA</div>
+                <div class="weather-display">
+                    <i class="fas fa-cloud-sun fa-2x" style="color: #ccc;"></i>
+                    <div class="temp-big">18°C</div>
+                    <div style="font-size:10px; text-align:right;">Humedad: 65%<br>Viento: 12km/h</div>
+                </div>
+            </div>
+
+            <div class="hub-module">
+                <div class="hub-title">RUTAS INTERURBANAS</div>
+                <table class="routes-table">
+                    <tr><td><i class="fas fa-city"></i> Santiago</td><td style="text-align:right; color:#888;">472 KM</td><td style="text-align:right; color:#ccc;">5h 20m</td></tr>
+                    <tr><td><i class="fas fa-anchor"></i> Coquimbo</td><td style="text-align:right; color:#888;">12 KM</td><td style="text-align:right; color:#ccc;">25m</td></tr>
+                    <tr><td><i class="fas fa-mountain"></i> Vicuña</td><td style="text-align:right; color:#888;">62 KM</td><td style="text-align:right; color:#ccc;">55m</td></tr>
+                </table>
+            </div>
+
+            <div class="hub-module">
+                <div class="hub-title">BIBLIOTECA VLS</div>
+                <button class="lib-btn"><i class="fas fa-map"></i> Plano Regulador 2026</button>
+                <button class="lib-btn"><i class="fas fa-camera-retro"></i> Galería Histórica</button>
+                <button class="lib-btn"><i class="fas fa-bus"></i> Recorridos Transteporte</button>
+            </div>
+        </div>
+
+        <div class="panel" style="background: black;">
             <canvas id="renderCanvas"></canvas>
-            <div class="status-badge" id="status-text"><i class="fas fa-map-pin"></i> CENTRO HISTÓRICO</div>
+            <div class="overlay-center">
+                <div class="location-pill" id="loc-indicator">📍 CENTRO HISTÓRICO</div>
+            </div>
         </div>
 
         <div class="panel">
-            <div style="position:relative; height:60%;">
+            <div style="position:relative; height:55%;">
                 <div id="map"></div>
-                <button class="btn-volver" onclick="resetTour()"><i class="fas fa-sync-alt"></i> VOLVER AL CENTRO</button>
+                <button onclick="resetTour()" style="position:absolute; top:10px; right:10px; z-index:999; background:white; border:none; padding:8px 12px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:11px; box-shadow:0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-undo"></i> VOLVER AL CENTRO</button>
             </div>
             
             <div id="gestion-ui">
-                <h4 style="margin-top:0; color:var(--serena-gold); text-transform: uppercase;">Reportar Aquí</h4>
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">NUEVO REPORTE</h4>
+                <input type="text" id="g-nom" class="f-input" placeholder="Nombre del Vecino">
+                <textarea id="g-desc" class="f-input" rows="2" placeholder="Describa la incidencia..."></textarea>
                 
-                <input type="text" id="g-nom" class="f-input" placeholder="Tu Nombre y Apellido">
-                <textarea id="g-desc" class="f-input" rows="2" placeholder="Describe la situación..."></textarea>
-                
-                <label class="btn-action" style="background:#333; border:2px dashed #555; color:#ccc; display:block; text-align:center; padding: 12px; margin-top: 10px; cursor:pointer;">
-                    <i class="fas fa-camera"></i> ADJUNTAR FOTO EVIDENCIA
-                    <input type="file" id="file-cam" style="display:none" accept="image/*" capture="environment" onchange="alert('Foto seleccionada. Listo para enviar.')">
+                <label class="btn-cam-big">
+                    <i class="fas fa-camera fa-lg"></i> ADJUNTAR EVIDENCIA
+                    <input type="file" id="cam-input" style="display:none;" accept="image/*" capture="environment" onchange="alert('📸 ¡Foto cargada exitosamente!')">
                 </label>
 
-                <button class="btn-action" onclick="enviarReporte()">ENVIAR REPORTE OFICIAL</button>
+                <button class="btn-submit" onclick="enviarReporte()">ENVIAR REPORTE</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        // CONFIG
-        const CENTER = [-29.9027, -71.2520];
-        let isTourMode = true;
-
-        // FIREBASE
+        // --- 1. CONFIGURACIÓN ---
+        const CENTER = [-29.9027, -71.2520]; // Plaza
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // RADIO FUNCIONAL
+        // --- 2. RADIO ---
         const player = document.getElementById("master-player");
-        const playIcon = document.getElementById("play-icon");
+        const btnIcon = document.getElementById("play-btn");
         function toggleAudio() {
-            if(player.paused) { player.play(); playIcon.className = "fas fa-pause"; }
+            if(player.paused) { player.play(); btnIcon.className = "fas fa-pause"; }
             else { player.pause(); btnIcon.className = "fas fa-play"; }
         }
 
-        // MOTOR 3D (Intento de recuperación de rutas)
+        // --- 3. MOTOR 3D (LA RECUPERACIÓN) ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, serenito, muni, intendencia;
+        let destinoCaminar = null;
 
         const crearEscena = function() {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.08, 0.08, 0.1); 
-            const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/2.5, 130, BABYLON.Vector3.Zero(), s);
-            cam.attachControl(canvas, true);
+            s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0); // CIELO AZUL (Día)
             
-            // Iluminación mejorada
-            const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), s);
-            hemi.intensity = 0.8;
+            // Cámara más baja para apreciar los edificios
+            const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
+            cam.attachControl(canvas, true);
+            cam.upperBetaLimit = Math.PI / 2.1; // No mirar bajo el suelo
+
+            // LUZ FUERTE (Para que se vea la textura)
+            new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), s).intensity = 0.8;
             const dir = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), s);
-            dir.position = new BABYLON.Vector3(20, 40, 20);
-            dir.intensity = 0.5;
+            dir.position = new BABYLON.Vector3(50, 50, 50);
 
-            // SUELO CON TEXTURA (Clave para la gráfica)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 1500, height: 1500}, s);
-            const matSuelo = new BABYLON.StandardMaterial("matSuelo", s);
-            // IMPORTANTE: Asegúrate que mapa.jpg esté en la raíz
-            matSuelo.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); 
-            matSuelo.specularColor = BABYLON.Color3.Black();
-            suelo.material = matSuelo;
+            // SUELO GRANDE Y TEXTURIZADO
+            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, s);
+            const mat = new BABYLON.StandardMaterial("m", s);
+            mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); // CRÍTICO: Debe estar el archivo
+            mat.specularColor = new BABYLON.Color3(0,0,0); // Sin brillo plástico
+            suelo.material = mat;
+            suelo.checkCollisions = true;
 
-            // CARGA DE MODELOS (Rutas relativas simples "./")
-            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m) => {
-                muni = m[0];
-                muni.position = new BABYLON.Vector3(50, 0, 50);
-                muni.scaling = new BABYLON.Vector3(4,4,4);
-                muni.rotation.y = Math.PI;
-            });
-            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m) => {
-                intendencia = m[0];
-                intendencia.position = new BABYLON.Vector3(-50, 0, -30);
-                intendencia.scaling = new BABYLON.Vector3(4,4,4);
-            });
+            // CARGA DE EDIFICIOS (Escala Grande)
+            const load = (f, x, z, r) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
+                    let root = m[0];
+                    root.scaling = new BABYLON.Vector3(8, 8, 8); // ¡GRANDES!
+                    root.position = new BABYLON.Vector3(x, 0, z);
+                    root.rotation.y = r;
+                    if(f.includes("municipalidad")) muni = root;
+                    if(f.includes("intendencia")) intendencia = root;
+                });
+            };
+            load("municipalidad.glb", 80, 50, Math.PI);
+            load("intendencia.glb", -80, -30, 0);
+
+            // SERENITO (Protagonista)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
                 serenito = m[0];
-                serenito.scaling = new BABYLON.Vector3(8, 8, -8); // Espejado para que mire al frente
+                serenito.scaling = new BABYLON.Vector3(12, 12, -12); // Más grande
                 cam.lockedTarget = serenito;
+            });
+
+            // LOGICA CLICK-TO-MOVE (RECUPERADA)
+            s.onPointerDown = (evt, pick) => {
+                if(pick.hit && pick.pickedMesh === suelo) {
+                    destinoCaminar = pick.pickedPoint;
+                    // También actualizamos el mapa derecho
+                    actualizarMapaDesde3D(pick.pickedPoint);
+                }
+            };
+
+            // Animación de Caminata
+            s.onBeforeRenderObservable.add(() => {
+                if(!serenito || !destinoCaminar) return;
+                let diff = destinoCaminar.subtract(serenito.position);
+                diff.y = 0;
+                if(diff.length() > 1.5) {
+                    serenito.lookAt(destinoCaminar);
+                    serenito.rotation.y += Math.PI; // Corrección de modelo
+                    serenito.position.addInPlace(diff.normalize().scale(0.8)); // Velocidad
+                } else {
+                    destinoCaminar = null;
+                }
             });
 
             return s;
@@ -166,60 +263,74 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // MAPA Y SINCRONIZACIÓN
+        // --- 4. MAPA Y SINCRONIZACIÓN ---
         let map, marker;
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView(CENTER, 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            const pinIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] });
-            marker = L.marker(CENTER, {draggable: true, icon: pinIcon}).addTo(map);
+            marker = L.marker(CENTER, {draggable: true}).addTo(map);
 
-            marker.on('drag', (e) => sync3D(e.target.getLatLng()));
-            map.on('move', () => { const c = map.getCenter(); marker.setLatLng(c); sync3D(c); });
+            // Si muevo el mapa -> Serenito se mueve (Teletransporte)
+            marker.on('drag', (e) => {
+                const ll = e.target.getLatLng();
+                moverSerenitoDesdeMapa(ll.lat, ll.lng);
+            });
         }
         initMap();
 
-        function sync3D(pos) {
+        // 5. PUENTE DE SINCRONIZACIÓN
+        function moverSerenitoDesdeMapa(lat, lng) {
             if(!serenito) return;
-            const dist = map.distance(pos, L.latLng(CENTER));
+            const factor = 8000; // Escala visual
+            serenito.position.x = (lng - CENTER[1]) * factor;
+            serenito.position.z = (lat - CENTER[0]) * factor;
             
-            // Mover a Serenito
-            const scale = 2; // Factor de escala mapa -> 3D
-            serenito.position.x = (pos.lng - CENTER[1]) * 111320 * scale; // Aprox metros
-            serenito.position.z = (pos.lat - CENTER[0]) * 111320 * scale;
-
-            // Lógica de Zona (300 metros)
-            if(dist > 300 && isTourMode) {
+            // Check de Zona
+            const dist = Math.sqrt(serenito.position.x**2 + serenito.position.z**2);
+            if(dist > 500) {
                 if(muni) muni.setEnabled(false);
                 if(intendencia) intendencia.setEnabled(false);
-                document.getElementById("status-text").innerHTML = "<i class='fas fa-city'></i> ZONA URBANA";
-                document.getElementById("status-text").style.borderColor = "#ff3333";
-                isTourMode = false;
-            } else if(dist <= 300 && !isTourMode) {
+                document.getElementById('loc-indicator').innerText = "📍 ZONA URBANA";
+                document.getElementById('loc-indicator').style.borderColor = "white";
+            } else {
                 if(muni) muni.setEnabled(true);
                 if(intendencia) intendencia.setEnabled(true);
-                document.getElementById("status-text").innerHTML = "<i class='fas fa-map-pin'></i> CENTRO HISTÓRICO";
-                document.getElementById("status-text").style.borderColor = "var(--serena-gold)";
-                isTourMode = true;
+                document.getElementById('loc-indicator').innerText = "📍 CENTRO HISTÓRICO";
+                document.getElementById('loc-indicator').style.borderColor = "var(--serena-gold)";
             }
         }
 
-        window.resetTour = function() { map.setView(CENTER, 16); };
+        function actualizarMapaDesde3D(point3D) {
+            // Inverso del factor
+            const factor = 8000;
+            const newLng = (point3D.x / factor) + CENTER[1];
+            const newLat = (point3D.z / factor) + CENTER[0];
+            const newLoc = [newLat, newLng];
+            map.panTo(newLoc);
+            marker.setLatLng(newLoc);
+        }
+
+        window.resetTour = function() {
+            map.setView(CENTER, 16);
+            marker.setLatLng(CENTER);
+            moverSerenitoDesdeMapa(CENTER[0], CENTER[1]);
+        };
 
         window.enviarReporte = async function() {
-            const data = {
-                vecino: document.getElementById('g-nom').value,
-                desc: document.getElementById('g-desc').value,
+            const nom = document.getElementById('g-nom').value;
+            const desc = document.getElementById('g-desc').value;
+            if(!nom || !desc) return alert("Faltan datos por completar.");
+            
+            await db.collection("incidencias").add({
+                vecino: nom, descripcion: desc,
                 lat: marker.getLatLng().lat,
                 lon: marker.getLatLng().lng,
-                fecha: new Date()
-                // TODO: Integrar compresión de foto aquí
-            };
-            if(!data.vecino || !data.desc) return alert("Completa los campos obligatorios.");
-            await db.collection("incidencias").add(data);
+                fecha: new Date(),
+                estado: "Ingresado"
+            });
             alert("¡Reporte enviado exitosamente!");
             location.reload();
-        };
+        }
 
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
     </script>
