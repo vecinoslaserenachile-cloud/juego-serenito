@@ -18,6 +18,7 @@
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
+        
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
         /* LAYOUT */
@@ -42,11 +43,19 @@
         .rdmls-sub { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--serena-gold); letter-spacing: 2px; }
 
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
+        
+        /* RUTAS RESTAURADAS (ESTILO ORIGINAL) */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
+        .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; margin-right: 5px; display:inline-block; margin-bottom:5px; }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
+        
+        .route-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 12px; }
+        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .trans-val { font-weight: bold; color: white; }
 
         /* MAPA Y 3D */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
@@ -54,14 +63,17 @@
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         
-        /* FORMULARIO Y CRM */
+        /* FORMULARIO */
         #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; background: #444; border: 2px solid var(--serena-gold); }
         .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; }
+        
+        /* LUPA (ZOOM) PARA IMÁGENES */
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; transition: 0.3s; }
+        .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); transform: scale(1.02); }
 
         /* CHATBOT */
         #btn-chat-tramites {
@@ -85,8 +97,7 @@
 
         /* MODALES */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; }
-        .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: white; cursor: pointer; border-radius: 5px; font-weight: bold; color:black; }
-        #img-full { max-width:90%; max-height:90%; border:3px solid white; border-radius:8px; }
+        #img-full { max-width:90%; max-height:90%; border:3px solid white; border-radius:8px; box-shadow: 0 0 30px rgba(0,0,0,0.8); cursor: zoom-out; }
         
         /* MODAL CRM (HISTORIAL) */
         .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 70vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 2px solid var(--serena-gold); }
@@ -121,7 +132,7 @@
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
                 </div>
-                <div id="route-output" style="margin-top:10px; font-size:12px;"></div>
+                <div id="route-output"></div>
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()" style="display:none; width:100%; margin-top:5px;">CERRAR RUTA</button>
             </div>
             
@@ -163,6 +174,8 @@
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-aves.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-playa.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-bici.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
     </div>
 
@@ -177,7 +190,7 @@
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:14px;">
             <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">
-                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Respondo sobre trámites y servicios.
+                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Respondo sobre trámites, horarios y servicios.
             </div>
         </div>
         <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
@@ -187,11 +200,13 @@
     </div>
 
     <div id="modal-tour" class="modal">
-        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">CERRAR PASEO</button>
+        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
     
-    <div id="img-modal" onclick="this.style.display='none'"><img id="img-full"></div>
+    <div id="img-modal" onclick="this.style.display='none'">
+        <img id="img-full" src="">
+    </div>
     
     <div id="success-modal" class="modal">
         <div class="success-box">
@@ -220,7 +235,7 @@
         const db = firebase.firestore();
         let user = null;
 
-        // 2. MAPA
+        // 2. MAPA LEAFLET
         const LS_COORDS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
@@ -236,14 +251,28 @@
             }
         });
 
-        // 3. CLIMA Y RUTAS
+        // 3. CLIMA Y RUTAS (RESTAURADO DETALLE)
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
         
         function calcDirect(lat, lon, name) {
             const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
-            document.getElementById('route-output').innerHTML = `<div style="text-align:center;font-weight:bold;">${name}</div><div>Distancia: ${dist.toFixed(1)} km</div>`;
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; // Factor ruta real
+            
+            // CÁLCULO DE TIEMPOS RESTAURADO
+            const tAuto = (dist / 60).toFixed(1); // 60 km/h
+            const tBus = (dist / 40).toFixed(1);  // 40 km/h
+            const tBici = (dist / 15).toFixed(1); // 15 km/h
+            const tPie = (dist / 5).toFixed(1);   // 5 km/h
+
+            document.getElementById('route-output').innerHTML = `
+                <div style="text-align:center;font-weight:bold;margin-bottom:5px;">${name} (${dist.toFixed(1)} km)</div>
+                <div class="trans-row"><i class="fas fa-car"></i> <span class="trans-val">${tAuto} h</span> Auto</div>
+                <div class="trans-row"><i class="fas fa-bus"></i> <span class="trans-val">${tBus} h</span> Bus/Micro</div>
+                <div class="trans-row bike"><i class="fas fa-bicycle"></i> <span class="trans-val" style="color:#00e676;">${tBici} h</span> Bicicleta</div>
+                <div class="trans-row"><i class="fas fa-walking"></i> <span class="trans-val">${tPie} h</span> Caminando</div>
+            `;
+            
             document.getElementById('btn-reset-route').style.display='block';
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
@@ -317,7 +346,7 @@
             }
         }
 
-        // 6. LÓGICA USUARIO + CRM (HISTORIAL)
+        // 6. LÓGICA USUARIO + CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -332,7 +361,6 @@
             }
         });
 
-        // 7. FUNCIÓN VER HISTORIAL (CRM)
         function verHistorial() {
             document.getElementById('hist-modal').style.display = 'flex';
             const list = document.getElementById('hist-content');
@@ -390,10 +418,18 @@
         }
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
-        window.expandImg = function(src) { document.getElementById('img-full').src=src; document.getElementById('img-modal').style.display='flex'; }
+        
+        // 7. LUPA RESTAURADA
+        window.expandImg = function(src) { 
+            const modal = document.getElementById('img-modal');
+            const img = document.getElementById('img-full');
+            img.src = src;
+            modal.style.display = 'flex'; 
+        }
+        
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 8. CHATBOT IA REPARADO (GEMINI PRO)
+        // 8. CHATBOT IA (NUEVA ESTRATEGIA v1.5-flash)
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
@@ -412,21 +448,25 @@
             loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
             box.appendChild(loading);
 
+            // CLAVE IA
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
             try {
-                // MODELO 'gemini-pro' (Estable)
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
+                // USAMOS v1beta/models/gemini-1.5-flash-latest (Más permisivo)
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve: " + txt }] }] })
                 });
+                
+                if(!res.ok) throw new Error("Bloqueo de seguridad o cuota excedida.");
+
                 const d = await res.json();
                 const reply = d.candidates[0].content.parts[0].text;
                 
                 loading.remove();
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error de red.";
+                loading.innerText = "Error IA: Intenta más tarde.";
                 console.error(e);
             }
             box.scrollTop = box.scrollHeight;
