@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v22 Tanque Definitivo</title>
+    <title>LA❤️SERENA - v25 Versión Final</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,14 +18,6 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* PANEL DE ESTADO */
-        #status-panel {
-            position: absolute; top: 100px; left: 15px; z-index: 500;
-            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
-            padding: 12px; border-radius: 0 10px 10px 0; color: white;
-            font-size: 11px; pointer-events: none; box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
-        }
-
         /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .pointer { pointer-events: auto; }
@@ -40,25 +32,19 @@
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
-        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
         
-        /* ESTILO HISTORIAL */
         .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
         .admin-reply { background: #000; border: 1px dashed #ffd700; padding: 10px; margin-top: 10px; border-radius: 5px; color: #ffd700; font-size: 13px; }
+        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
-
-    <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR TANQUE v22.0</div>
-        <div id="st-info">Sincronizando ciudad...</div>
-    </div>
 
     <div class="top-ui">
         <div class="radio-card">
             <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            <input type="range" style="width:50px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
             <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:25px; border-radius:50%;"> 
@@ -77,10 +63,10 @@
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Esperando ubicación...</p>
+        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Esperando GPS...</p>
         <video id="cam" autoplay playsinline muted></video>
-        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué sucede?">
-        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black; font-size:16px;">ENVIAR AHORA</button>
+        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas hoy?">
+        <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
@@ -115,7 +101,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR BABYLON 3D
+        // 2. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -126,7 +112,7 @@
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
 
-            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
+            camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 130, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
@@ -137,72 +123,52 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // --- RESTAURACIÓN DE EDIFICIOS (UBICACIÓN BLINDADA) ---
-            const loadEdificio = (file, x, z, scaleFactor, rotation) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", file, s, (meshes) => {
-                    let root = new BABYLON.TransformNode("root_" + file, s);
-                    meshes.forEach(m => m.parent = root);
-                    const bounds = root.getHierarchyBoundingVectors(true);
-                    const size = bounds.max.subtract(bounds.min);
-                    const factor = scaleFactor / Math.max(size.x, size.y, size.z);
-                    root.scaling = new BABYLON.Vector3(factor, factor, factor);
-                    root.rotation.y = rotation;
-                    root.position = new BABYLON.Vector3(x, -bounds.min.y * factor, z); // Fix hundimiento
-                    meshes.forEach(m => m.checkCollisions = true);
+            // CARGA DE EDIFICIOS BLINDADA
+            const load = (f, x, z, sc, r) => {
+                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
+                    let root = new BABYLON.TransformNode("r", s);
+                    m[0].parent = root;
+                    const b = m[0].getHierarchyBoundingVectors(true);
+                    const scale = sc / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
+                    root.scaling = new BABYLON.Vector3(scale, scale, scale);
+                    root.rotation.y = r;
+                    root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
                 });
             };
+            load("municipalidad.glb", 610, 160, 170, Math.PI); 
+            load("intendencia.glb", 430, 410, 190, 0);
 
-            loadEdificio("municipalidad.glb", 610, 160, 170, Math.PI); 
-            loadEdificio("intendencia.glb", 430, 410, 190, 0);
-
-            // --- SERENITO (CEREBRO TANQUE) ---
+            // SERENITO TANQUE
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
-                serenito.rotationQuaternion = null; // Necesario para rotation.y
                 serenito.scaling = new BABYLON.Vector3(-10, 10, 10);
                 serenito.position = new BABYLON.Vector3(0, 5, 0);
                 serenito.checkCollisions = true;
                 serenito.applyGravity = true;
                 camera.lockedTarget = serenito;
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
-                document.getElementById('st-info').innerText = "Tanque listo.";
             });
 
-            // 🛑 LÓGICA TANQUE ESTRICTA (Giro -> Alto -> Avance)
-            s.onPointerDown = (evt, pick) => { 
-                if(pick.hit && pick.pickedMesh === suelo) {
-                    destinoFinal = pick.pickedPoint;
-                }
-            };
-            
+            // LÓGICA TANQUE ESTRICTA
+            s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
-                
                 let diff = destinoFinal.subtract(serenito.position);
-                diff.y = 0; 
-
-                if(diff.length() > 1.2) { 
+                diff.y = 0;
+                if(diff.length() > 1.2) {
                     let angleDest = Math.atan2(diff.x, diff.z);
                     let rotDiff = angleDest - serenito.rotation.y;
-                    
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-
-                    // == FASE 1: GIRO PURO (Bloqueo de avance) ==
-                    if(Math.abs(rotDiff) > 0.05) { 
-                        document.getElementById('st-info').innerText = "🔄 Rotando cuerpo...";
+                    if(Math.abs(rotDiff) > 0.08) {
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
-                        if(animCaminar) animCaminar.stop(); 
-                    } 
-                    // == FASE 2: MARCHA ==
-                    else {
-                        document.getElementById('st-info').innerText = "🚶 Caminando...";
-                        serenito.rotation.y = angleDest; // Alineación perfecta
+                        if(animCaminar) animCaminar.stop();
+                    } else {
+                        serenito.rotation.y = angleDest;
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
                 } else {
-                    document.getElementById('st-info').innerText = "✅ Detenido";
                     if(animCaminar) animCaminar.stop();
                     destinoFinal = null;
                 }
@@ -217,12 +183,10 @@
         let coordsGlobal = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Accede con Google.");
+            if(!userActual) return alert("Accede con Google primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             navigator.geolocation.getCurrentPosition(pos => { 
                 coordsGlobal = pos.coords;
-                document.getElementById('gps-status').innerText = "📍 Ubicación fijada";
-                document.getElementById('gps-status').style.color = "lime";
             });
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -231,13 +195,12 @@
         }
 
         function enviarReporte() {
-            if(!coordsGlobal) return alert("Esperando señal GPS...");
             db.collection("incidencias").add({
                 uid: userActual.uid,
                 vecino: userActual.displayName,
                 descripcion: document.getElementById('desc').value,
-                lat: coordsGlobal.latitude,
-                lon: coordsGlobal.longitude,
+                lat: coordsGlobal ? coordsGlobal.latitude : 0,
+                lon: coordsGlobal ? coordsGlobal.longitude : 0,
                 estado: "Ingresado",
                 fecha: new Date(),
                 respuesta_admin: "" 
@@ -256,7 +219,7 @@
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "No hay registros."; return; }
+                    if(snap.empty) { lista.innerHTML = "No tienes reportes aún."; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
                         const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString() : "---";
@@ -272,7 +235,7 @@
                 })
                 .catch(err => {
                     console.error(err);
-                    lista.innerHTML = `<p style='color:red;'>Error: Revisa los índices en Firebase.</p>`;
+                    lista.innerHTML = `<p style='color:red;'>Error: Revisa los índices en Firebase (debe ser 'incidencias' en minúscula).</p>`;
                 });
         }
 
@@ -283,10 +246,8 @@
 
         window.toggleRadio = () => {
             const a = document.getElementById('audio-player');
-            if(a.paused) { a.play(); document.getElementById('icon-play').className="fas fa-stop"; }
-            else { a.pause(); document.getElementById('icon-play').className="fas fa-play"; }
+            if(a.paused) a.play(); else a.pause();
         };
-
         window.resetCamara = () => { if(serenito) camera.lockedTarget = serenito; };
         window.addEventListener("resize", () => engine.resize());
 
