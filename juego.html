@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Gemelo Digital v44</title>
+    <title>VLS - Fusión Real v45</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,256 +13,327 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #d32f2f; --serena-gold: #fbc02d; --dark: #050505; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; overflow: hidden; }
-        
-        #master-grid {
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #121212; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--dark); overflow: hidden; }
+
+        /* --- LAYOUT MAESTRO (GRID) --- */
+        #main-layout {
             display: grid;
             height: 100vh;
             width: 100vw;
+            /* Móvil: Radio arriba (fijo), Mapa medio (flexible), Form abajo (auto) */
+            grid-template-rows: auto 1fr auto; 
             grid-template-columns: 1fr;
-            /* Ajuste móvil para permitir scroll */
-            grid-template-rows: auto 40vh 1fr; 
-            overflow-y: auto; /* Permite scroll general en móvil */
         }
 
         @media (min-width: 1024px) {
-            #master-grid {
-                grid-template-columns: 25% 45% 30%;
-                grid-template-rows: 100vh;
-                overflow: hidden; /* Fijo en escritorio */
+            #main-layout {
+                /* Escritorio: Radio Izq (30%), Mapa Der (70%) */
+                grid-template-rows: 1fr;
+                grid-template-columns: 350px 1fr;
             }
         }
 
-        .panel { position: relative; border-right: 1px solid #222; display: flex; flex-direction: column; background: #111; }
-
-        /* --- COL 1: RADIO CON VOLUMEN --- */
-        #panel-hub { padding: 20px; text-align: center; }
-        .vol-slider {
-            width: 80%; margin: 15px auto;
-            -webkit-appearance: none; height: 4px; background: #444; border-radius: 2px;
-        }
-        .vol-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 15px; height: 15px; background: var(--serena-gold); border-radius: 50%; cursor: pointer;
+        /* --- 1. SECCIÓN RADIO (ESTILO CAPTURA MÓVIL) --- */
+        #radio-panel {
+            background: linear-gradient(180deg, #d32f2f 0%, #8e0000 100%);
+            color: white; padding: 15px; text-align: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 20;
         }
 
-        /* --- COL 2: 3D GEO-REAL --- */
-        #renderCanvas { width: 100%; height: 100%; outline: none; background: #000; }
-        .gps-overlay {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px;
-            font-size: 11px; color: var(--serena-gold); border: 1px solid #444; pointer-events: none;
-        }
-
-        /* --- COL 3: MAPA INTELIGENTE --- */
-        #map { height: 50%; width: 100%; }
+        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 38px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); margin: 5px 0; }
+        .radio-status { font-size: 10px; letter-spacing: 2px; color: var(--serena-gold); text-transform: uppercase; margin-bottom: 5px; }
         
-        /* Buscador Flotante */
-        .search-box {
-            position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000;
-            display: flex; gap: 5px;
+        .play-big-btn {
+            width: 70px; height: 70px; background: white; border-radius: 50%;
+            border: none; color: var(--serena-red); font-size: 30px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s;
         }
-        .search-input {
-            flex: 1; padding: 10px; border-radius: 4px; border: none; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 14px;
-        }
-        .search-btn {
-            background: var(--serena-red); color: white; border: none; padding: 0 15px;
-            border-radius: 4px; cursor: pointer; font-weight: bold;
+        .play-big-btn:active { transform: scale(0.95); }
+
+        /* Visualizador de Barras */
+        .viz-bars { display: flex; gap: 4px; height: 30px; align-items: flex-end; margin-top: 15px; opacity: 0.5; }
+        .bar { width: 6px; background: var(--serena-gold); height: 5px; border-radius: 2px; }
+
+        /* Contenido Extra Escritorio */
+        .desktop-only-info { display: none; width: 100%; margin-top: 20px; text-align: left; }
+        @media (min-width: 1024px) { 
+            .desktop-only-info { display: block; } 
+            #radio-panel { height: 100vh; justify-content: flex-start; padding-top: 40px; }
         }
 
-        /* Pin Central Fijo */
-        .center-pin {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%);
-            z-index: 500; pointer-events: none; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.5));
+        .info-item { background: rgba(0,0,0,0.2); padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
+
+        /* --- 2. EL ESCENARIO (MAPA + 3D SUPERPUESTO) --- */
+        #stage-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+        /* Capa 1: Mapa Real */
+        #map { width: 100%; height: 100%; z-index: 1; background: #e0e0e0; }
+
+        /* Capa 2: 3D Transparente (Serenito) */
+        #renderCanvas { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 10; pointer-events: none; /* Dejar pasar clics al mapa */
+            outline: none;
         }
 
-        #gestion-ui { 
-            padding: 20px; background: #181818; border-top: 3px solid var(--serena-red); 
-            flex-grow: 1; overflow-y: auto; /* Scroll interno si es necesario */
+        /* Capa 3: UI Flotante sobre Mapa */
+        .map-floating-ui {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 15; width: 90%; max-width: 400px;
+            display: flex; gap: 5px; pointer-events: auto;
         }
+        .address-box {
+            flex: 1; background: rgba(0,0,0,0.8); color: var(--serena-gold);
+            padding: 10px 15px; border-radius: 30px; font-size: 13px;
+            border: 1px solid var(--serena-gold); display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* --- 3. PANEL DE GESTIÓN (ABAJO O FLOTANTE) --- */
+        #form-panel {
+            background: #1a1a1a; color: white; padding: 20px;
+            border-top: 4px solid var(--serena-red); z-index: 30;
+        }
+        @media (min-width: 1024px) {
+            #form-panel {
+                position: absolute; bottom: 20px; right: 20px; width: 350px;
+                border-radius: 15px; border: 1px solid #333;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+        }
+
+        .input-dark { width: 100%; padding: 12px; margin-bottom: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
         
-        .f-input { width: 100%; padding: 12px; margin: 8px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; }
-        .btn-submit { width: 100%; padding: 15px; background: var(--serena-red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .media-buttons { display: flex; gap: 10px; margin-bottom: 10px; }
+        .btn-media { 
+            flex: 1; padding: 12px; background: #2a2a2a; border: 1px dashed #666; 
+            color: #ccc; border-radius: 8px; cursor: pointer; text-align: center; font-size: 12px;
+        }
+        .btn-send { width: 100%; padding: 15px; background: var(--serena-red); color: white; font-weight: bold; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
 
     </style>
 </head>
 <body>
 
-    <audio id="audio-stream" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+    <div id="main-layout">
 
-    <div id="master-grid">
-        
-        <div class="panel" id="panel-hub">
-            <div style="border: 2px solid var(--serena-red); border-radius: 15px; padding: 20px; background: linear-gradient(135deg, #222, #000);">
-                <i class="fas fa-music fa-2x" style="color:var(--serena-red); margin-bottom:10px;"></i>
-                <h3 style="margin:0; color:white;">RADIO VLS</h3>
-                
-                <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-top:15px;">
-                    <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:var(--serena-gold); cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
-                </div>
-                
-                <div style="margin-top:15px; font-size:10px; color:#888;">VOLUMEN</div>
-                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.5" oninput="setVolume(this.value)">
-            </div>
+        <div id="radio-panel">
+            <div class="radio-status">RADIO DIGITAL MUNICIPAL</div>
+            <div class="digital-clock" id="clock">00:00:00</div>
+            <div style="font-size: 12px; margin-bottom: 15px; opacity: 0.8;">LA SERENA, CHILE</div>
             
-            <div style="margin-top:20px; text-align:left; padding:10px;">
-                <div style="font-size:11px; color:var(--serena-gold); border-bottom:1px solid #333; padding-bottom:5px;">ACCESOS RÁPIDOS</div>
-                <p style="font-size:12px; color:#aaa;"><i class="fas fa-info-circle"></i> Usa el mapa de la derecha para mover a Serenito en la ciudad.</p>
+            <button class="play-big-btn" onclick="toggleRadio()">
+                <i class="fas fa-play" id="icon-play"></i>
+            </button>
+
+            <div class="viz-bars" id="visualizer">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+
+            <div class="desktop-only-info">
+                <h4 style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom:10px;">BIBLIOTECA VLS</h4>
+                <div class="info-item"><i class="fas fa-map"></i> Plano Regulador</div>
+                <div class="info-item"><i class="fas fa-bus"></i> Recorridos Transteporte</div>
+                
+                <h4 style="margin-top:20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom:10px;">RUTAS</h4>
+                <div class="info-item" style="display:flex; justify-content:space-between;">
+                    <span>Santiago</span> <span>472 KM</span>
+                </div>
+                <div class="info-item" style="display:flex; justify-content:space-between;">
+                    <span>Coquimbo</span> <span>12 KM</span>
+                </div>
             </div>
         </div>
 
-        <div class="panel" style="height: 40vh; min-height: 300px; order: 2;"> <canvas id="renderCanvas"></canvas>
-            <div class="gps-overlay" id="coords-display">LAT: -29.9027 | LON: -71.2520</div>
+        <div id="stage-container">
+            <div id="map"></div>
+            
+            <canvas id="renderCanvas"></canvas>
+
+            <div class="map-floating-ui">
+                <div class="address-box">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span id="address-text">Arrastra el mapa...</span>
+                </div>
+                <button onclick="centerMap()" style="width:40px; height:40px; border-radius:50%; border:none; background:white; color:black; font-weight:bold; cursor:pointer;"><i class="fas fa-crosshairs"></i></button>
+            </div>
         </div>
 
-        <div class="panel" style="order: 3; flex-grow: 1;">
-            <div style="position:relative; height:50%; min-height: 300px;">
-                <div id="map"></div>
-                <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin" width="36">
-                
-                <div class="search-box">
-                    <input type="text" id="search-input" class="search-input" placeholder="Ej: Balmaceda 1500, La Serena">
-                    <button class="search-btn" onclick="buscarDireccion()"><i class="fas fa-search"></i></button>
-                </div>
-            </div>
+        <div id="form-panel">
+            <div style="color:var(--serena-gold); font-size:12px; margin-bottom:10px; font-weight:bold;">NUEVO REPORTE EN ESTA UBICACIÓN</div>
             
-            <div id="gestion-ui">
-                <h4 style="margin:0; color:var(--serena-gold);">REPORTE GEO-REFERENCIADO</h4>
-                <p style="font-size:11px; color:#888; margin-bottom:10px;">La ubicación se toma del centro del mapa.</p>
-                
-                <input type="text" id="g-dir" class="f-input" readonly placeholder="Dirección detectada..." style="color:var(--serena-gold); border-color:#555;">
-                <input type="text" id="g-nom" class="f-input" placeholder="Nombre del Vecino">
-                <textarea id="g-desc" class="f-input" rows="2" placeholder="Detalle del reporte..."></textarea>
-                
-                <button class="btn-submit" onclick="enviarReporte()">ENVIAR REPORTE</button>
+            <input type="text" id="r-dir" class="input-dark" readonly style="color:var(--serena-gold); border-color:#555;" placeholder="Ubicación...">
+            <input type="text" id="r-nom" class="input-dark" placeholder="Nombre y Apellido">
+            
+            <div class="media-buttons">
+                <label class="btn-media">
+                    <i class="fas fa-camera fa-lg"></i><br>FOTO
+                    <input type="file" hidden accept="image/*" capture="environment">
+                </label>
+                <label class="btn-media">
+                    <i class="fas fa-video fa-lg"></i><br>VIDEO
+                    <input type="file" hidden accept="video/*" capture="environment">
+                </label>
             </div>
+
+            <button class="btn-send" onclick="enviarReporte()">ENVIAR REPORTE</button>
         </div>
 
     </div>
 
+    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+
     <script>
         // CONFIG
-        const CENTER = [-29.9027, -71.2520];
+        const CENTER = [-29.9027, -71.2520]; // Plaza La Serena
         
-        // 1. RADIO VOLUMEN
-        const audio = document.getElementById('audio-stream');
-        audio.volume = 0.5; // Iniciar al 50%
-        
-        function setVolume(val) { audio.volume = val; }
-        function toggleRadio() {
-            const icon = document.getElementById('play-icon');
-            if(audio.paused) { audio.play(); icon.className = "fas fa-pause"; }
-            else { audio.pause(); icon.className = "fas fa-play"; }
+        // 1. RELOJ & RADIO
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('es-CL');
         }
+        setInterval(updateClock, 1000); updateClock();
 
-        // 2. MOTOR 3D (SIN JPG - GRILLA TÁCTICA)
+        const audio = document.getElementById('audio-player');
+        function toggleRadio() {
+            const icon = document.getElementById('icon-play');
+            const bars = document.querySelectorAll('.bar');
+            if(audio.paused) {
+                audio.play(); icon.className = "fas fa-pause";
+                bars.forEach(b => b.style.animation = "equalizer 0.8s infinite");
+            } else {
+                audio.pause(); icon.className = "fas fa-play";
+                bars.forEach(b => b.style.animation = "none");
+            }
+        }
+        // CSS Animación inyectada
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes equalizer { 0% {height: 5px} 50% {height: 25px} 100% {height: 5px} }`;
+        document.head.appendChild(style);
+
+
+        // 2. MAPA LEAFLET
+        const map = L.map('map', { zoomControl: false }).setView(CENTER, 17);
+        // Usamos CartoDB Dark para que resalte Serenito, o OSM estándar
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // 3. BABYLON 3D (TRANSPARENTE)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
-        let scene, serenito;
+        let scene, serenito, muni;
 
-        const crearEscena = function() {
+        const createScene = function() {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.05, 0.05, 0.1); // Fondo oscuro tech
+            s.clearColor = new BABYLON.Color4(0,0,0,0); // ¡TRANSPARENTE!
             
-            const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/3, 120, BABYLON.Vector3.Zero(), s);
-            // Cámara fija relativa
+            const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
             
-            const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), s);
-            
-            // SUELO PROCEDURAL (GRILLA INFINITA)
-            const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2000, height: 2000}, s);
-            const matGrid = new BABYLON.StandardMaterial("matGrid", s);
-            matGrid.wireframe = true; // Modo Alambre (Tech Style)
-            matGrid.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-            suelo.material = matGrid;
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
+            light.intensity = 1.2;
 
-            // SERENITO
+            // Serenito Fijo en el Centro (El mapa se mueve debajo)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
                 serenito = m[0];
                 serenito.scaling = new BABYLON.Vector3(10, 10, -10);
+                serenito.position = new BABYLON.Vector3(0, -20, 0); // Ajuste altura visual
                 cam.lockedTarget = serenito;
-                // Animación simple de "respiración"
+                
+                // Animación idle
                 s.registerBeforeRender(() => {
-                    serenito.rotation.y += 0.005; // Gira suavemente para mostrarse
+                    serenito.rotation.y = Math.PI; // Siempre mirando a cámara/frente
                 });
+            });
+
+            // Edificios Fantasma (Solo aparecen en el centro)
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m) => {
+                muni = m[0];
+                muni.scaling = new BABYLON.Vector3(6,6,6);
+                muni.setEnabled(false); // Oculto por defecto
             });
 
             return s;
         };
-        scene = crearEscena();
+        scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. MAPA Y BÚSQUEDA
-        const map = L.map('map', { zoomControl: false }).setView(CENTER, 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // BUSCADOR DE DIRECCIONES (NOMINATIM API)
-        async function buscarDireccion() {
-            const query = document.getElementById('search-input').value;
-            if(!query) return;
-            
-            // Buscar en OpenStreetMap restringido a Chile
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}, La Serena, Chile`;
-            
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                if(data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    map.setView([lat, lon], 17); // Zoom al lugar
-                    detectarDireccion(lat, lon); // Actualizar formulario
-                } else {
-                    alert("Dirección no encontrada. Intenta ser más específico.");
-                }
-            } catch(e) { alert("Error de conexión"); }
-        }
-
-        // DETECTAR DIRECCIÓN AL MOVER MAPA
-        map.on('moveend', () => {
-            const c = map.getCenter();
-            detectarDireccion(c.lat, c.lng);
+        // 4. SINCRONIZACIÓN MAGISTRAL
+        // Cuando arrastras el mapa, Serenito camina
+        map.on('movestart', () => {
+            if(serenito) {
+                // Aquí podrías activar animación de caminar
+            }
         });
 
-        async function detectarDireccion(lat, lon) {
-            document.getElementById('coords-display').innerText = `LAT: ${lat.toFixed(4)} | LON: ${lon.toFixed(4)}`;
-            
-            // Reverse Geocoding
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                const data = await res.json();
-                const dir = data.address.road || "Ubicación Georeferenciada";
-                document.getElementById('g-dir').value = dir;
-            } catch(e) { 
-                document.getElementById('g-dir').value = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-            }
-        }
+        map.on('move', () => {
+             // Lógica de "Edificios Fantasma"
+             // Si estamos cerca del centro real, mostrar edificio 3D flotando sobre el mapa
+             const c = map.getCenter();
+             const dist = map.distance(c, L.latLng(CENTER));
+             
+             if(muni) {
+                 if(dist < 300) { // 300 metros del centro
+                     muni.setEnabled(true);
+                     // Calcular posición relativa para que el edificio se quede "pegado" al mapa
+                     const offsetLat = (c.lat - CENTER[0]) * 10000; // Factor ajuste
+                     const offsetLng = (c.lng - CENTER[1]) * 10000;
+                     muni.position.z = -offsetLat;
+                     muni.position.x = -offsetLng;
+                 } else {
+                     muni.setEnabled(false);
+                 }
+             }
+        });
 
-        // 4. FIREBASE
+        map.on('moveend', async () => {
+            const c = map.getCenter();
+            document.getElementById('address-text').innerText = "📍 Buscando...";
+            
+            // Geocoding Real
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
+                const data = await res.json();
+                const dir = data.address.road || "Ubicación detectada";
+                document.getElementById('address-text').innerText = dir;
+                document.getElementById('r-dir').value = dir;
+            } catch(e) {
+                document.getElementById('address-text').innerText = "Coordenadas: " + c.lat.toFixed(4);
+                document.getElementById('r-dir').value = `${c.lat}, ${c.lng}`;
+            }
+        });
+
+        // 5. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         window.enviarReporte = async function() {
-            const nom = document.getElementById('g-nom').value;
-            if(!nom) return alert("Falta nombre");
-            const c = map.getCenter();
+            const nom = document.getElementById('r-nom').value;
+            if(!nom) return alert("Ingresa tu nombre");
             
+            const c = map.getCenter();
             await db.collection("incidencias").add({
                 vecino: nom,
-                direccion: document.getElementById('g-dir').value,
-                desc: document.getElementById('g-desc').value,
+                direccion: document.getElementById('r-dir').value,
                 lat: c.lat, lon: c.lng,
-                fecha: new Date()
+                fecha: new Date(),
+                tipo: "v45_fusion"
             });
-            alert("Reporte enviado con éxito");
-            location.reload();
-        }
-        
+            alert("Reporte enviado a Central Municipal");
+        };
+
+        window.centerMap = () => map.setView(CENTER, 17);
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
+
     </script>
 </body>
 </html>
