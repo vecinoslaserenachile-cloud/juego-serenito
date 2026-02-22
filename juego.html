@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Centro de Control Vecinal v40</title>
+    <title>Vecinos La Serena - v41 Fase 1</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -15,44 +15,46 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #e63946; --serena-gold: #ffd700; --dark: #0a0a0a; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; overflow: hidden; }
+        :root { --serena-red: #e63946; --serena-gold: #ffd700; --dark: #0f0f0f; --panel-bg: #141414; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark); color: white; overflow: hidden; }
         
+        /* LAYOUT MAESTRO (3 COLUMNAS) */
         #master-grid {
             display: grid;
             height: 100vh;
             width: 100vw;
             grid-template-columns: 1fr;
-            grid-template-rows: 25% 40% 35%;
+            grid-template-rows: 20% 40% 40%; /* Móvil */
         }
 
         @media (min-width: 1024px) {
             #master-grid {
-                grid-template-columns: 25% 45% 30%;
+                grid-template-columns: 20% 50% 30%; /* Escritorio: Izq | Centro (Grande) | Der */
                 grid-template-rows: 1fr;
             }
         }
 
-        .panel { position: relative; border: 1px solid #1a1a1a; display: flex; flex-direction: column; overflow: hidden; }
+        .panel { background: var(--panel-bg); border-right: 1px solid #333; position: relative; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* PANEL 1: RADIO */
-        #panel-radio { background: linear-gradient(180deg, #1a1a1a 0%, #000 100%); text-align: center; justify-content: center; padding: 20px; }
-        .radio-logo { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--serena-red); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; background: #111; box-shadow: 0 0 20px rgba(230, 57, 70, 0.4); }
-        .btn-audio { background: var(--serena-red); border: none; width: 55px; height: 55px; border-radius: 50%; color: white; cursor: pointer; margin-top: 10px; font-size: 22px; }
-
-        /* PANEL 2: 3D (RESTAURADO) */
-        #renderCanvas { width: 100%; height: 100%; outline: none; }
-
-        /* PANEL 3: MAPA + RUTAS + GESTIÓN */
-        #map { flex-grow: 1; width: 100%; }
-        .map-tools { background: #111; padding: 12px; border-top: 2px solid var(--serena-red); max-height: 45vh; overflow-y: auto; }
-        .vls-table { width: 100%; font-size: 11px; margin: 10px 0; border-collapse: collapse; background: #1a1a1a; }
-        .vls-table th { background: var(--serena-red); color: white; padding: 6px; }
-        .vls-table td { padding: 6px; border-bottom: 1px solid #333; text-align: center; }
+        /* --- COLUMNA IZQUIERDA: HUB DE INFO --- */
+        #panel-hub { padding: 15px; overflow-y: auto; text-align: center; }
+        .radio-widget { background: linear-gradient(135deg, #222, #000); padding: 15px; border-radius: 15px; border: 1px solid var(--serena-red); margin-bottom: 15px; }
+        .info-card { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: left; border-left: 3px solid var(--serena-gold); }
+        .info-title { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; }
+        .info-value { font-size: 14px; font-weight: bold; }
         
-        .f-input { width: 100%; padding: 10px; margin: 3px 0; background: #222; border: 1px solid #333; color: white; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
-        .btn-media { background: #333; color: var(--serena-gold); padding: 8px; border-radius: 6px; border: 1px dashed #555; text-align: center; font-size: 11px; cursor: pointer; display: block; margin: 4px 0; }
-        .btn-send { width: 100%; background: var(--serena-red); border: none; padding: 12px; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        /* --- COLUMNA CENTRAL: 3D (VISOR) --- */
+        #renderCanvas { width: 100%; height: 100%; outline: none; background: #000; }
+        .status-overlay { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 20px; font-size: 12px; pointer-events: none; border: 1px solid #555; }
+
+        /* --- COLUMNA DERECHA: MAPA Y GESTIÓN --- */
+        #map { flex-grow: 1; width: 100%; height: 50%; }
+        #gestion-ui { height: 50%; background: #1a1a1a; padding: 15px; overflow-y: auto; border-top: 2px solid var(--serena-red); }
+        
+        .f-input { width: 100%; padding: 10px; margin: 5px 0; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 8px; }
+        .btn-action { width: 100%; padding: 12px; background: var(--serena-red); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        .btn-reset { position: absolute; top: 10px; right: 10px; z-index: 1000; background: white; color: black; border: none; padding: 8px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
     </style>
 </head>
 <body>
@@ -61,54 +63,77 @@
 
     <div id="master-grid">
         
-        <div class="panel" id="panel-radio">
-            <div class="radio-logo">
-                <img src="logo_radio.png" id="main-logo" style="width:100%; border-radius:50%;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'">
+        <div class="panel" id="panel-hub">
+            <div class="radio-widget">
+                <i class="fas fa-tower-broadcast fa-2x" style="color:var(--serena-red); margin-bottom:10px;"></i>
+                <h4 style="margin:0; color:white;">RADIO MUNICIPAL</h4>
+                <small style="color:#888;">EN VIVO 24/7</small>
+                <br>
+                <button onclick="toggleAudio()" style="margin-top:10px; width:40px; height:40px; border-radius:50%; border:none; background:var(--serena-gold); cursor:pointer;"><i class="fas fa-play" id="play-btn"></i></button>
             </div>
-            <h3 style="color:var(--serena-gold); margin: 5px 0 0 0; font-size: 15px;">RADIO DIGITAL</h3>
-            <p style="color:#666; font-size: 10px; margin: 0;">MUNICIPALIDAD LA SERENA</p>
-            <button class="btn-audio" onclick="toggleAudio()"><i class="fas fa-play" id="play-btn"></i></button>
+
+            <div class="info-card">
+                <div class="info-title">CLIMA (LA SERENA)</div>
+                <div class="info-value"><i class="fas fa-sun" style="color:gold"></i> 18°C Despejado</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-title">BIBLIOTECA VLS</div>
+                <div style="font-size:11px; margin-top:5px;"><a href="#" style="color:#aaa;">📂 Plan Regulador</a></div>
+                <div style="font-size:11px; margin-top:5px;"><a href="#" style="color:#aaa;">📂 Mapas Turísticos</a></div>
+            </div>
+
+             <div class="info-card" style="border-left-color: var(--serena-red);">
+                <div class="info-title">RUTAS INTERURBANAS</div>
+                <table style="width:100%; font-size:11px; margin-top:5px; color:#ccc;">
+                    <tr><td>Santiago</td><td style="text-align:right">472 km</td></tr>
+                    <tr><td>Coquimbo</td><td style="text-align:right">12 km</td></tr>
+                    <tr><td>Vicuña</td><td style="text-align:right">62 km</td></tr>
+                </table>
+            </div>
         </div>
 
         <div class="panel" id="panel-3d">
             <canvas id="renderCanvas"></canvas>
+            <div class="status-overlay" id="status-text">📍 CENTRO HISTÓRICO</div>
         </div>
 
-        <div class="panel" id="panel-map">
-            <div id="map"></div>
-            <div class="map-tools">
-                <div style="font-size: 12px; color: var(--serena-gold); font-weight: bold; margin-bottom: 5px;">📍 RUTAS VLS</div>
-                <table class="vls-table">
-                    <tr><th>Destino</th><th>Distancia</th><th>Tiempo Est.</th></tr>
-                    <tr><td>Santiago</td><td>472 KM</td><td>5h 21min</td></tr>
-                    <tr><td>Coquimbo</td><td>12 KM</td><td>20min</td></tr>
-                    <tr><td>Vicuña</td><td>62 KM</td><td>55min</td></tr>
-                </table>
+        <div class="panel">
+            <div style="position:relative; height:50%;">
+                <div id="map"></div>
+                <button class="btn-reset" onclick="resetTour()"><i class="fas fa-sync"></i> VOLVER AL CENTRO</button>
+            </div>
+            
+            <div id="gestion-ui">
+                <h4 style="margin-top:0; color:var(--serena-gold);">REPORTAR EN ESTA UBICACIÓN</h4>
+                <p style="font-size:11px; color:#888; margin-bottom:10px;">Mueve el mapa para ajustar la posición exacta.</p>
+                
+                <input type="text" id="g-nom" class="f-input" placeholder="Tu Nombre">
+                <textarea id="g-desc" class="f-input" rows="3" placeholder="Descripción de la incidencia..."></textarea>
+                
+                <button class="btn-action" style="background:#333; border:1px dashed #666; color:#ccc;" onclick="document.getElementById('file-cam').click()">
+                    <i class="fas fa-camera"></i> ADJUNTAR EVIDENCIA
+                </button>
+                <input type="file" id="file-cam" style="display:none" capture="environment">
 
-                <input type="text" id="g-nom" class="f-input" placeholder="Nombre y Apellido">
-                <textarea id="g-desc" class="f-input" rows="2" placeholder="Describa la situación..."></textarea>
-                
-                <div style="display: flex; gap: 5px;">
-                    <label class="btn-media" style="flex:1;"><i class="fas fa-camera"></i> FOTOS (MÁX 5)<input type="file" multiple accept="image/*" style="display:none" onchange="comprimirMedia(this, 'foto')"></label>
-                    <label class="btn-media" style="flex:1;"><i class="fas fa-video"></i> VIDEO<input type="file" accept="video/*" capture="environment" style="display:none" onchange="comprimirMedia(this, 'video')"></label>
-                </div>
-                <div id="status-media" style="font-size:10px; color:#888; text-align:center;"></div>
-                
-                <button class="btn-send" onclick="enviarGestion()">ENVIAR GESTIÓN</button>
+                <button class="btn-action" onclick="enviarReporte()">ENVIAR REPORTE</button>
             </div>
         </div>
 
     </div>
 
-    <canvas id="comp-canvas" style="display:none;"></canvas>
-
     <script>
-        // FIREBASE laserena-d1263
+        // CONFIG GLOBAL
+        const CENTER_LAT = -29.9027;
+        const CENTER_LON = -71.2520; // Plaza de Armas La Serena
+        let isTourMode = true;
+
+        // 1. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // AUDIO PERSISTENTE
+        // 2. RADIO
         const player = document.getElementById("master-player");
         const btnIcon = document.getElementById("play-btn");
         function toggleAudio() {
@@ -116,81 +141,137 @@
             else { player.pause(); btnIcon.className = "fas fa-play"; }
         }
 
-        // MOTOR 3D (RESTAURADO v37)
+        // 3. MOTOR 3D BABYLON (Sincronizado)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
+        let scene, serenito, edificioMuni, edificioIntendencia;
+
         const crearEscena = function() {
             const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color3(0.05, 0.05, 0.05);
-            const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
+            s.clearColor = new BABYLON.Color3(0.1, 0.1, 0.15); // Cielo nocturno
+            const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 120, BABYLON.Vector3.Zero(), s);
             cam.attachControl(canvas, true);
             new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0, 1, 0), s);
+
+            // Suelo
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2000, height: 2000}, s);
             const mat = new BABYLON.StandardMaterial("m", s);
-            mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
+            mat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
             suelo.material = mat;
-            const load = (f, x, z, sc, r) => {
-                BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
-                    let root = new BABYLON.TransformNode("r", s);
-                    m[0].parent = root;
-                    const b = m[0].getHierarchyBoundingVectors(true);
-                    const scale = sc / Math.max(b.max.x-b.min.x, b.max.y-b.min.y, b.max.z-b.min.z);
-                    root.scaling = new BABYLON.Vector3(scale, scale, scale);
-                    root.rotation.y = r;
-                    root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
-                });
-            };
-            load("municipalidad.glb", 610, 160, 170, Math.PI);
-            load("intendencia.glb", 430, 410, 190, 0);
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
-                m[0].scaling = new BABYLON.Vector3(-10, 10, 10);
-                cam.lockedTarget = m[0];
+
+            // Cargar Edificios (Se guardan en variables para ocultarlos luego)
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m) => {
+                edificioMuni = m[0];
+                m[0].position = new BABYLON.Vector3(60, 0, 40); // Ajuste relativo
+                m[0].scaling = new BABYLON.Vector3(5,5,5);
             });
+            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m) => {
+                edificioIntendencia = m[0];
+                m[0].position = new BABYLON.Vector3(-60, 0, -40);
+                m[0].scaling = new BABYLON.Vector3(5,5,5);
+            });
+
+            // Serenito (El protagonista)
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
+                serenito = m[0];
+                serenito.scaling = new BABYLON.Vector3(-8, 8, 8); // Ajuste escala
+                cam.lockedTarget = serenito;
+            });
+
             return s;
         };
-        const scene = crearEscena();
+        scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // MAPA GPS
+        // 4. MAPA LEAFLET + SINCRONIZACIÓN
         let map, marker;
+
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([-29.9027, -71.2520], 15);
+            map = L.map('map', { zoomControl: false }).setView([CENTER_LAT, CENTER_LON], 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            marker = L.marker([-29.9027, -71.2520]).addTo(map);
-            if(navigator.geolocation) {
-                navigator.geolocation.watchPosition(p => {
-                    const coords = [p.coords.latitude, p.coords.longitude];
-                    marker.setLatLng(coords);
-                    map.setView(coords);
-                });
-            }
+
+            // Icono personalizado
+            const pinIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Pin genérico por ahora
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+
+            marker = L.marker([CENTER_LAT, CENTER_LON], {draggable: true, icon: pinIcon}).addTo(map);
+
+            // EVENTO MÁGICO: AL MOVER EL MARCADOR
+            marker.on('drag', function(e) {
+                const pos = marker.getLatLng();
+                actualizarMundo3D(pos.lat, pos.lng);
+            });
+            
+            // También al mover el mapa
+            map.on('move', function() {
+                const center = map.getCenter();
+                marker.setLatLng(center); // El marcador siempre al centro en móvil
+                actualizarMundo3D(center.lat, center.lng);
+            });
         }
         initMap();
 
-        // COMPRESIÓN MULTIMEDIA (Base64)
-        let mediaData = [];
-        function comprimirMedia(input, tipo) {
-            const files = input.files;
-            document.getElementById('status-media').innerText = `Procesando ${tipo}...`;
-            // Lógica de compresión simplificada para Base64
-            // (Se mantiene el motor de la v35 para fotos)
-            document.getElementById('status-media').innerText = `✅ ${files.length} archivo(s) listo(s)`;
+        // 5. LÓGICA DE SINCRONIZACIÓN (EL PUENTE)
+        function actualizarMundo3D(lat, lon) {
+            if(!serenito) return;
+
+            // Calcular distancia del centro histórico (simple pitágoras lat/lon)
+            const dist = Math.sqrt(Math.pow(lat - CENTER_LAT, 2) + Math.pow(lon - CENTER_LON, 2));
+            
+            // Factor de escala (inventado para efecto visual: 1 grado ~ 10000 unidades 3D)
+            const scaleFactor = 8000; 
+            const x = (lon - CENTER_LON) * scaleFactor;
+            const z = (lat - CENTER_LAT) * scaleFactor;
+
+            // Mover a Serenito
+            serenito.position.x = x;
+            serenito.position.z = z;
+
+            // Lógica de Zona (Geofencing simple)
+            // Si te alejas más de ~0.003 grados (aprox 300 metros), ocultar edificios
+            if(dist > 0.003) {
+                if(isTourMode) {
+                    if(edificioMuni) edificioMuni.setEnabled(false);
+                    if(edificioIntendencia) edificioIntendencia.setEnabled(false);
+                    document.getElementById("status-text").innerText = "📍 ZONA URBANA (FUERA DEL CENTRO)";
+                    document.getElementById("status-text").style.background = "rgba(200, 0, 0, 0.7)";
+                    isTourMode = false;
+                }
+            } else {
+                if(!isTourMode) {
+                    if(edificioMuni) edificioMuni.setEnabled(true);
+                    if(edificioIntendencia) edificioIntendencia.setEnabled(true);
+                    document.getElementById("status-text").innerText = "📍 CENTRO HISTÓRICO";
+                    document.getElementById("status-text").style.background = "rgba(0, 0, 0, 0.7)";
+                    isTourMode = true;
+                }
+            }
         }
 
-        async function enviarGestion() {
+        // RESETEAR AL TURISMO
+        window.resetTour = function() {
+            map.setView([CENTER_LAT, CENTER_LON], 16);
+            marker.setLatLng([CENTER_LAT, CENTER_LON]);
+            actualizarMundo3D(CENTER_LAT, CENTER_LON);
+        };
+
+        // ENVIAR REPORTE
+        window.enviarReporte = async function() {
             const data = {
                 vecino: document.getElementById('g-nom').value,
-                detalle: document.getElementById('g-desc').value,
+                desc: document.getElementById('g-desc').value,
                 lat: marker.getLatLng().lat,
                 lon: marker.getLatLng().lng,
-                fecha: new Date(),
-                estado: "Ingresado"
+                fecha: new Date()
             };
-            if(!data.vecino || !data.detalle) return alert("Complete los datos.");
+            if(!data.vecino) return alert("Falta tu nombre.");
             await db.collection("incidencias").add(data);
-            alert("¡Gestión Municipal Ingresada!");
+            alert("Reporte enviado. Serenito agradece tu ayuda.");
             location.reload();
-        }
+        };
 
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
     </script>
