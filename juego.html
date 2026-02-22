@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Core Puro v84</title>
+    <title>VLS - Fusión Maestra v85</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,105 +20,157 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET & BASE */
+        /* BASE */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
             background: var(--dark); color: white;
-            width: 100%; 
+            width: 100%; height: 100%;
         }
 
-        /* --- ESCRITORIO (FIJO) --- */
+        /* =========================================
+           ESCRITORIO (Diseño Fijo - La "Belleza")
+           ========================================= */
         @media (min-width: 1024px) {
-            body, html { height: 100%; overflow: hidden; }
+            body { overflow: hidden; } /* Fijo en PC */
+            
             #main-layout {
                 display: grid; width: 100vw; height: 100vh;
-                grid-template-columns: 320px 1fr 320px;
+                grid-template-columns: 350px 1fr 320px; /* Izq | Centro | Der */
                 grid-template-rows: 1fr;
             }
-            #sidebar, #right-col { overflow-y: auto; }
-            #stage-area { position: relative; width: 100%; height: 100%; }
+
+            #sidebar { overflow-y: auto; z-index: 20; }
+            #stage-area { position: relative; width: 100%; height: 100%; z-index: 1; }
+            #form-panel { overflow-y: auto; z-index: 20; }
         }
 
-        /* --- MÓVIL (LIBRE) --- */
+        /* =========================================
+           MÓVIL (Scroll Infinito - Funcionalidad)
+           ========================================= */
         @media (max-width: 1023px) {
-            body, html { height: auto; overflow-y: auto; }
-            #main-layout {
-                display: flex; flex-direction: column; width: 100%; min-height: 100vh;
+            body, html { 
+                height: auto !important; 
+                overflow-y: auto !important; 
+                overflow-x: hidden; 
             }
-            #sidebar { order: 1; width: 100%; padding: 15px; box-sizing: border-box; }
-            #stage-area { order: 2; width: 100%; height: 50vh; min-height: 400px; position: relative; } /* Altura Forzada */
-            #right-col { order: 3; width: 100%; padding: 15px; box-sizing: border-box; padding-bottom: 50px; }
+            
+            #main-layout {
+                display: flex; 
+                flex-direction: column; 
+                width: 100%; 
+                min-height: 100vh;
+            }
+
+            /* Orden Vertical */
+            #sidebar { 
+                order: 1; 
+                width: 100%; 
+                height: auto; 
+                padding: 15px; 
+                box-sizing: border-box; 
+            }
+            
+            #stage-area { 
+                order: 2; 
+                width: 100%; 
+                height: 55vh !important; /* Altura generosa para el mapa */
+                min-height: 400px;
+                position: relative; 
+                z-index: 1; 
+            }
+            
+            #form-panel { 
+                order: 3; 
+                width: 100%; 
+                height: auto; 
+                padding: 15px; 
+                box-sizing: border-box; 
+                padding-bottom: 80px; /* Espacio final */
+            }
         }
 
-        /* --- COMPONENTES --- */
+        /* --- ESTILOS COMPONENTES (Recuperados de tu versión favorita) --- */
 
         /* IZQUIERDA */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); display: flex; flex-direction: column; gap: 15px; z-index: 50; }
+        #sidebar { 
+            background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); 
+            padding: 20px; display: flex; flex-direction: column; gap: 15px; 
+            box-shadow: 4px 0 20px rgba(0,0,0,0.6); 
+        }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .station-title { font-family: 'Oswald', sans-serif; font-size: 18px; text-transform: uppercase; margin-bottom: 5px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; }
-        .vol-slider { width: 90%; margin-top: 10px; }
+        .station-title { font-family: 'Oswald', sans-serif; font-size: 20px; color: white; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; letter-spacing: 1px; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 34px; margin: 10px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
+        .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; }
+        
+        /* Módulos Visuales */
         .module-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
-        .mod-title { font-size: 10px; color: #ccc; font-weight: bold; display: block; margin-bottom: 8px; }
+        .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; }
 
-        /* Calendario & Clima Simple */
+        /* Calendario & Clima */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; gap: 2px; }
-        .cal-day { padding: 4px; background: rgba(255,255,255,0.05); }
+        .cal-head { color: #aaa; padding: 2px; }
+        .cal-day { padding: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; }
         .cal-today { background: var(--serena-gold); color: black; font-weight: bold; }
         
-        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; margin-top: 5px; }
-        .env-item { background: rgba(0,0,0,0.2); padding: 5px; display: flex; align-items: center; gap: 5px; }
+        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; margin-top: 8px; }
+        .env-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; display: flex; align-items: center; gap: 5px; }
 
         /* Rutas */
+        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
-        .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; }
-        .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; cursor: pointer; }
+        .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
+        .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        .chip-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
-        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+        .chip-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #333; }
+        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
         
-        .route-list { margin-top: 5px; max-height: 150px; overflow-y: auto; }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); margin-bottom: 2px; font-size: 11px; }
-        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 8px; width: 100%; margin-top: 5px; cursor: pointer; display: none; }
+        .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 150px; }
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
+        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* CENTRO (MAPA) */
-        #stage-area { background: #222; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .btn-tour { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 20px; border-radius: 30px; border: 2px solid white; cursor: pointer; white-space: nowrap; }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 11px; z-index: 20; pointer-events: none; white-space: nowrap; }
+        .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .btn-tour { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 25px; border-radius: 30px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; white-space: nowrap; }
 
         /* DERECHA */
-        #right-col { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; }
-        @media (max-width: 1023px) { #right-col { border-left: none; border-top: 4px solid var(--serena-gold); } }
+        #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; }
+        @media (max-width: 1023px) { #form-panel { border-left: none; border-top: 4px solid var(--serena-gold); } }
         
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
-        .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
-        .f-input.alert { border-color: #ff3d00; }
+        
+        .f-input { width: 100%; padding: 12px; margin-bottom: 8px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        .f-input:focus { border-color: var(--serena-gold); outline: none; }
+        .f-input.alert { border-color: #ff3d00; background: rgba(255, 61, 0, 0.1); }
         .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
 
         #step-2-details { display: none; }
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .upload-btn { background: #333; border: 1px dashed #666; color: #ccc; padding: 15px; text-align: center; border-radius: 5px; cursor: pointer; font-size: 11px; }
-        .btn-green, .btn-red { width: 100%; padding: 12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; color: white; }
-        .btn-green { background: #2e7d32; } .btn-red { background: var(--serena-red); }
-        .back-link { color: #aaa; font-size: 11px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 10px; }
+        .upload-btn { background: #333; border: 1px dashed #666; color: #ccc; padding: 15px; text-align: center; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        
+        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 14px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size: 14px; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 14px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size: 14px; }
+        .back-link { color: #aaa; font-size: 12px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 15px; }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; }
-        .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: white; cursor: pointer; font-weight: bold; color: black; }
+        .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px 20px; background: white; cursor: pointer; border-radius: 5px; font-weight: bold; z-index: 10001; color: black; font-size: 14px; }
         #hist-modal { background: rgba(0,0,0,0.95); align-items: center; justify-content: center; }
         .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 1px solid var(--serena-gold); }
-        .hist-item { background: #333; padding: 10px; margin-bottom: 5px; border-left: 3px solid var(--serena-gold); display: flex; justify-content: space-between; }
-        .hist-thumb { width: 50px; height: 50px; object-fit: cover; border: 1px solid #555; }
+        .hist-card { background: #333; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid var(--serena-gold); }
+        .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #555; margin-left: 10px; cursor: zoom-in; }
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
-        #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; }
+        #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
 
     </style>
 </head>
@@ -131,10 +183,15 @@
                 <i class="fas fa-tower-broadcast"></i>
                 <div class="station-title">RADIO DIGITAL MUNICIPAL<br>LA SERENA</div>
                 <div class="digital-clock" id="clock">00:00:00</div>
-                <div style="display:flex; justify-content:center; gap:10px;">
+                <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
                     <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
                 </div>
                 <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            </div>
+
+            <div class="city-news-box" id="city-ticker">
+                <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
+                <span id="ticker-text">Conectando...</span>
             </div>
 
             <div class="module-box">
@@ -145,28 +202,34 @@
                 <div class="cal-grid" id="cal-days" style="margin-bottom:10px;"></div>
                 
                 <span class="mod-title" style="border-top:1px solid #444; padding-top:5px; margin-top:5px;">AMBIENTE</span>
-                <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+                <div style="font-size:24px; font-weight:bold; margin-bottom:5px;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
                 <div class="env-grid">
                     <div class="env-item"><i class="fas fa-wind" style="color:cyan;"></i> <span id="w-wind">--</span></div>
                     <div class="env-item"><i class="fas fa-water" style="color:cornflowerblue;"></i> <span id="w-tide">Alta</span></div>
                     <div class="env-item"><i class="fas fa-umbrella-beach" style="color:orange;"></i> UV 8</div>
+                    <div class="env-item"><i class="fas fa-moon" style="color:silver;"></i> Luna</div>
                 </div>
             </div>
 
             <div class="route-box">
-                <span class="mod-title">VIAJES (DESDE P. ARMAS)</span>
+                <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px;">📍 DESDE: PLAZA DE ARMAS</div>
+                
                 <div class="search-row">
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
+                
                 <div class="chip-scroll-container">
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo (Puerto)')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
                     <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
                     <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
                     <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
                 </div>
+
                 <div class="route-list" id="route-output"></div>
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()">CERRAR RUTA</button>
             </div>
@@ -177,10 +240,10 @@
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
             <canvas id="renderCanvas"></canvas>
             <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Mueve el mapa</div>
-            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO</button>
+            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO 3D</button>
         </div>
 
-        <div id="right-col">
+        <div id="form-panel">
             <div class="user-header" id="user-bar">
                 <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
@@ -195,7 +258,7 @@
 
             <div id="step-2-details">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:3px solid gold; font-size:11px;" id="locked-addr"></div>
+                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:3px solid gold; font-size:11px;" id="locked-addr">Dir</div>
                 <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
                 <textarea id="r-desc" class="f-input" rows="3" placeholder="Descripción..."></textarea>
@@ -213,7 +276,7 @@
     </div>
 
     <div id="modal-tour" class="modal">
-        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER A LA APP <i class="fas fa-times"></i></button>
+        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">CERRAR PASEO <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
     <div id="hist-modal" class="modal">
@@ -230,13 +293,13 @@
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
         
-        // 1. RELOJ (INDEPENDIENTE)
+        // 1. RELOJ & FECHA (EJECUCIÓN INMEDIATA)
         setInterval(() => {
             const el = document.getElementById('clock');
             if(el) el.innerText = new Date().toLocaleTimeString('es-CL');
         }, 1000);
 
-        // 2. CALENDARIO
+        // 2. CALENDARIO INIT
         function initCal() {
             const now = new Date();
             const m = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
@@ -250,19 +313,23 @@
         }
         initCal();
 
-        // 3. CLIMA (TRY/CATCH PARA NO BLOQUEAR)
+        // 3. MAPA (CARGA INMEDIATA, SIN ESPERAR CLIMA)
+        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        let routePolyline = null;
+
+        // 4. CLIMA ASYNC (SEGUNDO PLANO)
         async function w(){ try{ 
             let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
             document.getElementById('w-temp').innerText=d.current_weather.temperature;
             document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
         }catch(e){} } 
-        w();
+        setTimeout(w, 500); // Retraso intencional para no bloquear UI
 
-        // 4. MAPA (CARGA INMEDIATA)
-        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        let routePolyline = null;
+        const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro.", "Fono Seguridad: 1455"];
+        let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); if(el){ el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); } }, 5000);
 
+        // LOGICA DE MAPA
         map.on('moveend', async () => {
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
@@ -301,9 +368,10 @@
             const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
             document.getElementById('route-output').innerHTML = `
                 <div style="text-align:center; color:white; font-weight:bold;">${name}</div>
-                <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/90).toFixed(1)} h</span></div>
-                <div class="trans-row bike"><i class="fas fa-bicycle"></i> <span>${(dist/18).toFixed(1)} h</span></div>
-                <div style="text-align:center; font-size:10px; color:gold;">${Math.round(dist)} KM</div>`;
+                <div class="trans-row"><div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
+                <div class="trans-row"><div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
+                <div class="trans-row bike"><div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
+                <div class="trans-row"><div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
             document.getElementById('btn-reset-route').style.display='block';
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
@@ -404,7 +472,7 @@
                 snap.forEach(doc => { 
                     const d=doc.data();
                     let imgHTML = d.foto_evidencia ? `<img src="${d.foto_evidencia}" class="hist-thumb" onclick="expandImg('${d.foto_evidencia}')">` : "";
-                    list.innerHTML += `<div class="hist-item"><div><b>${d.direccion}</b><br><span style="font-size:10px; color:#aaa;">${d.fecha.toDate().toLocaleDateString()}</span><br>${d.descripcion}</div>${imgHTML}</div>`; 
+                    list.innerHTML += `<div class="hist-card"><b>${d.direccion}</b><br>${d.descripcion}<div>${imgHTML}</div></div>`; 
                 });
             });
         }
