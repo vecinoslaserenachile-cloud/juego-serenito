@@ -185,7 +185,7 @@
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:14px;">
             <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">
-                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Pregúntame sobre trámites, horarios y servicios.
+                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Respondo sobre trámites, horarios y servicios.
             </div>
         </div>
         <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
@@ -257,13 +257,15 @@
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; 
             
-            const tAuto = (dist / 60).toFixed(1);
-            const tBus = (dist / 40).toFixed(1);
+            const tAvion = (dist / 800).toFixed(1);
+            const tAuto = (dist / 90).toFixed(1);
+            const tBus = (dist / 70).toFixed(1);
             const tBici = (dist / 15).toFixed(1);
             const tPie = (dist / 5).toFixed(1);
 
             document.getElementById('route-output').innerHTML = `
                 <div style="text-align:center;font-weight:bold;margin-bottom:5px;">${name} (${dist.toFixed(1)} km)</div>
+                <div class="trans-row"><i class="fas fa-plane"></i> <span class="trans-val" style="color:#29b6f6;">${tAvion} h</span> Avión</div>
                 <div class="trans-row"><i class="fas fa-car"></i> <span class="trans-val">${tAuto} h</span> Auto</div>
                 <div class="trans-row"><i class="fas fa-bus"></i> <span class="trans-val">${tBus} h</span> Bus/Micro</div>
                 <div class="trans-row bike"><i class="fas fa-bicycle"></i> <span class="trans-val" style="color:#00e676;">${tBici} h</span> Bicicleta</div>
@@ -319,7 +321,7 @@
                 // CÁMARA CON LÍMITE (NO PASA EL PISO)
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
-                cam.upperBetaLimit = Math.PI / 2.2; // ESTO EVITA VER DEBAJO DEL SUELO
+                cam.upperBetaLimit = Math.PI / 2.2; 
                 
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
@@ -346,7 +348,7 @@
             }
         }
 
-        // 6. USUARIO Y CRM
+        // 6. LÓGICA USUARIO + CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -410,7 +412,7 @@
         
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 8. CHATBOT IA REPARADO (CONEXIÓN SEGURA REST)
+        // 8. CHATBOT IA REPARADO (CONEXIÓN REST)
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
@@ -429,25 +431,34 @@
             loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
             box.appendChild(loading);
 
+            // CLAVE IA
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
             try {
-                // MODELO 1.5-FLASH VIA REST (MÁS ROBUSTO QUE LA LIBRERÍA JS)
+                // LLAMADA REST DIRECTA (MÁS ESTABLE)
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve y útil: " + txt }] }] })
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve y útil: " + txt }] }],
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
+                    })
                 });
                 
                 const d = await res.json();
                 
-                if(d.error) throw new Error(d.error.message); // Captura errores de Google explícitos
+                if (d.error) throw new Error(d.error.message); // Ver error real
 
                 const reply = d.candidates[0].content.parts[0].text;
                 
                 loading.remove();
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error: Intenta nuevamente.";
+                loading.innerText = "Error: " + e.message;
                 console.error(e);
             }
             box.scrollTop = box.scrollHeight;
