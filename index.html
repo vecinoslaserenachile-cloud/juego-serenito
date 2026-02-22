@@ -47,7 +47,6 @@
         .chip { background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 15px; font-size: 10px; cursor: pointer; transition:0.2s; border: 1px solid transparent; }
         .chip:hover { border-color: var(--serena-gold); background: rgba(255,255,255,0.25); }
         .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 12px; margin-top:5px; }
-        .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
 
         /* MAPA Y 3D */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
@@ -102,7 +101,7 @@
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
-                <input type="text" id="city-input" class="city-input" placeholder="Escribe un destino...">
+                <input type="text" id="city-input" class="city-input" onkeypress="if(event.key==='Enter')buscarYCalcular()" placeholder="Escribe un destino...">
                 <div class="chip-scroll-container">
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
@@ -170,7 +169,7 @@
             <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">&times;</button>
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:13px; background:#111;">
-            <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%;">
+            <div id="welcome-msg" style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%;">
                 ¡Hola! Soy Serenito. Estoy listo para responder tus dudas sobre la ciudad de forma instantánea.
             </div>
         </div>
@@ -184,12 +183,10 @@
         <button class="tour-close-btn" onclick="document.getElementById('modal-tour').style.display='none'">CERRAR PASEO</button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
-    
     <div id="img-modal" class="modal" onclick="this.style.display='none'">
         <div class="close-zoom">&times;</div>
         <img id="img-full" src="">
     </div>
-    
     <div id="success-modal" class="modal">
         <div class="success-box">
             <i class="fas fa-check-circle" style="font-size:60px; color:#00e676; margin-bottom:20px;"></i>
@@ -198,26 +195,24 @@
             <button onclick="document.getElementById('success-modal').style.display='none'; goStep1();" class="btn-green" style="width:100%;">ACEPTAR</button>
         </div>
     </div>
-
     <div id="hist-modal" class="modal">
         <div class="hist-box">
             <h3 style="color:var(--serena-gold); border-bottom:1px solid #444; padding-bottom:10px;">📂 MIS REPORTES</h3>
             <div id="hist-content"></div>
-            <button onclick="document.getElementById('hist-modal').style.display='none'" class="btn-red" style="width:100%; margin-top:10px;">CERRAR</button>
+            <button onclick="document.getElementById('hist-modal').style.display='none'" class="btn-red" style="margin-top:10px;">CERRAR</button>
         </div>
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // 1. FIREBASE
+        // 1. FIREBASE & AUTH
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const auth = firebase.auth(); const db = firebase.firestore();
         let user = null;
 
-        // 2. MAPA LEAFLET
+        // 2. MAPA & GPS
         const LS_COORDS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
@@ -233,78 +228,64 @@
             }
         });
 
-        // 3. CLIMA Y RUTAS
+        // 3. CLIMA & RUTAS
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
         
         function calcDirect(lat, lon, name) {
             const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; 
-            
-            const tAvion = (dist / 800).toFixed(1);
-            const tAuto = (dist / 90).toFixed(1);
-            const tBus = (dist / 70).toFixed(1);
-            const tBici = (dist / 15).toFixed(1);
-            const tPie = (dist / 5).toFixed(1);
-
-            document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center;font-weight:bold;margin:10px 0;">${name} (${dist.toFixed(1)} km)</div>
-                <div class="trans-row"><i class="fas fa-plane"></i> <span style="color:#29b6f6;">${tAvion} h</span> Vuelo</div>
-                <div class="trans-row"><i class="fas fa-car"></i> <span>${tAuto} h</span> Auto</div>
-                <div class="trans-row"><i class="fas fa-bus"></i> <span>${tBus} h</span> Bus</div>
-                <div class="trans-row bike"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${tBici} h</span> Bici</div>
-                <div class="trans-row"><i class="fas fa-walking"></i> <span>${tPie} h</span> Pie</div>
-            `;
+            const tAvion=(dist/800).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/70).toFixed(1), tBici=(dist/15).toFixed(1), tPie=(dist/5).toFixed(1);
+            document.getElementById('route-output').innerHTML = `<div style="text-align:center;font-weight:bold;margin:10px 0;">${name} (${dist.toFixed(1)} km)</div><div class="trans-row"><i class="fas fa-plane"></i> <span style="color:#29b6f6;">${tAvion} h</span> Vuelo</div><div class="trans-row"><i class="fas fa-car"></i> <span>${tAuto} h</span> Auto</div><div class="trans-row"><i class="fas fa-bus"></i> <span>${tBus} h</span> Bus</div><div class="trans-row bike"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${tBici} h</span> Bici</div><div class="trans-row"><i class="fas fa-walking"></i> <span>${tPie} h</span> Pie</div>`;
             document.getElementById('btn-reset-route').style.display='block';
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
         }
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); document.getElementById('route-output').innerHTML=""; }
+        function buscarYCalcular(){
+            const q = document.getElementById('city-input').value; if(!q)return;
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`).then(r=>r.json()).then(d=>{
+                if(!d.length) { document.getElementById('route-output').innerHTML = "No encontrado"; return; }
+                calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
+            });
+        }
 
-        // 4. MOTOR 3D PRINCIPAL
+        // 4. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
-            const scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color4(0,0,0,0);
-            const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
-            new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
-                let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
-                camera.lockedTarget = s;
-                scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
-                map.on('movestart', () => s.scaling = new BABYLON.Vector3(6,6,-6));
-                map.on('moveend', () => s.scaling = new BABYLON.Vector3(12,12,-12));
+            const s = new BABYLON.Scene(engine); s.clearColor = new BABYLON.Color4(0,0,0,0);
+            const cam = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
+            new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
+                let ser = m[0]; ser.scaling = new BABYLON.Vector3(12,12,-12); ser.position.y = 0; cam.lockedTarget = ser;
+                s.registerBeforeRender(()=> ser.rotation.y = Math.PI);
+                map.on('movestart', () => ser.scaling = new BABYLON.Vector3(6,6,-6));
+                map.on('moveend', () => ser.scaling = new BABYLON.Vector3(12,12,-12));
             });
-            return scene;
+            return s;
         };
-        const scene = createScene();
-        engine.runRenderLoop(() => scene.render());
+        const scene = createScene(); engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // 5. PASEO 3D (BLOQUEO DE PISO)
+        // 5. PASEO HISTÓRICO
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
             if(!tourEngine) {
-                const c = document.getElementById('tour-canvas');
-                tourEngine = new BABYLON.Engine(c, true);
-                const s = new BABYLON.Scene(tourEngine);
-                s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+                const c = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(c, true);
+                const s = new BABYLON.Scene(tourEngine); s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
-                cam.attachControl(c, true);
-                cam.upperBetaLimit = Math.PI / 2.2; // BLOQUEO PISO
+                cam.attachControl(c, true); cam.upperBetaLimit = Math.PI / 2.2;
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
-                const mat = new BABYLON.StandardMaterial("m", s);
-                mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
-                g.material = mat; 
+                const mat = new BABYLON.StandardMaterial("m", s); mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); g.material = mat; 
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; });
                 let tSer, dest;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
-                s.onPointerDown = (evt, pickResult) => { if (pickResult.hit && pickResult.pickedMesh === g) dest = pickResult.pickedPoint; };
+                s.onPointerDown = (e, p) => { if (p.hit && p.pickedMesh === g) dest = p.pickedPoint; };
                 s.onBeforeRenderObservable.add(()=>{
                     if(tSer && dest) {
                         let diff = dest.subtract(tSer.position); diff.y = 0;
@@ -318,7 +299,7 @@
             }
         }
 
-        // 6. USUARIO Y CRM
+        // 6. USUARIO & REPORTES
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -329,15 +310,10 @@
         });
 
         function verHistorial() {
-            document.getElementById('hist-modal').style.display = 'flex';
-            const list = document.getElementById('hist-content');
-            list.innerHTML = 'Cargando...';
+            document.getElementById('hist-modal').style.display = 'flex'; const list = document.getElementById('hist-content'); list.innerHTML = 'Cargando...';
             db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get().then(snap => {
                 list.innerHTML = snap.empty ? "Sin reportes." : "";
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    list.innerHTML += `<div class="hist-item"><b>${d.direccion}</b><br>${d.descripcion}<br><small>${d.fecha.toDate().toLocaleString()}</small></div>`;
-                });
+                snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div class="hist-item"><b>${d.direccion}</b><br>${d.descripcion}<br><small>${d.fecha.toDate().toLocaleString()}</small></div>`; });
             });
         }
 
@@ -345,64 +321,46 @@
         function goStep1() { document.getElementById('step-1').style.display='block'; document.getElementById('step-2').style.display='none'; }
         
         async function enviarReporteFinal() {
-            if(!user) return;
-            const btn = document.getElementById('btn-enviar');
-            btn.innerText = "ENVIANDO..."; btn.disabled = true;
+            if(!user) return; const btn = document.getElementById('btn-enviar'); btn.innerText = "ENVIANDO..."; btn.disabled = true;
             try {
-                const file = document.getElementById('evidencia-file').files[0];
-                let base64 = null;
-                if(file) { base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=e=>r(e.target.result); reader.readAsDataURL(file); }); }
+                const file = document.getElementById('evidencia-file').files[0]; let base64 = null;
+                if(file) { base64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); }); }
                 await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
                 document.getElementById('success-modal').style.display = 'flex';
-            } catch(e) { alert(e.message); } 
-            finally { btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false; }
+            } catch(e) { alert(e.message); } finally { btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false; }
         }
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
         window.expandImg = function(src) { document.getElementById('img-full').src = src; document.getElementById('img-modal').style.display = 'flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 7. MOTOR DE LENGUAJE LOCAL (SERENITO-BRAIN)
+        // 7. MOTOR DE LENGUAJE MEJORADO (SERENITO-BRAIN v1.1)
         const KNOWLEDGE_BASE = [
-            { keys: ["hola", "buen", "dia", "tarde"], resp: "¡Hola! Soy Serenito, el asistente oficial de La Serena. ¿En qué puedo ayudarte hoy?" },
-            { keys: ["horario", "municipalidad", "abren", "cierra"], resp: "La Municipalidad atiende de Lunes a Viernes, de 08:30 a 14:00 horas en el edificio central." },
-            { keys: ["patente", "permiso", "vehiculo", "pagar"], resp: "Puedes pagar tu permiso de circulación directamente en el sitio web municipal o en los puntos habilitados en los centros comerciales." },
-            { keys: ["basura", "reciclaje", "desecho"], resp: "El camión recolector pasa por el sector centro durante la noche. Recuerda usar las campanas de reciclaje de vidrio y plástico." },
-            { keys: ["salud", "cesfam", "medico"], resp: "Contamos con varios CESFAM en la comuna. En caso de emergencia, puedes llamar al 131 (SAMU)." },
-            { keys: ["turismo", "visitar", "faro"], resp: "Te recomiendo visitar el Faro Monumental, el Jardín Japonés y nuestra hermosa Recova." },
-            { keys: ["seguridad", "carabinero", "delito"], resp: "Para emergencias de seguridad pública, llama al 1455 (Seguridad Ciudadana Municipal) o al 133." }
+            { keys: ["hola", "buen", "dia", "tarde", "esta"], resp: "¡Hola! Soy Serenito, el asistente oficial de La Serena. ¿En qué puedo ayudarte hoy?" },
+            { keys: ["horario", "abren", "cierra", "atienden", "tarde"], resp: "La Municipalidad atiende de Lunes a Viernes, de 08:30 a 14:00 horas. Por la tarde, las delegaciones municipales suelen tener turnos específicos de atención ciudadana." },
+            { keys: ["telefono", "fono", "numero", "contacto", "llamada"], resp: "Puedes llamar al 1455 para Seguridad Ciudadana Municipal. Para la Central Telefónica Municipal, marca el 51 220 6600." },
+            { keys: ["patente", "permiso", "vehiculo", "pagar"], resp: "Puedes pagar tu permiso de circulación directamente en el sitio web municipal o en los puntos habilitados presenciales." },
+            { keys: ["basura", "reciclaje", "desecho"], resp: "El camión recolector pasa por el sector centro durante la noche. ¡Recuerda reciclar en los puntos habilitados!" },
+            { keys: ["seguridad", "carabinero", "delito", "policia"], resp: "Ante cualquier emergencia de seguridad, llama al 1455 (Muni) o al 133 (Carabineros)." }
         ];
 
-        function toggleChat() {
-            const w = document.getElementById('chat-window');
-            w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
-        }
-
-        // HABILITAR ENTER EN CHAT
+        function toggleChat() { const w = document.getElementById('chat-window'); w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none'; }
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChat(); });
 
         function sendChat() {
-            const inp = document.getElementById('chat-input');
-            const box = document.getElementById('chat-msgs');
-            const txt = inp.value.trim().toLowerCase();
-            if(!txt) return;
-
+            const inp = document.getElementById('chat-input'); const box = document.getElementById('chat-msgs'); const txt = inp.value.trim().toLowerCase(); if(!txt) return;
             box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; color:white;">${txt}</div>`;
-            inp.value = ""; 
-            box.scrollTop = box.scrollHeight;
-
-            // ANALIZAR RESPUESTA LOCAL
+            inp.value = ""; box.scrollTop = box.scrollHeight;
             setTimeout(() => {
-                let finalResp = "Lo siento, no tengo esa información exacta todavía. Pero puedes llamar al 1455 para consultas directas.";
-                for(let item of KNOWLEDGE_BASE) {
-                    if(item.keys.some(k => txt.includes(k))) {
-                        finalResp = item.resp;
-                        break;
-                    }
+                let finalResp = "Aún estoy aprendiendo sobre ese punto específico de La Serena. Para información detallada, te recomiendo llamar al 1455 o visitar www.laserena.cl.";
+                // BUSCAR COINCIDENCIA (SI CONTIENE PREGUNTA ESPECÍFICA, IGNORAR HOLA)
+                const sortedBase = [...KNOWLEDGE_BASE].reverse(); // Dar prioridad a temas específicos sobre el saludo
+                for(let item of sortedBase) {
+                    if(item.keys.some(k => txt.includes(k))) { finalResp = item.resp; break; }
                 }
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">${finalResp}</div>`;
                 box.scrollTop = box.scrollHeight;
-            }, 500);
+            }, 400);
         }
     </script>
 </body>
