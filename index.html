@@ -18,9 +18,11 @@
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
+        
+        /* BASE */
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
-        /* LAYOUT RESPONSIVE */
+        /* LAYOUT (Escritorio vs Móvil) */
         @media (min-width: 1024px) {
             #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; grid-template-rows: 1fr; }
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
@@ -38,47 +40,56 @@
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         
+        .rdmls-brand { margin-bottom: 10px; }
+        .rdmls-sigla { font-family: 'Oswald', sans-serif; font-size: 54px; margin: 0; line-height: 0.9; }
+        .rdmls-sub { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--serena-gold); letter-spacing: 2px; }
+
+        /* MAPA Y 3D */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         
+        /* FORMULARIO */
         #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
         .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 10px; cursor:zoom-in; border:1px solid #444; }
+        
+        /* CÓMICS */
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; transition: 0.3s; cursor: zoom-in; }
+        .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); }
+
+        /* BOTÓN CHAT GIGANTE Y PULSANTE */
+        #btn-chat-tramites {
+            position: fixed; bottom: 30px; right: 20px;
+            background: linear-gradient(45deg, #2962ff, #4285f4);
+            color: white; border: 3px solid white; border-radius: 50%;
+            width: 75px; height: 75px; /* TAMAÑO GRANDE */
+            font-size: 32px; /* ÍCONO GRANDE */
+            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+            z-index: 10000; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            animation: pulse 2s infinite; /* ANIMACIÓN LATIDO */
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(66, 133, 244, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+        }
+        
+        #chat-window {
+            display: none; position: fixed; bottom: 120px; right: 20px;
+            width: 320px; height: 450px; background: #1a1a1a;
+            border-radius: 15px; border: 1px solid #444;
+            z-index: 10000; flex-direction: column;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
+        }
 
         /* MODALES */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; }
         #img-full { max-width:90%; max-height:90%; border:3px solid white; border-radius:8px; }
         #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 12000; }
         .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
-
-        /* --- CHATBOT MEJORADO --- */
-        #btn-chat-tramites {
-            position: fixed; bottom: 30px; right: 20px;
-            background: linear-gradient(45deg, #2962ff, #4285f4);
-            color: white; border: 3px solid white; border-radius: 50%;
-            width: 70px; height: 70px; /* MÁS GRANDE */
-            font-size: 30px; /* ÍCONO MÁS GRANDE */
-            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
-            z-index: 10000; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            animation: pulse 2s infinite; /* LATIDO */
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(66, 133, 244, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
-        }
-        
-        #chat-window {
-            display: none; position: fixed; bottom: 110px; right: 20px;
-            width: 320px; height: 450px; background: #1a1a1a;
-            border-radius: 15px; border: 1px solid #444;
-            z-index: 10000; flex-direction: column;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
-        }
     </style>
 </head>
 <body>
@@ -86,17 +97,15 @@
     <div id="main-layout">
         <div id="sidebar">
             <div class="radio-header">
-                <img src="escudo.png" class="escudo-img">
-                <h1 style="font-family:'Oswald'; font-size:54px; margin:0; line-height:0.9;">RDMLS</h1>
-                <div style="font-family:'Oswald'; font-size:12px; color:var(--serena-gold);">RADIO MUNICIPAL</div>
+                <img src="escudo.png" class="escudo-img" alt="Escudo La Serena">
+                <div class="rdmls-brand">
+                    <h1 class="rdmls-sigla">RDMLS</h1>
+                    <h2 class="rdmls-sub">RADIO DIGITAL MUNICIPAL</h2>
+                </div>
                 <div style="font-size:28px; font-family:'Oswald'; margin:10px 0;" id="clock">00:00:00</div>
                 <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
             </div>
             
-            <div style="background:rgba(0,0,0,0.3); padding:12px; border-left:4px solid #00e676; border-radius:8px; font-size:12px;">
-                <i class="fas fa-bullhorn"></i> <span id="ticker">Farmacia Municipal Abierta...</span>
-            </div>
-
             <img src="relleno-radio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="serenito-bus.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
@@ -134,6 +143,8 @@
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-aves.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-playa.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-bici.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
     </div>
 
@@ -148,22 +159,23 @@
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:14px;">
             <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">
-                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Pregúntame sobre:<br>• Permisos de Circulación<br>• Farmacias de Turno<br>• Horarios Municipales
+                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Pregúntame sobre:<br>• Permisos de Circulación<br>• Farmacias de Turno<br>• Horarios
             </div>
         </div>
         <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
-            <input type="text" id="chat-input" placeholder="Escribe tu consulta aquí..." style="flex:1; background:#111; border:1px solid #444; color:white; padding:10px; border-radius:5px;">
+            <input type="text" id="chat-input" placeholder="Escribe tu consulta..." style="flex:1; background:#111; border:1px solid #444; color:white; padding:10px; border-radius:5px;">
             <button onclick="sendChat()" style="background:#4285f4; border:none; color:white; padding:0 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
     <div id="modal-tour" class="modal"><div style="color:white;text-align:center;">PASEO 3D EN CONSTRUCCIÓN<br><button onclick="this.parentElement.parentElement.style.display='none'" style="margin-top:20px;padding:10px;">Cerrar</button></div></div>
     <div id="img-modal" onclick="this.style.display='none'"><img id="img-full"></div>
+    
     <div id="success-modal" class="modal">
         <div class="success-box">
             <i class="fas fa-check-circle" style="font-size:60px; color:#00e676; margin-bottom:20px;"></i>
             <h2 style="color:white; margin:0 0 10px 0;">¡GRACIAS!</h2>
-            <p style="color:#ccc;">Tu reporte ha sido enviado.</p>
+            <p style="color:#ccc;">Tu reporte ha sido enviado exitosamente.</p>
             <button onclick="document.getElementById('success-modal').style.display='none'; goStep1();" class="btn-green" style="margin-top:20px; width:100%;">ACEPTAR</button>
         </div>
     </div>
@@ -171,14 +183,14 @@
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // --- CONFIGURACIÓN ---
+        // 1. CONFIGURACIÓN FIREBASE (PROPIA)
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         let user = null;
 
-        // --- MAPA ---
+        // 2. MAPA
         const map = L.map('map', {zoomControl:false}).setView([-29.9027, -71.2520], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         
@@ -192,7 +204,7 @@
             }
         });
 
-        // --- 3D ---
+        // 3. 3D (SERENITO)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -201,20 +213,21 @@
             const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
             
+            // INTENTO DE CARGA DE SERENITO
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
                 let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
                 camera.lockedTarget = s;
                 scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
                 map.on('movestart', () => s.scaling = new BABYLON.Vector3(6,6,-6));
                 map.on('moveend', () => s.scaling = new BABYLON.Vector3(12,12,-12));
-            }, null, (e)=>{console.log("Falta 3D")});
+            }, null, (e) => { console.log("Si falta el archivo serenito.glb, no se ve el 3D."); });
             return scene;
         };
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // --- LÓGICA ---
+        // 4. LÓGICA DE USUARIO Y REPORTE
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -228,7 +241,7 @@
         function goStep1() { document.getElementById('step-1').style.display='block'; document.getElementById('step-2').style.display='none'; }
         
         async function enviarReporte() {
-            if(!user) { alert("Debes acceder primero."); return; }
+            if(!user) { alert("Debes acceder con Google primero (botón azul arriba)."); return; }
             const file = document.getElementById('evidencia-file').files[0];
             let base64 = null;
             if(file) {
@@ -248,7 +261,7 @@
         window.expandImg = function(src) { document.getElementById('img-full').src=src; document.getElementById('img-modal').style.display='flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // --- CHATBOT IA ---
+        // 5. CHATBOT IA (GEMINI) - FUNCIÓN MEJORADA
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
@@ -260,32 +273,29 @@
             const txt = inp.value.trim();
             if(!txt) return;
 
-            // 1. Poner mensaje usuario
+            // Mensaje usuario
             box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
             inp.value = ""; box.scrollTop = box.scrollHeight;
 
-            // 2. Indicador escribiendo
+            // Indicador de escritura
             const loading = document.createElement("div");
-            loading.innerHTML = "Escribiendo...";
-            loading.style.cssText = "color:#aaa; font-style:italic; margin-left:10px; font-size:11px;";
+            loading.innerText = "Escribiendo...";
+            loading.style.cssText = "color:#aaa; font-style:italic; margin-left:10px; font-size:12px;";
             box.appendChild(loading);
 
-            // 3. API KEY (AQUÍ ESTABA EL ERROR, AHORA ESTÁ CORREGIDO)
+            // TU CLAVE DE IA (CONFIRMADA)
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
             
             try {
-                // Usamos gemini-1.5-flash que es rápido y soporta este endpoint
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres el asistente de la Muni de La Serena. Responde breve y útil: " + txt }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres un asistente útil de la Municipalidad de La Serena. Responde brevemente a: " + txt }] }] })
                 });
                 
-                if (!res.ok) throw new Error("Error API: " + res.status);
-
                 const d = await res.json();
                 
-                // Si la respuesta viene rara, proteger
+                // Validación básica de respuesta
                 if(!d.candidates || !d.candidates[0]) throw new Error("Sin respuesta");
 
                 const reply = d.candidates[0].content.parts[0].text;
@@ -293,7 +303,7 @@
                 loading.remove();
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error de conexión con la IA.";
+                loading.innerText = "Error de conexión (Revisa tu internet).";
                 console.error(e);
             }
             box.scrollTop = box.scrollHeight;
