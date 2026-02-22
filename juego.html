@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v35 Motor de Compresión</title>
+    <title>LA❤️SERENA - v37 Precisión Ciudadana</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,23 +18,26 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* UI SUPERIOR */
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
         .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
         .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
 
-        /* TOOLBAR */
         #toolbar { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
         .btn { width: 60px; height: 60px; border-radius: 50%; border: none; background: white; font-size: 24px; cursor: pointer; box-shadow: 0 5px 10px rgba(0,0,0,0.3); color: #444; }
         .btn-main { background: #ff3333; color: white; border: 4px solid white; transform: translateY(-10px); }
 
-        /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
+        .box { background: #111; width: 90%; max-width: 480px; padding: 20px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; max-height: 90vh; overflow-y: auto; }
         
-        .report-card { background: #222; padding: 15px; margin: 12px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
-        .report-img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #444; display: block; }
-        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
+        .f-input { width: 100%; padding: 12px; margin: 6px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .f-label { display: block; text-align: left; font-size: 11px; color: #ffd700; margin-top: 5px; text-transform: uppercase; font-weight: bold; }
+
+        .report-card { background: #222; padding: 15px; margin: 12px 0; border-radius: 12px; border-left: 5px solid #ffd700; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .report-img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid #444; }
+        #cam { width: 100%; height: 180px; background: #000; border-radius: 12px; margin-bottom: 10px; border: 2px solid #ffd700; object-fit: cover; }
+        
+        /* ESTILO HORA */
+        .time-badge { font-size: 11px; background: #333; color: #ffd700; padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #555; }
     </style>
 </head>
 <body>
@@ -43,7 +46,7 @@
         <div class="radio-card">
             <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:50px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
             <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:25px; border-radius:50%;"> 
@@ -61,17 +64,31 @@
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700; margin-top:0;">REPORTE CIUDADANO</h3>
+        <h3 style="color:#ffd700; margin:0 0 10px 0;">NUEVO REPORTE</h3>
         <video id="cam" autoplay playsinline muted></video>
         <canvas id="compressor-canvas" style="display:none;"></canvas>
-        <input type="text" id="desc" style="width:100%; padding:14px; margin:10px 0; background:#222; border:1px solid #444; color:white; border-radius:10px; box-sizing: border-box;" placeholder="¿Qué sucede en este punto?">
-        <button id="btn-env" onclick="enviarReporte()" style="width:100%; padding:16px; background:#ffd700; border:none; font-weight:bold; border-radius:12px; color:black; font-size:16px;">ENVIAR REPORTE</button>
+        
+        <div style="display: flex; gap: 10px;">
+            <div style="flex:1;"><span class="f-label">Nombre</span><input type="text" id="f-nom" class="f-input" placeholder="Nombre"></div>
+            <div style="flex:1;"><span class="f-label">Apellido</span><input type="text" id="f-ape" class="f-input" placeholder="Apellido"></div>
+        </div>
+        
+        <span class="f-label">Teléfono</span>
+        <input type="tel" id="f-tel" class="f-input" placeholder="+56 9 ...">
+        
+        <span class="f-label">Email Actualizado</span>
+        <input type="email" id="f-mail" class="f-input" placeholder="correo@ejemplo.com">
+        
+        <span class="f-label">¿Qué sucede?</span>
+        <input type="text" id="f-desc" class="f-input" placeholder="Descripción breve">
+
+        <button id="btn-env" onclick="enviarReporte()" style="width:100%; padding:16px; background:#ffd700; border:none; font-weight:bold; border-radius:12px; color:black; font-size:16px; margin-top:10px;">ENVIAR AHORA</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:15px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
 
     <div id="modal-hist" class="modal"><div class="box">
-        <h3 style="color:#ffd700;">MIS REPORTES</h3>
-        <div id="lista" style="max-height:400px; overflow-y:auto; padding-right:5px;"></div>
+        <h3 style="color:#ffd700;">HISTORIAL DE GESTIONES</h3>
+        <div id="lista" style="max-height:60vh; overflow-y:auto; padding-right:10px;"></div>
         <button onclick="document.getElementById('modal-hist').style.display='none'" style="margin-top:20px; background:#444; color:white; padding:12px; border:none; border-radius:10px; width:100%;">Cerrar</button>
     </div></div>
 
@@ -95,12 +112,14 @@
                 userActual = u;
                 document.getElementById('u-name').innerText = u.displayName.split(' ')[0];
                 document.getElementById('u-img').src = u.photoURL;
+                document.getElementById('f-nom').value = u.displayName.split(' ')[0] || "";
+                document.getElementById('f-mail').value = u.email || "";
             }
         });
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D BABYLON (MOTOR TANQUE BLINDADO)
+        // 2. MOTOR 3D BABYLON
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -110,12 +129,10 @@
             s.clearColor = new BABYLON.Color3(0.53, 0.81, 0.92);
             s.gravity = new BABYLON.Vector3(0, -0.9, 0);
             s.collisionsEnabled = true;
-
             camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 140, BABYLON.Vector3.Zero(), s);
             camera.upperBetaLimit = Math.PI / 2.2; 
             camera.attachControl(canvas, true);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), s);
-
             const suelo = BABYLON.MeshBuilder.CreateGround("suelo", {width: 2500, height: 2500}, s);
             const mat = new BABYLON.StandardMaterial("m", s);
             mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
@@ -172,54 +189,57 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. MOTOR DE COMPRESIÓN MULTIMEDIA
+        // 3. REPORTES CON HORA Y FECHA
         let streamActivo = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Por favor, accede con Google.");
+            if(!userActual) return alert("Accede con Google primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Necesitamos acceso a la cámara."); }
+            } catch (err) { alert("Permite el acceso a la cámara."); }
         }
 
         async function enviarReporte() {
             const btn = document.getElementById('btn-env');
             const video = document.getElementById('cam');
             const canvasComp = document.getElementById('compressor-canvas');
-            const desc = document.getElementById('desc').value;
+            
+            const nom = document.getElementById('f-nom').value;
+            const ape = document.getElementById('f-ape').value;
+            const tel = document.getElementById('f-tel').value;
+            const mail = document.getElementById('f-mail').value;
+            const desc = document.getElementById('f-desc').value;
 
-            if(!desc) return alert("Escribe un mensaje para la Municipalidad.");
-            btn.innerText = "COMPRIMIENDO FOTO...";
+            if(!nom || !ape || !tel || !mail || !desc) return alert("Por favor, completa todos los datos de contacto.");
+
+            btn.innerText = "REGISTRANDO...";
             btn.disabled = true;
 
-            // EL MOTOR DE COMPRESIÓN:
-            // 1. Definimos una resolución balanceada (640x480)
+            // COMPRESIÓN v35
             canvasComp.width = 640;
             canvasComp.height = 480;
             const ctx = canvasComp.getContext('2d');
-            
-            // 2. Dibujamos el frame actual del video en el canvas
             ctx.drawImage(video, 0, 0, 640, 480);
-            
-            // 3. Comprimimos a JPEG con calidad 0.5 (50%)
-            // Esto reduce el peso drásticamente sin perder la evidencia.
             const fotoComprimida = canvasComp.toDataURL('image/jpeg', 0.5); 
 
             try {
                 await db.collection("incidencias").add({
                     uid: userActual.uid,
-                    vecino: userActual.displayName,
+                    nombre_real: nom,
+                    apellido_real: ape,
+                    telefono: tel,
+                    email_contacto: mail,
                     descripcion: desc,
                     foto: fotoComprimida,
-                    fecha: new Date(),
+                    fecha: new Date(), // GUARDA DÍA Y HORA EXACTA
                     estado: "Ingresado"
                 });
-                alert("¡Reporte enviado! Gracias por cuidar nuestra comuna.");
+                alert("¡Reporte oficial ingresado!");
                 cerrarModal('modal-rep');
             } catch (err) { 
-                alert("Error al enviar: " + err.message); 
+                alert("Error: " + err.message); 
             } finally { 
                 btn.innerText = "ENVIAR REPORTE"; 
                 btn.disabled = false; 
@@ -227,10 +247,10 @@
         }
 
         function verHistorial() {
-            if(!userActual) return alert("Accede con tu cuenta primero.");
+            if(!userActual) return alert("Accede primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const lista = document.getElementById('lista');
-            lista.innerHTML = "<p style='color:gold;'>Sincronizando con la red municipal...</p>";
+            lista.innerHTML = "<p style='color:gold;'>Cargando todas tus gestiones...</p>";
 
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
@@ -238,16 +258,28 @@
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "No tienes gestiones registradas."; return; }
+                    if(snap.empty) { lista.innerHTML = "Sin registros aún."; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
                         const img = d.foto ? `<img src="${d.foto}" class="report-img">` : "";
-                        lista.innerHTML += `<div class="report-card">
-                            <b>📅 ${d.fecha.toDate().toLocaleDateString()}</b><br>
-                            <span style="font-size:14px;">${d.descripcion}</span><br>
-                            ${img}
-                            <div style="margin-top:8px;"><small style="color:gold; font-weight:bold;">Estado: ${d.estado}</small></div>
-                        </div>`;
+                        
+                        // FORMATEAR FECHA Y HORA
+                        const fechaObj = d.fecha.toDate();
+                        const fecha = fechaObj.toLocaleDateString();
+                        const hora = fechaObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                        lista.innerHTML += `
+                            <div class="report-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                    <b>📅 ${fecha} <span class="time-badge">⏰ ${hora}</span></b>
+                                    <span style="font-size:10px; background:#444; padding:2px 6px; border-radius:4px; color:gold;">${d.estado}</span>
+                                </div>
+                                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">
+                                    <i class="fas fa-id-badge"></i> Vecino: <b>${d.nombre_real} ${d.apellido_real}</b>
+                                </div>
+                                <span style="font-size:14px; display:block;">${d.descripcion}</span>
+                                ${img}
+                            </div>`;
                     });
                 });
         }
@@ -255,7 +287,7 @@
         function cerrarModal(id) { 
             document.getElementById(id).style.display = 'none'; 
             if(streamActivo) streamActivo.getTracks().forEach(t => t.stop()); 
-            document.getElementById('desc').value = ""; 
+            document.getElementById('f-desc').value = ""; 
         }
         window.toggleRadio = () => { const a = document.getElementById('audio-player'); if(a.paused) a.play(); else a.pause(); };
         window.resetCamara = () => { if(serenito) camera.lockedTarget = serenito; };
