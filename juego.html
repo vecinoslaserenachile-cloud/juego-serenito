@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Lógica & Memoria v48</title>
+    <title>VLS - Lógica & Legado v49</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -28,29 +28,40 @@
             #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
         }
 
-        /* --- IZQUIERDA: HUB INTELIGENTE --- */
+        /* --- IZQUIERDA: HUB --- */
         #sidebar {
             background: linear-gradient(180deg, #d32f2f 0%, #8e0000 100%);
             padding: 20px; display: flex; flex-direction: column; gap: 15px;
             color: white; z-index: 50; box-shadow: 4px 0 15px rgba(0,0,0,0.5);
         }
         
+        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 28px; text-align: center; }
         .widget-box { background: rgba(0,0,0,0.25); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 28px; text-align: center; margin-bottom: 5px; }
 
         /* Calculadora Rutas */
-        .route-select { width: 100%; padding: 8px; border-radius: 5px; border: none; margin-bottom: 8px; background: white; color: #333; }
-        .route-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; margin-top: 5px; }
-        .route-item { display: flex; align-items: center; gap: 5px; color: #eee; }
+        .route-select { width: 100%; padding: 8px; border-radius: 5px; border: none; margin-bottom: 8px; }
+        .route-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-top: 10px; }
+        .route-item { display: flex; align-items: center; gap: 6px; color: #eee; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; }
 
-        /* --- CENTRO: MAPA + 3D --- */
-        #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #e0e0e0; }
+        /* --- CENTRO: MAPA REAL + SERENITO OVERLAY --- */
+        #stage-area { position: relative; flex-grow: 1; min-height: 60vh; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         
-        /* --- DERECHA: GESTIÓN DE USUARIO --- */
+        /* BOTÓN PASEO HISTÓRICO */
+        .btn-tour-3d {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            background: linear-gradient(45deg, var(--serena-gold), #ffeb3b);
+            color: #333; font-weight: bold; border: 2px solid white;
+            padding: 10px 20px; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px;
+            transition: transform 0.2s;
+        }
+        .btn-tour-3d:hover { transform: scale(1.05); }
+
+        /* --- DERECHA: USUARIO & REPORTE --- */
         #form-container {
-            position: absolute; bottom: 20px; right: 20px; width: 340px;
+            position: absolute; bottom: 20px; right: 20px; width: 320px;
             background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 30; color: white;
         }
@@ -58,20 +69,21 @@
             #form-container { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; }
         }
 
-        /* LOGIN HEADER */
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #333; object-fit: cover; }
-        .login-btn { background: #4285F4; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
-        .hist-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
+        .login-btn { width: 100%; padding: 8px; background: #4285F4; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
+        .btn-red { width: 100%; padding: 12px; background: var(--serena-red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* MODAL HISTORIAL */
-        #modal-historial { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; }
-        .hist-box { background: #222; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 15px; border: 1px solid #444; }
-        .hist-item { background: #333; padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
-        .hist-img { width: 100%; height: 100px; object-fit: cover; margin-top: 5px; border-radius: 5px; }
-
-        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; }
-        .btn-red { width: 100%; padding: 14px; background: var(--serena-red); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        /* --- MODAL PASEO HISTÓRICO (Tanque Mode) --- */
+        #modal-tour {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+        }
+        #tour-canvas { width: 100%; height: 100%; outline: none; }
+        .tour-ui { position: absolute; top: 20px; right: 20px; z-index: 10000; }
+        .close-tour { background: #333; color: white; border: 1px solid #555; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
 
     </style>
 </head>
@@ -83,180 +95,126 @@
             <div class="digital-clock" id="clock">00:00:00</div>
             
             <div style="text-align:center;">
-                <button onclick="toggleRadio()" style="width:60px; height:60px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:24px; cursor:pointer;"><i class="fas fa-play" id="icon-play"></i></button>
+                <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="icon-play"></i></button>
                 <div style="font-size:10px; margin-top:5px;">RADIO VLS</div>
                 <input type="range" style="width:80%; margin-top:5px;" min="0" max="1" step="0.1" oninput="document.getElementById('audio-player').volume=this.value">
             </div>
 
             <div class="widget-box">
-                <div style="font-size:10px; color:var(--serena-gold);">CLIMA ACTUAL</div>
-                <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
-            </div>
-
-            <div class="widget-box">
                 <div style="font-size:10px; color:var(--serena-gold); margin-bottom:5px;">PLANIFICADOR DE VIAJES</div>
                 
-                <select id="route-dest" class="route-select" onchange="calcularRutaReal()">
+                <select id="route-dest" class="route-select" onchange="calcularRuta()">
                     <option value="">Selecciona Destino...</option>
-                    <option value="-29.9533,-71.3436">Coquimbo</option>
-                    <option value="-30.0319,-70.7081">Vicuña</option>
-                    <option value="-30.6015,-71.2003">Ovalle</option>
-                    <option value="-31.6308,-71.1653">Illapel</option>
-                    <option value="-31.9072,-71.5116">Los Vilos</option>
-                    <option value="-33.4489,-70.6693">Santiago</option>
-                    <option value="-36.8201,-73.0444">Concepción</option>
-                    <option value="-18.4783,-70.3126">Arica</option>
-                    <option value="-41.4689,-72.9345">Puerto Montt</option>
-                    <option value="-32.8895,-68.8458">Mendoza (ARG)</option>
-                    <option value="-23.5505,-46.6333">Sao Paulo (BRA)</option>
-                    <option value="custom">Otro (Buscar en Mapa)</option>
+                    <option value="coquimbo" data-coords="-29.9533,-71.3436" data-sea="true">Coquimbo</option>
+                    <option value="vicuna" data-coords="-30.0319,-70.7081" data-sea="false">Vicuña (Valle Elqui)</option>
+                    <option value="ovalle" data-coords="-30.6015,-71.2003" data-sea="false">Ovalle</option>
+                    <option value="santiago" data-coords="-33.4489,-70.6693" data-sea="false">Santiago</option>
+                    <option value="arica" data-coords="-18.4783,-70.3126" data-sea="true">Arica</option>
+                    <option value="mendoza" data-coords="-32.8895,-68.8458" data-sea="false">Mendoza (ARG)</option>
                 </select>
 
                 <div class="route-grid" id="route-res">
-                    <div class="route-item"><i class="fas fa-car"></i> --</div>
-                    <div class="route-item"><i class="fas fa-bus"></i> --</div>
-                    <div class="route-item"><i class="fas fa-plane"></i> --</div>
-                    <div class="route-item"><i class="fas fa-ship"></i> --</div>
-                    <div style="grid-column: span 2; margin-top:5px; font-size:10px; text-align:center; color:#ccc;">Selecciona un destino para calcular.</div>
+                    <div style="grid-column: span 2; font-size:10px; color:#ccc; text-align:center;">Selecciona un destino para ver tiempos.</div>
                 </div>
+            </div>
+
+            <div class="widget-box">
+                <div style="font-size:10px; color:var(--serena-gold);">CLIMA ACTUAL</div>
+                <div style="font-size:20px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
-            <canvas id="renderCanvas"></canvas>
-            <div style="position:absolute; top:20px; left:50%; transform:translateX(-50%); z-index:20; background:rgba(0,0,0,0.7); padding:5px 15px; border-radius:20px; color:gold; font-size:12px; pointer-events:none;">
-                <i class="fas fa-map-pin"></i> <span id="address-label">Ubicación...</span>
-            </div>
+            <canvas id="renderCanvas"></canvas> <button class="btn-tour-3d" onclick="openTourMode()">
+                <i class="fas fa-cube"></i> PASEO HISTÓRICO 3D
+            </button>
         </div>
 
         <div id="form-container">
-            
             <div class="user-header" id="user-ui">
-                <button class="login-btn" onclick="loginGoogle()"><i class="fab fa-google"></i> Acceder para Reportar</button>
+                <button class="login-btn" onclick="loginGoogle()"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
-            <div id="report-form" style="opacity:0.5; pointer-events:none;"> <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">NUEVA INCIDENCIA</h4>
-                <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Dirección Automática">
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="¿Qué sucede aquí?"></textarea>
-                
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <label style="flex:1; background:#333; color:#ccc; padding:10px; text-align:center; border-radius:6px; cursor:pointer; border:1px dashed #555;">
-                        <i class="fas fa-camera"></i> FOTO
-                        <input type="file" id="file-photo" hidden accept="image/*" capture="environment">
-                    </label>
-                </div>
-                <button class="btn-red" onclick="enviarReporte()">ENVIAR A MUNICIPALIDAD</button>
+            <div id="report-form" style="opacity:0.5; pointer-events:none;">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTE CIUDADANO</h4>
+                <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación Detectada">
+                <input type="text" id="r-desc" class="f-input" placeholder="Descripción...">
+                <button class="btn-red" onclick="alert('Reporte enviado')">ENVIAR</button>
             </div>
         </div>
 
     </div>
 
-    <div id="modal-historial" onclick="this.style.display='none'">
-        <div class="hist-box" onclick="event.stopPropagation()">
-            <h3 style="color:var(--serena-gold); margin-top:0;">MIS REPORTES</h3>
-            <div id="hist-list">Cargando...</div>
-            <button onclick="document.getElementById('modal-historial').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px; border-radius:5px;">Cerrar</button>
+    <div id="modal-tour">
+        <div class="tour-ui">
+            <button class="close-tour" onclick="closeTourMode()">CERRAR PASEO <i class="fas fa-times"></i></button>
         </div>
+        <canvas id="tour-canvas"></canvas>
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
         // CONFIG
-        const CENTER = [-29.9027, -71.2520];
-        const LS_COORDS = { lat: -29.9027, lon: -71.2520 };
+        const LS_COORDS = [-29.9027, -71.2520];
 
-        // 1. LÓGICA DE USUARIO (FIREBASE AUTH)
-        const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        let currentUser = null;
-
-        function loginGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
-        }
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                // UI Logueado
-                document.getElementById('user-ui').innerHTML = `
-                    <img src="${user.photoURL}" class="user-avatar">
-                    <div style="flex:1; font-size:12px;">
-                        <div>${user.displayName}</div>
-                        <div style="color:green;">● Verificado</div>
-                    </div>
-                    <button class="hist-btn" onclick="verHistorial()"><i class="fas fa-history"></i> Historial</button>
-                `;
-                // Activar Formulario
-                document.getElementById('report-form').style.opacity = "1";
-                document.getElementById('report-form').style.pointerEvents = "auto";
-            } else {
-                currentUser = null;
-                document.getElementById('user-ui').innerHTML = `<button class="login-btn" onclick="loginGoogle()"><i class="fab fa-google"></i> Acceder para Reportar</button>`;
-                document.getElementById('report-form').style.opacity = "0.5";
-                document.getElementById('report-form').style.pointerEvents = "none";
-            }
-        });
-
-        // 2. CÁLCULO DE RUTAS REALISTA (HAVERSINE)
-        function calcularRutaReal() {
-            const val = document.getElementById('route-dest').value;
-            if(!val) return;
-            if(val === 'custom') return alert("Opción personalizada en desarrollo.");
-
-            const [latDest, lonDest] = val.split(',').map(Number);
-            
-            // Fórmula Haversine (Distancia Lineal)
-            const R = 6371; // Radio Tierra km
-            const dLat = (latDest - LS_COORDS.lat) * Math.PI / 180;
-            const dLon = (lonDest - LS_COORDS.lon) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(LS_COORDS.lat * Math.PI / 180) * Math.cos(latDest * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            let distLineal = R * c;
-
-            // Factor de Tortuosidad (Carreteras no son rectas) -> +30%
-            let distRuta = distLineal * 1.3;
-            
-            // VELOCIDADES REALES (km/h)
-            const vAuto = 90;
-            const vBus = 70;
-            const vAvion = 800; // Solo vuelo
-            const vBarco = 30; 
-
-            // Cálculo Tiempos
-            const tAuto = (distRuta / vAuto).toFixed(1);
-            const tBus = (distRuta / vBus).toFixed(1);
-            
-            // Lógica Avión: Solo si > 300km. Se suman 2h de aeropuerto.
-            let tAvionStr = "--";
-            if(distLineal > 300) {
-                const vuelo = distLineal / vAvion;
-                tAvionStr = (vuelo + 2.0).toFixed(1) + " h";
-            }
-
-            // Lógica Barco (Muy simplificada)
-            const tBarco = (distRuta / vBarco).toFixed(1);
-
-            document.getElementById('route-res').innerHTML = `
-                <div class="route-item"><i class="fas fa-car"></i> Auto: ${tAuto} h</div>
-                <div class="route-item"><i class="fas fa-bus"></i> Bus: ${tBus} h</div>
-                <div class="route-item"><i class="fas fa-plane"></i> Avión: ${tAvionStr}</div>
-                <div class="route-item"><i class="fas fa-ship"></i> Barco: ${tBarco} h</div>
-                <div style="grid-column: span 2; margin-top:5px; text-align:center; color:gold;">
-                    Distancia Est: ${Math.round(distRuta)} km
-                </div>
-            `;
-        }
-
-        // 3. MAPA & 3D (Serenito Dinámico)
-        const map = L.map('map', { zoomControl: false }).setView(CENTER, 17);
+        // 1. CÁLCULO RUTAS INTELIGENTE
+        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        let currentPolyline = null;
 
+        function calcularRuta() {
+            const sel = document.getElementById('route-dest');
+            const opt = sel.options[sel.selectedIndex];
+            if(!opt.value) return;
+
+            const coordsStr = opt.getAttribute('data-coords');
+            const hasSea = opt.getAttribute('data-sea') === 'true';
+            const [lat, lon] = coordsStr.split(',').map(Number);
+            
+            // Haversine
+            const R = 6371; 
+            const dLat = (lat - LS_COORDS[0]) * Math.PI/180;
+            const dLon = (lon - LS_COORDS[1]) * Math.PI/180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180) * Math.sin(dLon/2)**2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const dist = R * c; 
+            const distRuta = dist * 1.3; // Carretera
+
+            // Tiempos
+            const tPie = (distRuta / 5).toFixed(1) + " h";
+            const tBici = (distRuta / 15).toFixed(1) + " h"; // 15km/h bici promedio
+            const tAuto = (distRuta / 90).toFixed(1) + " h";
+            const tBus = (distRuta / 70).toFixed(1) + " h";
+            
+            let html = `
+                <div class="route-item"><i class="fas fa-walking"></i> ${tPie}</div>
+                <div class="route-item"><i class="fas fa-bicycle"></i> ${tBici}</div>
+                <div class="route-item"><i class="fas fa-car"></i> ${tAuto}</div>
+                <div class="route-item"><i class="fas fa-bus"></i> ${tBus}</div>
+            `;
+
+            if(hasSea) {
+                const tBarco = (distRuta / 30).toFixed(1) + " h"; // Barco lento
+                html += `<div class="route-item"><i class="fas fa-ship"></i> ${tBarco}</div>`;
+            }
+
+            if(dist > 300) {
+                 const tAvion = (dist / 800 + 2).toFixed(1) + " h";
+                 html += `<div class="route-item"><i class="fas fa-plane"></i> ${tAvion}</div>`;
+            }
+
+            html += `<div style="grid-column:span 2; text-align:center; margin-top:5px; color:gold;">Distancia Aprox: ${Math.round(distRuta)} km</div>`;
+            document.getElementById('route-res').innerHTML = html;
+
+            // DIBUJAR RUTA EN MAPA
+            if(currentPolyline) map.removeLayer(currentPolyline);
+            currentPolyline = L.polyline([LS_COORDS, [lat, lon]], {color: '#b71c1c', weight: 4, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+            map.fitBounds(currentPolyline.getBounds(), {padding: [50,50]});
+        }
+
+        // 2. MOTOR 3D PRINCIPAL (Overlay)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -269,8 +227,8 @@
                 cam.lockedTarget = ser;
                 s.registerBeforeRender(() => { ser.rotation.y = Math.PI; });
                 
-                // Dinámica de Movimiento
-                map.on('movestart', () => ser.scaling = new BABYLON.Vector3(6,6,-6));
+                // Dinámica: Pequeño al mover, Grande al parar
+                map.on('movestart', () => ser.scaling = new BABYLON.Vector3(5,5,-5));
                 map.on('moveend', () => ser.scaling = new BABYLON.Vector3(12,12,-12));
             });
             return s;
@@ -278,90 +236,88 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        map.on('moveend', async () => {
-            const c = map.getCenter();
-            document.getElementById('address-label').innerText = "Buscando...";
-            try {
-                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
-                let d = await r.json();
-                let dir = d.address.road || "Ubicación detectada";
-                document.getElementById('r-dir').value = dir;
-                document.getElementById('address-label').innerText = dir;
-            } catch(e) {}
+        // 3. PASEO HISTÓRICO (MODAL TANQUE)
+        let tourEngine, tourScene;
+        function openTourMode() {
+            document.getElementById('modal-tour').style.display = 'block';
+            if(!tourEngine) initTourEngine();
+        }
+        function closeTourMode() {
+            document.getElementById('modal-tour').style.display = 'none';
+        }
+
+        function initTourEngine() {
+            const tc = document.getElementById('tour-canvas');
+            tourEngine = new BABYLON.Engine(tc, true);
+            const s = new BABYLON.Scene(tourEngine);
+            s.clearColor = new BABYLON.Color3(0.5, 0.6, 0.8);
+            
+            const cam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/2.5, 120, BABYLON.Vector3.Zero(), s);
+            cam.attachControl(tc, true);
+            new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), s);
+
+            // SUELO JPG (EL LEGADO)
+            const ground = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
+            const mat = new BABYLON.StandardMaterial("m", s);
+            mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
+            mat.specularColor = BABYLON.Color3.Black();
+            ground.material = mat;
+
+            // EDIFICIOS
+            BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(5,5,5); m[0].position.x=60; });
+            BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(5,5,5); m[0].position.x=-60; });
+
+            // SERENITO TANQUE
+            let tourSerenito, dest;
+            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ 
+                tourSerenito = m[0]; 
+                tourSerenito.scaling = new BABYLON.Vector3(10,10,-10);
+                cam.lockedTarget = tourSerenito;
+            });
+
+            // LOGICA CAMINAR POR CLIC (TANQUE)
+            s.onPointerDown = (evt, pick) => {
+                if(pick.hit && pick.pickedMesh === ground) dest = pick.pickedPoint;
+            };
+            s.onBeforeRenderObservable.add(() => {
+                if(!tourSerenito || !dest) return;
+                let diff = dest.subtract(tourSerenito.position);
+                diff.y = 0;
+                if(diff.length() > 1) {
+                    tourSerenito.lookAt(dest);
+                    tourSerenito.rotation.y += Math.PI; 
+                    tourSerenito.position.addInPlace(diff.normalize().scale(0.8));
+                } else dest = null;
+            });
+
+            tourEngine.runRenderLoop(() => s.render());
+            window.addEventListener("resize", () => tourEngine.resize());
+        }
+
+        // 4. FIREBASE AUTH & EXTRAS
+        const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        
+        function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        auth.onAuthStateChanged(u => {
+            if(u) {
+                document.getElementById('user-ui').innerHTML = `<img src="${u.photoURL}" class="user-avatar"> <b>${u.displayName}</b>`;
+                document.getElementById('report-form').style.opacity = "1";
+                document.getElementById('report-form').style.pointerEvents = "auto";
+            }
         });
 
-        // 4. HISTORIAL Y ENVÍO
-        async function enviarReporte() {
-            if(!currentUser) return alert("Debes iniciar sesión.");
-            const desc = document.getElementById('r-desc').value;
-            const file = document.getElementById('file-photo').files[0];
-            
-            // Compresión básica de foto (Base64)
-            let fotoBase64 = null;
-            if(file) {
-                fotoBase64 = await new Promise(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            await db.collection("incidencias").add({
-                uid: currentUser.uid,
-                vecino: currentUser.displayName,
-                foto_perfil: currentUser.photoURL,
-                direccion: document.getElementById('r-dir').value,
-                descripcion: desc,
-                foto_evidencia: fotoBase64,
-                fecha: new Date(),
-                estado: "Pendiente"
-            });
-            alert("Reporte guardado en tu historial.");
-            document.getElementById('r-desc').value = "";
-        }
-
-        function verHistorial() {
-            if(!currentUser) return;
-            document.getElementById('modal-historial').style.display = 'flex';
-            const list = document.getElementById('hist-list');
-            list.innerHTML = "Cargando...";
-            
-            db.collection("incidencias").where("uid", "==", currentUser.uid).orderBy("fecha", "desc").get().then(snap => {
-                list.innerHTML = "";
-                if(snap.empty) list.innerHTML = "No tienes reportes aún.";
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const imgHTML = d.foto_evidencia ? `<img src="${d.foto_evidencia}" class="hist-img">` : "";
-                    list.innerHTML += `
-                        <div class="hist-item">
-                            <div style="font-size:10px; color:#aaa;">${d.fecha.toDate().toLocaleString()}</div>
-                            <div style="color:var(--serena-gold); font-weight:bold;">${d.direccion}</div>
-                            <div>${d.descripcion}</div>
-                            ${imgHTML}
-                            <div style="font-size:10px; background:#444; display:inline-block; padding:2px 5px; border-radius:3px; margin-top:5px;">${d.estado}</div>
-                        </div>
-                    `;
-                });
-            });
-        }
-
-        // Extras
+        // Reloj & Clima
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
-        const player = document.getElementById('audio-player');
-        function toggleRadio() {
-            if(player.paused) { player.play(); document.getElementById('icon-play').className="fas fa-pause"; }
-            else { player.pause(); document.getElementById('icon-play').className="fas fa-play"; }
-        }
-        async function weather() {
-             try {
-                let r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true");
-                let d = await r.json();
-                document.getElementById('w-temp').innerText = d.current_weather.temperature;
-            } catch(e) {}
-        }
-        weather();
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
+        async function w() { try { let d = await (await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText = d.current_weather.temperature; } catch(e){} }
+        w();
 
+        // Audio
+        const player = document.getElementById('audio-player');
+        function toggleRadio() { player.paused ? player.play() : player.pause(); }
+
+        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
     </script>
 </body>
 </html>
