@@ -31,11 +31,11 @@
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
             #sidebar { order: 1; width: 100%; padding: 15px; box-sizing: border-box; }
             #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; }
-            #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 120px; box-sizing: border-box; }
+            #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 150px; box-sizing: border-box; }
         }
 
         /* ESTILOS VISUALES */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; }
+        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         
@@ -55,6 +55,7 @@
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 150px; }
         .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 11px; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* MAPA Y 3D */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
@@ -176,6 +177,8 @@
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-aves.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-playa.jpg" class="graphic-filler" onclick="expandImg(this.src)">
+            <img src="comic-bici.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
     </div>
 
@@ -216,7 +219,7 @@
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // 1. FIREBASE
+        // 1. CONFIGURACIÓN FIREBASE (PROPIA)
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -262,7 +265,7 @@
                 });
         }
 
-        // 4. MOTOR 3D PRINCIPAL
+        // 4. MOTOR 3D PRINCIPAL (SERENITO + MOVIMIENTO TANQUE)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -270,13 +273,26 @@
             scene.clearColor = new BABYLON.Color4(0,0,0,0);
             const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+            
+            // CARGA SERENITO + LÓGICA DE MOVIMIENTO
+            let serenitoMesh;
+            let targetPosition = null;
+
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
-                let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
-                camera.lockedTarget = s;
-                scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
-                map.on('movestart', () => s.scaling = new BABYLON.Vector3(6,6,-6));
-                map.on('moveend', () => s.scaling = new BABYLON.Vector3(12,12,-12));
+                serenitoMesh = m[0]; 
+                serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
+                serenitoMesh.position.y = 0;
+                camera.lockedTarget = serenitoMesh;
+                
+                // Rotación base
+                scene.registerBeforeRender(()=> {
+                    if(!targetPosition) serenitoMesh.rotation.y = Math.PI; 
+                });
+
+                map.on('movestart', () => serenitoMesh.scaling = new BABYLON.Vector3(6,6,-6));
+                map.on('moveend', () => serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12));
             });
+
             return scene;
         };
         const scene = createScene();
@@ -295,16 +311,45 @@
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
+                
+                // SUELO CLICKEABLE
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
                 const mat = new BABYLON.StandardMaterial("m", s);
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; 
                 
+                // EDIFICIOS
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; });
+                
+                // SERENITO CAMINANTE
+                let tSer, dest;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ 
-                    let tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; 
+                    tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; 
                 });
+
+                // LÓGICA DE MOVIMIENTO (CLICK EN SUELO)
+                s.onPointerDown = (evt, pickResult) => {
+                    if (pickResult.hit && pickResult.pickedMesh === g) {
+                        dest = pickResult.pickedPoint;
+                    }
+                };
+
+                s.onBeforeRenderObservable.add(()=>{
+                    if(tSer && dest) {
+                        let diff = dest.subtract(tSer.position);
+                        diff.y = 0;
+                        if(diff.length() > 1) {
+                            let dir = diff.normalize();
+                            tSer.position.addInPlace(dir.scale(0.5)); // Velocidad
+                            tSer.lookAt(dest);
+                            tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // Ajuste rotación modelo
+                        } else {
+                            dest = null;
+                        }
+                    }
+                });
+
                 tourEngine.runRenderLoop(() => s.render());
             }
         }
@@ -353,7 +398,7 @@
         window.expandImg = function(src) { document.getElementById('img-full').src=src; document.getElementById('img-modal').style.display='flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 7. CHATBOT IA REPARADO (Modelo 'gemini-pro')
+        // 7. CHATBOT IA REPARADO (Modelo 'gemini-1.5-flash')
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
@@ -374,19 +419,22 @@
 
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
             try {
-                // CAMBIO CLAVE: Usamos 'gemini-pro' que es más estable
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
+                // MODELO ACTUALIZADO PARA EVITAR CORS Y ERRORES 404
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve: " + txt }] }] })
                 });
                 const d = await res.json();
+                
+                if (d.error) throw new Error(d.error.message); // Capturar error de Google
+                
                 const reply = d.candidates[0].content.parts[0].text;
                 
                 loading.remove();
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error de red. Intenta de nuevo.";
+                loading.innerText = "Error: " + e.message;
                 console.error(e);
             }
             box.scrollTop = box.scrollHeight;
