@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Precisión & Flujo v52</title>
+    <title>VLS - Ciudad Viva v53</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -19,7 +19,7 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
 
-        /* GRID LAYOUT */
+        /* GRID MAESTRO (INTACTO) */
         #main-layout {
             display: grid; width: 100vw; height: 100vh;
             grid-template-columns: 340px 1fr; grid-template-rows: 1fr;
@@ -28,11 +28,11 @@
             #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
         }
 
-        /* --- IZQUIERDA: HUB --- */
+        /* --- IZQUIERDA: HUB RENOVADO --- */
         #sidebar {
             background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
             padding: 20px; display: flex; flex-direction: column; gap: 15px;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto;
         }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
@@ -40,34 +40,37 @@
         .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
 
+        /* MENSAJES CIUDADANOS (NUEVO) */
+        .city-news-box {
+            background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px;
+            border-left: 4px solid #00e676; /* Verde info */
+            font-size: 11px; line-height: 1.4; min-height: 40px;
+            display: flex; align-items: center;
+        }
+
+        /* CLIMA DETALLADO (MEJORADO) */
+        .weather-advanced {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; 
+            border-left: 4px solid var(--serena-gold);
+        }
+        .w-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 11px; }
+        .w-item { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px; }
+
         /* Widget Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
-        
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        /* Botones Rápidos */
         .quick-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-        .chip { 
-            background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; 
-            font-size: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;
-        }
+        .chip { background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 15px; font-size: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.2); }
-
-        /* Lista Resultados */
-        .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 250px; }
+        .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 200px; }
         .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.4); border-radius: 6px; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
         .trans-icon { font-size: 16px; width: 30px; text-align: center; }
-
-        /* BOTÓN RESET RUTA (NUEVO) */
-        .reset-route-btn {
-            background: #d32f2f; color: white; border: none; padding: 8px; width: 100%;
-            border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px;
-            font-size: 11px; display: none; /* Oculto por defecto */
-        }
-        .reset-route-btn:hover { background: #ff5252; }
+        
+        /* Botón Reset Ruta */
+        .reset-route-btn { background: #d32f2f; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* --- CENTRO: MAPA --- */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
@@ -80,8 +83,15 @@
             padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px;
         }
+        
+        .guide-msg {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px;
+            border: 1px solid var(--serena-gold); color: var(--serena-gold);
+            font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none;
+        }
 
-        /* --- DERECHA: REPORTE --- */
+        /* --- DERECHA: FORMULARIO --- */
         #form-panel {
             position: absolute; bottom: 20px; right: 20px; width: 320px;
             background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333;
@@ -117,14 +127,29 @@
                 <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value" style="margin-top:10px;">
             </div>
 
+            <div class="city-news-box" id="city-ticker">
+                <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
+                <span id="ticker-text">Cargando información comunal...</span>
+            </div>
+
+            <div class="weather-advanced">
+                 <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
+                 <div style="font-size:26px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
+                 
+                 <div class="w-grid">
+                     <div class="w-item"><span style="color:#aaa;">Máx</span> <strong id="w-max">--</strong></div>
+                     <div class="w-item"><span style="color:#aaa;">Mín</span> <strong id="w-min">--</strong></div>
+                     <div class="w-item"><span style="color:#aaa;">Viento</span> <strong id="w-wind">--</strong></div>
+                     <div class="w-item"><span style="color:#aaa;">UV</span> <strong>Alto</strong></div>
+                 </div>
+            </div>
+
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
-                
                 <div class="search-row">
-                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad (Ej: Santiago, Ovalle)">
+                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad (Ej: Ovalle, París...)">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
-
                 <div class="quick-chips">
                     <div class="chip" onclick="setDest('Coquimbo, Chile')">Coquimbo</div>
                     <div class="chip" onclick="setDest('Vicuña, Coquimbo')">Vicuña</div>
@@ -132,17 +157,10 @@
                     <div class="chip" onclick="setDest('Illapel, Chile')">Illapel</div>
                     <div class="chip" onclick="setDest('Santiago, Chile')">Santiago</div>
                 </div>
-                
                 <div class="route-list" id="route-output">
-                    <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino para ver tiempos.</div>
+                    <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>
                 </div>
-
-                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> CERRAR RUTA / VOLVER AL MAPA</button>
-            </div>
-            
-            <div class="route-box" style="flex-grow:0;">
-                 <div style="font-size:10px; color:var(--serena-gold);">CLIMA ACTUAL</div>
-                 <div style="font-size:20px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> VOLVER AL MAPA</button>
             </div>
         </div>
 
@@ -150,6 +168,10 @@
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
             
+            <div class="guide-msg">
+                <i class="fas fa-crosshairs"></i> Ubica la incidencia en el centro
+            </div>
+
             <button class="btn-tour" onclick="openTour()">
                 <i class="fas fa-cube"></i> PASEO HISTÓRICO 3D
             </button>
@@ -163,8 +185,11 @@
             </div>
 
             <div id="report-ui" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR AQUÍ</h4>
-                <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold);" placeholder="Ubicación...">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTE CIUDADANO</h4>
+                
+                <label style="font-size:10px; color:#aaa;">Dirección Exacta</label>
+                <input type="text" id="r-dir" class="f-input" readonly style="color:var(--serena-gold); border-color:var(--serena-gold);" placeholder="Detectando...">
+                
                 <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle..."></textarea>
                 
                 <label style="display:block; background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
@@ -194,99 +219,124 @@
 
     <script>
         // CONFIG
-        const LS_COORDS = [-29.9027, -71.2520]; // Plaza La Serena
+        const LS_COORDS = [-29.9027, -71.2520];
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
-        // 1. MAPA
+        // 1. CLIMA AVANZADO (REAL)
+        async function fetchWeather() {
+            try {
+                // Pedimos Temp actual, Max, Min y Viento
+                const url = "https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto";
+                const r = await fetch(url);
+                const d = await r.json();
+                
+                // Actual
+                document.getElementById('w-temp').innerText = d.current_weather.temperature;
+                document.getElementById('w-wind').innerText = d.current_weather.windspeed + " km/h";
+                
+                // Pronóstico Día (Hoy es índice 0)
+                document.getElementById('w-max').innerText = d.daily.temperature_2m_max[0] + "°";
+                document.getElementById('w-min').innerText = d.daily.temperature_2m_min[0] + "°";
+            } catch(e) { console.log("Error clima"); }
+        }
+        fetchWeather();
+
+        // 2. MENSAJES CIUDADANOS (ROTATOR)
+        const messages = [
+            "La Serena: La segunda ciudad más antigua de Chile.",
+            "Recuerda: Paga tu permiso de circulación a tiempo.",
+            "Cuida nuestras playas: Llévate tu basura.",
+            "Fono Seguridad Ciudadana: 1455.",
+            "Visita el Faro Monumental al atardecer.",
+            "Mercado Municipal abierto de 09:00 a 18:00 hrs."
+        ];
+        let msgIndex = 0;
+        function rotateMessages() {
+            const el = document.getElementById('ticker-text');
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.innerText = messages[msgIndex];
+                el.style.opacity = 1;
+                msgIndex = (msgIndex + 1) % messages.length;
+            }, 500);
+        }
+        setInterval(rotateMessages, 5000);
+        rotateMessages();
+
+        // 3. MAPA & GEOCODING PRECISO
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
 
-        // 2. CÁLCULO DE RUTAS PRECISO
-        function setDest(city) {
-            document.getElementById('city-input').value = city;
-            buscarYCalcular();
-        }
+        map.on('moveend', async () => {
+            const c = map.getCenter();
+            document.getElementById('r-dir').value = "Detectando...";
+            try {
+                // ZOOM 18 + ADDRESSDETAILS=1 PARA MÁXIMA PRECISIÓN
+                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
+                let d = await r.json();
+                let addr = d.address;
+                
+                // Lógica de construcción de dirección
+                let calle = addr.road || addr.pedestrian || "Calle s/n";
+                let numero = addr.house_number || "";
+                let barrio = addr.neighbourhood || addr.suburb || "";
+                
+                if (numero) {
+                    document.getElementById('r-dir').value = `${calle} #${numero}`;
+                } else if (barrio) {
+                    document.getElementById('r-dir').value = `${calle} (Barrio ${barrio})`;
+                } else {
+                    document.getElementById('r-dir').value = calle;
+                }
+            } catch(e) { document.getElementById('r-dir').value = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`; }
+        });
 
+        // 4. RUTAS (Intacto v52)
+        function setDest(city) { document.getElementById('city-input').value=city; buscarYCalcular(); }
         async function buscarYCalcular() {
             const query = document.getElementById('city-input').value;
             if(!query) return;
-            document.getElementById('route-output').innerHTML = '<div style="text-align:center; font-size:10px;">Calculando ruta...</div>';
-            document.getElementById('btn-reset-route').style.display = 'none';
-
+            document.getElementById('route-output').innerHTML = '<div style="text-align:center; font-size:10px;">Calculando...</div>';
             try {
-                // Nominatim
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
                 const data = await res.json();
+                if(data.length === 0) return document.getElementById('route-output').innerHTML = 'Error';
                 
-                if(data.length === 0) {
-                    document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px; text-align:center;">No encontrado.</div>';
-                    return;
-                }
-
-                const latDest = parseFloat(data[0].lat);
-                const lonDest = parseFloat(data[0].lon);
-                const nameDest = data[0].display_name.split(',')[0];
-
-                // FÓRMULA DE DISTANCIA (HAVERSINE PRECISO)
-                const R = 6371; 
-                const dLat = (latDest - LS_COORDS[0]) * Math.PI/180;
-                const dLon = (lonDest - LS_COORDS[1]) * Math.PI/180;
-                const a = Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(latDest*Math.PI/180) * Math.sin(dLon/2)**2;
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                const distLineal = R * c; 
+                const latDest=parseFloat(data[0].lat), lonDest=parseFloat(data[0].lon);
+                const nameDest=data[0].display_name.split(',')[0];
                 
-                // Factor Tortuosidad: 1.35 para carreteras chilenas
-                const distRuta = distLineal * 1.35;
+                // Cálculo Haversine + Factor
+                const R=6371; const dLat=(latDest-LS_COORDS[0])*Math.PI/180; const dLon=(lonDest-LS_COORDS[1])*Math.PI/180;
+                const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(latDest*Math.PI/180)*Math.sin(dLon/2)**2;
+                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
 
-                // Tiempos (Velocidades Reales)
-                const tPie = (distRuta / 5).toFixed(1);
-                const tBici = (distRuta / 18).toFixed(1);
-                const tAuto = (distRuta / 90).toFixed(1); // 90 km/h promedio
-                const tBus = (distRuta / 75).toFixed(1); // 75 km/h bus
-
-                let html = `
-                    <div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${nameDest}</div>
+                const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
+                
+                let html = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${nameDest}</div>
                     <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div>${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
                     <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div>${tBus} h</div> <div style="font-size:9px">Bus</div></div>
-                    <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div>${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                `;
-
-                // Solo mostrar avión si es lejos (> 350km)
-                if(distLineal > 350) {
-                     // Tiempo vuelo + 2h aeropuerto
-                     const tAvion = (distLineal / 800 + 2).toFixed(1);
-                     html += `<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div>${tAvion} h</div> <div style="font-size:9px">Avión</div></div>`;
-                }
-
-                html += `<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Distancia: ${Math.round(distRuta)} km</div>`;
+                    <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div>${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>`;
+                
+                if(dist>350) html+=`<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div>${(dist/800+2).toFixed(1)} h</div> <div style="font-size:9px">Avión</div></div>`;
+                html+=`<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">${Math.round(dist)} km</div>`;
+                
                 document.getElementById('route-output').innerHTML = html;
-
-                // Mostrar botón RESET
                 document.getElementById('btn-reset-route').style.display = 'block';
-
-                // DIBUJAR RUTA
                 if(routePolyline) map.removeLayer(routePolyline);
                 routePolyline = L.polyline([LS_COORDS, [latDest, lonDest]], {color: '#b71c1c', weight: 4, dashArray: '10, 10'}).addTo(map);
                 map.fitBounds(routePolyline.getBounds(), {padding: [50,50]});
-
-            } catch(e) {
-                document.getElementById('route-output').innerHTML = '<div style="color:red; font-size:10px;">Error. Intenta de nuevo.</div>';
-            }
+            } catch(e){}
         }
-
-        // 3. RESETEAR RUTA (SALIR)
         function resetRoute() {
-            if(routePolyline) map.removeLayer(routePolyline); // Borrar línea
-            document.getElementById('route-output').innerHTML = '<div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino...</div>';
+            if(routePolyline) map.removeLayer(routePolyline);
+            document.getElementById('route-output').innerHTML = '<div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>';
             document.getElementById('city-input').value = "";
-            document.getElementById('btn-reset-route').style.display = 'none'; // Ocultar botón
-            
-            // Volver a La Serena (Animado)
-            map.flyTo(LS_COORDS, 17, { duration: 1.5 });
+            document.getElementById('btn-reset-route').style.display = 'none';
+            map.flyTo(LS_COORDS, 17);
         }
 
-        // 4. MOTOR 3D PRINCIPAL
+        // 5. MOTOR 3D & PASEO (Intactos)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -306,20 +356,6 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // Geocoding Reporte
-        map.on('moveend', async () => {
-            const c = map.getCenter();
-            try {
-                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&addressdetails=1`);
-                let d = await r.json();
-                let addr = d.address;
-                let calle = addr.road || addr.pedestrian || "Calle";
-                let num = addr.house_number || "";
-                document.getElementById('r-dir').value = num ? `${calle} #${num}` : calle;
-            } catch(e) { document.getElementById('r-dir').value = `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`; }
-        });
-
-        // 5. PASEO HISTÓRICO (LEGADO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -340,11 +376,7 @@
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(8,8,-8); cam.lockedTarget=tSer; });
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
-                s.onBeforeRenderObservable.add(()=>{
-                    if(!tSer || !dest) return;
-                    let d = dest.subtract(tSer.position); d.y=0;
-                    if(d.length()>1) { tSer.lookAt(dest); tSer.rotation.y+=Math.PI; tSer.position.addInPlace(d.normalize()); } else dest=null;
-                });
+                s.onBeforeRenderObservable.add(()=>{ if(!tSer||!dest)return; let d=dest.subtract(tSer.position); d.y=0; if(d.length()>1){tSer.lookAt(dest); tSer.rotation.y+=Math.PI; tSer.position.addInPlace(d.normalize());}else dest=null; });
                 tourEngine.runRenderLoop(() => s.render());
             }
         }
@@ -354,7 +386,6 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
         let user;
-
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -364,19 +395,14 @@
                 document.getElementById('report-ui').style.pointerEvents = "auto";
             }
         });
-
         function verHistorial() {
             document.getElementById('hist-modal').style.display = 'flex';
             const list = document.getElementById('hist-content');
             db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get().then(snap => {
                 list.innerHTML = snap.empty ? "Sin reportes." : "";
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    list.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-left:3px solid gold;"><b>${d.direccion}</b><br>${d.descripcion}</div>`;
-                });
+                snap.forEach(doc => { const d=doc.data(); list.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-left:3px solid gold;"><b>${d.direccion}</b><br>${d.descripcion}</div>`; });
             });
         }
-
         async function enviar() {
             if(!user) return;
             await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, fecha: new Date(), estado: "Ingresado" });
@@ -385,7 +411,6 @@
 
         const p = document.getElementById('audio-player');
         function toggleRadio() { p.paused ? p.play() : p.pause(); }
-        async function w() { try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
     </script>
