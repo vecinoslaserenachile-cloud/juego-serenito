@@ -10,15 +10,24 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
-        
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
         /* LAYOUT */
@@ -34,34 +43,28 @@
             #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 150px; box-sizing: border-box; }
         }
 
-        /* ESTILOS VISUALES */
+        /* ESTILOS COMUNES */
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        
-        .rdmls-sigla { font-family: 'Oswald', sans-serif; font-size: 54px; margin: 0; line-height: 0.9; }
-        .rdmls-sub { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--serena-gold); letter-spacing: 2px; }
-
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* RUTAS RESTAURADAS (ESTILO ORIGINAL) */
-        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
+        /* RUTAS */
+        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; margin-right: 5px; display:inline-block; margin-bottom:5px; }
-        .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
-        
-        .route-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 12px; }
+        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; display:inline-block; margin:2px; transition:0.2s; }
+        .chip:hover { background: rgba(255,255,255,0.3); }
+        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 12px; margin-top:5px; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
-        .trans-val { font-weight: bold; color: white; }
 
         /* MAPA Y 3D */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; }
         
         /* FORMULARIO */
         #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
@@ -69,39 +72,30 @@
         .avatar { width: 40px; height: 40px; border-radius: 50%; background: #444; border: 2px solid var(--serena-gold); }
         .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-align: center;}
         
-        /* LUPA (ZOOM) PARA IMÁGENES */
+        /* IMÁGENES CON LUPA */
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; transition: 0.3s; }
         .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); transform: scale(1.02); }
 
         /* CHATBOT */
-        #btn-chat-tramites {
-            position: fixed; bottom: 30px; right: 20px;
-            background: linear-gradient(45deg, #2962ff, #4285f4);
-            color: white; border: 3px solid white; border-radius: 50%;
-            width: 75px; height: 75px; font-size: 32px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
-            z-index: 10000; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            animation: pulse 2s infinite;
-        }
+        #btn-chat-tramites { position: fixed; bottom: 30px; right: 20px; background: linear-gradient(45deg, #2962ff, #4285f4); color: white; border: 3px solid white; border-radius: 50%; width: 75px; height: 75px; font-size: 32px; box-shadow: 0 5px 25px rgba(0,0,0,0.6); z-index: 10000; cursor: pointer; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        #chat-window {
-            display: none; position: fixed; bottom: 120px; right: 20px;
-            width: 320px; height: 450px; background: #1a1a1a;
-            border-radius: 15px; border: 1px solid #444;
-            z-index: 10000; flex-direction: column;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
-        }
+        #chat-window { display: none; position: fixed; bottom: 120px; right: 20px; width: 320px; height: 450px; background: #1a1a1a; border-radius: 15px; border: 1px solid #444; z-index: 10000; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.9); }
 
         /* MODALES */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; }
-        #img-full { max-width:90%; max-height:90%; border:3px solid white; border-radius:8px; box-shadow: 0 0 30px rgba(0,0,0,0.8); cursor: zoom-out; }
         
-        /* MODAL CRM (HISTORIAL) */
+        /* ESTILO PARA BOTÓN CERRAR PASEO */
+        .tour-close-btn { position: absolute; top: 20px; right: 20px; padding: 12px 20px; background: var(--serena-red); color: white; border: none; border-radius: 30px; font-weight: bold; font-family: 'Oswald'; cursor: pointer; z-index: 12000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .tour-close-btn:hover { transform: scale(1.05); }
+
+        #img-full { max-width:95%; max-height:95%; border:3px solid white; border-radius:8px; box-shadow: 0 0 50px black; }
+        
+        /* CRM */
         .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 70vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 2px solid var(--serena-gold); }
         .hist-item { background: #333; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 3px solid var(--serena-gold); }
+        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; }
     </style>
 </head>
 <body>
@@ -109,7 +103,7 @@
     <div id="main-layout">
         <div id="sidebar">
             <div class="radio-header">
-                <img src="escudo.png" class="escudo-img" alt="Escudo La Serena">
+                <img src="escudo.png" class="escudo-img">
                 <h1 class="rdmls-sigla">RDMLS</h1>
                 <h2 class="rdmls-sub">RADIO DIGITAL MUNICIPAL</h2>
                 <div style="font-size:28px; font-family:'Oswald'; margin:10px 0;" id="clock">00:00:00</div>
@@ -123,7 +117,7 @@
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
-                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <div class="search-row">
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
@@ -131,6 +125,8 @@
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-30.2500, -71.5000, 'Tongoy')">Tongoy</div>
+                    <div class="chip" onclick="calcDirect(-30.1900, -71.4200, 'Guanaqueros')">Guanaqueros</div>
                 </div>
                 <div id="route-output"></div>
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()" style="display:none; width:100%; margin-top:5px;">CERRAR RUTA</button>
@@ -200,12 +196,15 @@
     </div>
 
     <div id="modal-tour" class="modal">
-        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER <i class="fas fa-times"></i></button>
+        <button class="tour-close-btn" onclick="document.getElementById('modal-tour').style.display='none'">
+            <i class="fas fa-sign-out-alt"></i> CERRAR PASEO
+        </button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
     
     <div id="img-modal" onclick="this.style.display='none'">
         <img id="img-full" src="">
+        <div style="color:white; position:absolute; bottom:20px; text-align:center; width:100%;">Toca para cerrar</div>
     </div>
     
     <div id="success-modal" class="modal">
@@ -251,19 +250,19 @@
             }
         });
 
-        // 3. CLIMA Y RUTAS (RESTAURADO DETALLE)
+        // 3. CLIMA Y RUTAS
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
         
         function calcDirect(lat, lon, name) {
             const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; // Factor ruta real
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; 
             
             // CÁLCULO DE TIEMPOS RESTAURADO
-            const tAuto = (dist / 60).toFixed(1); // 60 km/h
-            const tBus = (dist / 40).toFixed(1);  // 40 km/h
-            const tBici = (dist / 15).toFixed(1); // 15 km/h
-            const tPie = (dist / 5).toFixed(1);   // 5 km/h
+            const tAuto = (dist / 60).toFixed(1);
+            const tBus = (dist / 40).toFixed(1);
+            const tBici = (dist / 15).toFixed(1);
+            const tPie = (dist / 5).toFixed(1);
 
             document.getElementById('route-output').innerHTML = `
                 <div style="text-align:center;font-weight:bold;margin-bottom:5px;">${name} (${dist.toFixed(1)} km)</div>
@@ -288,7 +287,7 @@
                 });
         }
 
-        // 4. MOTOR 3D
+        // 4. MOTOR 3D PRINCIPAL
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -296,7 +295,6 @@
             scene.clearColor = new BABYLON.Color4(0,0,0,0);
             const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
-            
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
                 let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
                 camera.lockedTarget = s;
@@ -310,7 +308,7 @@
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // 5. PASEO 3D
+        // 5. PASEO 3D (SERENITO + MOVIMIENTO CLICK)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -322,6 +320,7 @@
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
+                
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
                 const mat = new BABYLON.StandardMaterial("m", s);
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
@@ -329,6 +328,7 @@
                 
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; });
+                
                 let tSer, dest;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
                 
@@ -346,7 +346,7 @@
             }
         }
 
-        // 6. LÓGICA USUARIO + CRM
+        // 6. USUARIO Y CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -365,7 +365,6 @@
             document.getElementById('hist-modal').style.display = 'flex';
             const list = document.getElementById('hist-content');
             list.innerHTML = '<div style="text-align:center; padding:20px;">Cargando historial...</div>';
-
             db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get()
             .then(snap => {
                 if(snap.empty) { list.innerHTML = "<div style='text-align:center; padding:20px;'>No tienes reportes enviados.</div>"; return; }
@@ -373,16 +372,7 @@
                 snap.forEach(doc => {
                     const d = doc.data();
                     const date = d.fecha ? new Date(d.fecha.seconds * 1000).toLocaleDateString() : "--";
-                    html += `
-                        <div class="hist-item">
-                            <div style="font-size:10px; color:#aaa; display:flex; justify-content:space-between;">
-                                <span>📅 ${date}</span> 
-                                <span style="color:#00e676;">${d.estado || "Enviado"}</span>
-                            </div>
-                            <div style="font-weight:bold; color:white; margin:5px 0;">${d.descripcion}</div>
-                            <div style="font-size:11px; color:#ccc;">📍 ${d.direccion}</div>
-                            ${d.foto_evidencia ? `<img src="${d.foto_evidencia}" style="width:100%; height:80px; object-fit:cover; margin-top:5px; border-radius:4px;">` : ''}
-                        </div>`;
+                    html += `<div class="hist-item"><div style="font-size:10px; color:#aaa; display:flex; justify-content:space-between;"><span>📅 ${date}</span> <span style="color:#00e676;">${d.estado || "Enviado"}</span></div><div style="font-weight:bold; color:white; margin:5px 0;">${d.descripcion}</div><div style="font-size:11px; color:#ccc;">📍 ${d.direccion}</div>${d.foto_evidencia ? `<img src="${d.foto_evidencia}" style="width:100%; height:80px; object-fit:cover; margin-top:5px; border-radius:4px;">` : ''}</div>`;
                 });
                 list.innerHTML = html;
             });
@@ -395,82 +385,72 @@
             if(!user) { alert("⚠️ Debes iniciar sesión (Botón azul arriba)."); return; }
             const btn = document.getElementById('btn-enviar');
             btn.innerText = "ENVIANDO..."; btn.disabled = true;
-
             try {
                 const file = document.getElementById('evidencia-file').files[0];
                 let base64 = null;
-                if(file) {
-                    base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=e=>r(e.target.result); reader.readAsDataURL(file); });
-                }
+                if(file) { base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=e=>r(e.target.result); reader.readAsDataURL(file); }); }
                 await db.collection("incidencias").add({
                     uid: user.uid, user: user.displayName, email: user.email,
-                    phone: document.getElementById('r-phone').value,
-                    direccion: document.getElementById('r-dir').value,
-                    descripcion: document.getElementById('r-desc').value,
+                    phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value,
                     foto_evidencia: base64, fecha: new Date(), estado: "Ingresado"
                 });
                 document.getElementById('success-modal').style.display = 'flex';
-            } catch(e) {
-                alert("Error al enviar: " + e.message);
-            } finally {
-                btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false;
-            }
+            } catch(e) { alert("Error al enviar: " + e.message); } 
+            finally { btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false; }
         }
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
         
-        // 7. LUPA RESTAURADA
+        // 7. LUPA (ZOOM) REPARADA
         window.expandImg = function(src) { 
-            const modal = document.getElementById('img-modal');
-            const img = document.getElementById('img-full');
-            img.src = src;
-            modal.style.display = 'flex'; 
+            const m = document.getElementById('img-modal');
+            document.getElementById('img-full').src = src;
+            m.style.display = 'flex';
         }
         
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 8. CHATBOT IA (NUEVA ESTRATEGIA v1.5-flash)
+        // --- MÓDULO CHATBOT V2 (SDK OFICIAL GOOGLE) ---
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
         }
+    </script>
 
-        async function sendChat() {
-            const inp = document.getElementById('chat-input');
-            const box = document.getElementById('chat-msgs');
-            const txt = inp.value.trim();
-            if(!txt) return;
+    <script type="module">
+      import { GoogleGenerativeAI } from "@google/generative-ai";
 
-            box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
-            inp.value = ""; box.scrollTop = box.scrollHeight;
+      // TU CLAVE
+      const API_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            const loading = document.createElement("div");
-            loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
-            box.appendChild(loading);
+      window.sendChat = async function() {
+        const inp = document.getElementById('chat-input');
+        const box = document.getElementById('chat-msgs');
+        const txt = inp.value.trim();
+        if(!txt) return;
 
-            // CLAVE IA
-            const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
-            try {
-                // USAMOS v1beta/models/gemini-1.5-flash-latest (Más permisivo)
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve: " + txt }] }] })
-                });
-                
-                if(!res.ok) throw new Error("Bloqueo de seguridad o cuota excedida.");
+        box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
+        inp.value = ""; box.scrollTop = box.scrollHeight;
 
-                const d = await res.json();
-                const reply = d.candidates[0].content.parts[0].text;
-                
-                loading.remove();
-                box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
-            } catch(e) {
-                loading.innerText = "Error IA: Intenta más tarde.";
-                console.error(e);
-            }
-            box.scrollTop = box.scrollHeight;
+        const loading = document.createElement("div");
+        loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
+        box.appendChild(loading);
+
+        try {
+            const result = await model.generateContent("Eres un asistente municipal de La Serena útil y breve. Responde a: " + txt);
+            const response = await result.response;
+            const text = response.text();
+            
+            loading.remove();
+            box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${text}</div>`;
+        } catch (error) {
+            loading.innerText = "Error de conexión (Cuota o Red).";
+            console.error(error);
         }
+        box.scrollTop = box.scrollHeight;
+      }
     </script>
 </body>
 </html>
