@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Precisión Absoluta v60</title>
+    <title>VLS - Flujo Certificado v61</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -21,32 +21,20 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
 
-        /* GRID MAESTRO */
-        #main-layout {
-            display: grid; width: 100vw; height: 100vh;
-            grid-template-columns: 340px 1fr; grid-template-rows: 1fr;
-        }
-        @media (max-width: 1023px) {
-            #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
-        }
+        /* LAYOUT */
+        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 340px 1fr; grid-template-rows: 1fr; }
+        @media (max-width: 1023px) { #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } }
 
-        /* --- IZQUIERDA --- */
-        #sidebar {
-            background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
-            padding: 20px; display: flex; flex-direction: column; gap: 15px;
-            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto;
-        }
-        
+        /* IZQUIERDA */
+        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto; }
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
         .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
-        /* Ticker & Clima */
         .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; transition: opacity 0.5s; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
@@ -59,7 +47,7 @@
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* --- CENTRO --- */
+        /* CENTRO */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
@@ -67,20 +55,24 @@
         .btn-tour:hover { transform: scale(1.05); }
         .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
 
-        /* --- DERECHA --- */
+        /* DERECHA (NUEVO FLUJO) */
         #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
         @media (max-width: 1023px) { #form-panel { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; border-top: 4px solid var(--serena-gold); } }
+        
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
         
-        /* INPUT DE DIRECCIÓN PRECISA */
-        .f-input { width: 100%; padding: 10px; margin-bottom: 4px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
+        .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         .f-input:focus { border-color: var(--serena-gold); background: #222; outline: none; }
-        .f-input.alert-missing { border-color: #ff3d00; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(255, 61, 0, 0);} 100% {box-shadow: 0 0 0 0 rgba(255, 61, 0, 0);} }
+        .f-input.alert { border-color: #ff3d00; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,61,0,0.4)} 70%{box-shadow:0 0 0 10px rgba(255,61,0,0)} 100%{box-shadow:0 0 0 0 rgba(255,61,0,0)} }
 
-        .vereda-detail { font-size: 10px; color: #888; margin-bottom: 10px; font-style: italic; text-align: right; }
-        .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
+        /* Pasos del Formulario */
+        #step-2-details { display: none; } /* Oculto al inicio */
+        
+        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .back-link { color: #aaa; font-size: 11px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 10px; }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; }
@@ -141,23 +133,40 @@
         </div>
 
         <div id="form-panel">
+            
             <div class="user-header" id="user-bar">
                 <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
-            <div id="report-ui" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR</h4>
-                <div class="gps-data" id="gps-coords">GPS: --, --</div>
+
+            <div id="step-1-location" style="opacity:0.5; pointer-events:none;"> <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: UBICACIÓN</h4>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">Verifica calle y número:</div>
                 
-                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando dirección...">
+                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
                 
-                <div class="vereda-detail" id="r-vereda"></div>
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle..."></textarea>
-                <label style="display:block; background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
-                    <i class="fas fa-camera"></i> FOTO EVIDENCIA
-                    <input type="file" hidden accept="image/*" id="evidencia-file">
-                </label>
-                <button onclick="enviar()" style="width:100%; background:var(--serena-red); color:white; padding:12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">ENVIAR AHORA</button>
+                <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px;">GPS: --</div>
+                
+                <button onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
             </div>
+
+            <div id="step-2-details">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLE REPORTE</h4>
+                
+                <div style="background:#333; padding:5px; font-size:11px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
+
+                <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono (Contacto)">
+                <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
+                
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="¿Qué sucede aquí? (Descripción)"></textarea>
+                
+                <label style="display:block; background:#333; padding:8px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
+                    <i class="fas fa-camera"></i> FOTO/VIDEO
+                    <input type="file" hidden accept="image/*,video/*" id="evidencia-file">
+                </label>
+                
+                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+                <span class="back-link" onclick="volverPaso1()">Correjir Ubicación</span>
+            </div>
+
         </div>
 
     </div>
@@ -185,41 +194,65 @@
         let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-        // 2. MAPA & GEOCODING REAL (SIN SIMULACIÓN)
+        // 2. MAPA & GEOCODING REAL (SÓLO CAMBIA EL INPUT EN PASO 1)
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
 
         map.on('moveend', async () => {
+            // Solo actualizar si estamos en PASO 1
+            if(document.getElementById('step-2-details').style.display === 'block') return;
+
             const c = map.getCenter();
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
-            document.getElementById('r-dir').classList.remove('alert-missing'); // Quitar alerta
             
+            // Check si el usuario está escribiendo manualmente para no borrarle
+            const inp = document.getElementById('r-dir');
+            if(document.activeElement === inp) return;
+
             try {
-                // AddressDetails=1 + Zoom 18 para máxima precisión
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
                 let d = await r.json();
-                let addr = d.address;
+                let a = d.address;
                 
-                let calle = addr.road || addr.pedestrian || "Ubicación sin nombre";
-                let num = addr.house_number;
+                let calle = a.road || a.pedestrian || "";
+                let num = a.house_number;
                 
-                if(num) {
-                    document.getElementById('r-dir').value = `${calle} #${num}`;
-                } else {
-                    // SI NO HAY NÚMERO, NO INVENTAR. DEJAR CAMPO PARA QUE USUARIO COMPLETE.
-                    document.getElementById('r-dir').value = `${calle} (Falta N°)`;
-                    document.getElementById('r-dir').classList.add('alert-missing'); // Alerta visual
-                }
-
-                // Cálculo Vereda (Geometría Básica)
-                let vereda = (c.lat % 0.0002 > 0.0001) ? "Vereda Norte/Oriente" : "Vereda Sur/Poniente";
-                document.getElementById('r-vereda').innerText = vereda;
-
-            } catch(e) { document.getElementById('r-dir').value = "Error de red"; }
+                if(calle) {
+                    if(num) inp.value = `${calle} #${num}`;
+                    else {
+                        inp.value = `${calle} (Ingresa N°)`;
+                        inp.classList.add('alert'); // Destacar que falta número
+                    }
+                } else inp.value = "Ubicación Desconocida";
+            } catch(e) {}
         });
 
-        // 3. RUTAS (HAVERSINE)
+        // 3. LOGICA DE FLUJO (PASOS)
+        function confirmarUbicacion() {
+            const dir = document.getElementById('r-dir').value;
+            // Validar que tenga número
+            if(!dir.match(/\d+/) && !dir.includes("S/N")) {
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la calle o 'S/N' si no tiene.");
+                document.getElementById('r-dir').focus();
+                return;
+            }
+            
+            // Pasar a Paso 2
+            document.getElementById('step-1-location').style.display = 'none';
+            document.getElementById('step-2-details').style.display = 'block';
+            document.getElementById('locked-addr').innerText = "📍 " + dir;
+            // Desactivar mapa visualmente (opcional)
+            document.querySelector('.guide-msg').style.display = 'none';
+        }
+
+        function volverPaso1() {
+            document.getElementById('step-1-location').style.display = 'block';
+            document.getElementById('step-2-details').style.display = 'none';
+            document.querySelector('.guide-msg').style.display = 'flex';
+        }
+
+        // 4. RUTAS (HAVERSINE)
         function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
         async function buscarYCalcular(){
             const q = document.getElementById('city-input').value; if(!q)return;
@@ -230,7 +263,7 @@
                 
                 const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
                 const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; // Factor ruta
+                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
 
                 const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
                 
@@ -251,7 +284,7 @@
         }
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); }
 
-        // 4. MOTOR 3D PRINCIPAL (BLINDADO)
+        // 5. MOTOR 3D & PASEO (BLINDADO)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -271,7 +304,6 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 5. PASEO HISTÓRICO (EDIFICIOS ELEVADOS)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -283,33 +315,27 @@
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true); cam.checkCollisions=true; cam.upperBetaLimit=Math.PI/2.2;
                 new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-                
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
                 const mat = new BABYLON.StandardMaterial("m", s);
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // EDIFICIOS ELEVADOS (Y=30)
+                // Edificios Y=30 (Desenterrados)
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=30; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=30; });
-                
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
-                
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
                 s.onBeforeRenderObservable.add(()=>{
                     if(!tSer || !dest) return;
                     let d = dest.subtract(tSer.position); d.y=0;
-                    if(d.length()>1) { 
-                        tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); 
-                        tSer.position.addInPlace(d.normalize().scale(1.2)); 
-                    } else dest=null;
+                    if(d.length()>1) { tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); tSer.position.addInPlace(d.normalize().scale(1.2)); } else dest=null;
                 });
                 tourEngine.runRenderLoop(() => s.render());
             }
         }
 
-        // 6. AUTH & VALIDACIÓN DIRECCIÓN
+        // 6. AUTH & ENVÍO FINAL
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -319,8 +345,9 @@
             if(u) {
                 user = u;
                 document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Historial</a></div>`;
-                document.getElementById('report-ui').style.opacity = "1";
-                document.getElementById('report-ui').style.pointerEvents = "auto";
+                document.getElementById('step-1-location').style.opacity = "1";
+                document.getElementById('step-1-location').style.pointerEvents = "auto";
+                document.getElementById('r-email').value = u.email;
             }
         });
         function verHistorial() {
@@ -332,20 +359,18 @@
             });
         }
         
-        async function enviar() {
+        async function enviarReporteFinal() {
             if(!user) return;
             const dir = document.getElementById('r-dir').value;
             const desc = document.getElementById('r-desc').value;
+            const phone = document.getElementById('r-phone').value;
             
-            // VALIDACIÓN: ¿Tiene número?
-            if(dir.includes("Falta") || !dir.match(/\d/)) {
-                alert("⚠️ FALTA NÚMERO\nEl sistema no detectó numeración exacta. Por favor, edita el campo de dirección y escribe el número de la casa.");
-                document.getElementById('r-dir').focus();
-                return;
-            }
-
-            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, direccion: dir, descripcion: desc, fecha: new Date(), estado: "Ingresado" });
-            alert("Reporte Enviado");
+            await db.collection("incidencias").add({ 
+                uid: user.uid, user: user.displayName, email: user.email, phone: phone,
+                direccion: dir, descripcion: desc, fecha: new Date(), estado: "Ingresado" 
+            });
+            alert("✅ Reporte Enviado Correctamente");
+            volverPaso1();
         }
 
         const p = document.getElementById('audio-player');
