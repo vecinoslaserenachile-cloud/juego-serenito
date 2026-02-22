@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Consola Maestra v62</title>
+    <title>VLS - Uber Style v63</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -53,19 +53,23 @@
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         .btn-tour:hover { transform: scale(1.05); }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+        
+        /* PIN CENTRAL TIPO UBER */
+        .center-pin { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%);
+            width: 40px; height: 40px; z-index: 20; pointer-events: none;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
 
         /* DERECHA */
         #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
         @media (max-width: 1023px) { #form-panel { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; border-top: 4px solid var(--serena-gold); } }
-        
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
         
-        .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
+        .f-input { width: 100%; padding: 10px; margin-bottom: 4px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         .f-input:focus { border-color: var(--serena-gold); background: #222; outline: none; }
-        .f-input.alert { border-color: #ff3d00; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,61,0,0.4)} 70%{box-shadow:0 0 0 10px rgba(255,61,0,0)} 100%{box-shadow:0 0 0 0 rgba(255,61,0,0)} }
+        .f-input.alert { border-color: #ff3d00; background: rgba(255, 61, 0, 0.1); } /* Alerta roja suave */
 
         #step-2-details { display: none; }
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
@@ -75,8 +79,15 @@
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; }
         .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: white; cursor: pointer; border-radius: 5px; font-weight: bold; z-index: 10001; color: black; }
-        #hist-modal { background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
-        .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 1px solid var(--serena-gold); }
+        
+        #hist-modal { background: rgba(0,0,0,0.95); align-items: center; justify-content: center; }
+        .hist-box { width: 90%; max-width: 450px; background: #222; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 1px solid var(--serena-gold); }
+        .hist-card { background: #333; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid var(--serena-gold); }
+        .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 5px; cursor: pointer; border: 1px solid #555; }
+        
+        /* Modal Imagen Grande */
+        #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
+        #img-full { max-width: 90%; max-height: 90%; border: 2px solid white; border-radius: 5px; }
 
     </style>
 </head>
@@ -125,9 +136,10 @@
 
         <div id="stage-area">
             <div id="map"></div>
+            <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
+            
             <canvas id="renderCanvas"></canvas>
-            <div class="guide-msg"><i class="fas fa-crosshairs"></i> Ubica la incidencia en el centro</div>
-            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO 3D</button>
+            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO</button>
         </div>
 
         <div id="form-panel">
@@ -137,7 +149,7 @@
 
             <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: UBICACIÓN</h4>
-                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">Verifica calle y número:</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">Mueve el mapa para ajustar:</div>
                 <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
                 <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
                 <button onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
@@ -150,11 +162,11 @@
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
                 <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
                 <label style="display:block; background:#333; padding:8px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
-                    <i class="fas fa-camera"></i> FOTO/VIDEO
-                    <input type="file" hidden accept="image/*,video/*" id="evidencia-file">
+                    <i class="fas fa-camera"></i> ADJUNTAR FOTO
+                    <input type="file" hidden accept="image/*" id="evidencia-file">
                 </label>
                 <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
-                <span class="back-link" onclick="volverPaso1()">Correjir Ubicación</span>
+                <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
             </div>
         </div>
 
@@ -164,12 +176,17 @@
         <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER A LA APP <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
+    
     <div id="hist-modal" class="modal">
         <div class="hist-box">
-            <h3>MIS REPORTES</h3>
+            <h3 style="color:var(--serena-gold); margin-top:0;">HISTORIAL DE REPORTES</h3>
             <div id="hist-content">Cargando...</div>
             <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px;">Cerrar</button>
         </div>
+    </div>
+
+    <div id="img-modal" onclick="this.style.display='none'">
+        <img id="img-full" src="">
     </div>
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
@@ -183,18 +200,19 @@
         let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-        // 2. MAPA & GEOCODING
+        // 2. MAPA & GEOCODING UBER STYLE
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
 
         map.on('moveend', async () => {
             if(document.getElementById('step-2-details').style.display === 'block') return;
-            const c = map.getCenter();
+            
+            const c = map.getCenter(); // El pin está fijo al centro visual
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
             
             const inp = document.getElementById('r-dir');
-            if(document.activeElement === inp) return;
+            if(document.activeElement === inp) return; // Si usuario escribe, no borrar
 
             try {
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
@@ -204,32 +222,35 @@
                 let num = a.house_number;
                 
                 if(calle) {
-                    if(num) inp.value = `${calle} #${num}`;
-                    else { inp.value = `${calle} (Falta N°)`; inp.classList.add('alert'); }
+                    if(num) {
+                        inp.value = `${calle} #${num}`;
+                        inp.classList.remove('alert');
+                    } else { 
+                        inp.value = `${calle} (Ingresa N°)`; 
+                        inp.classList.add('alert'); 
+                    }
                 } else inp.value = "Ubicación Desconocida";
             } catch(e) {}
         });
 
-        // 3. LOGICA FORMULARIO
+        // 3. LOGICA FLUJO REPORTES
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la calle o 'S/N'.");
+                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes mover el mapa o escribir el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
             document.getElementById('step-1-location').style.display = 'none';
             document.getElementById('step-2-details').style.display = 'block';
             document.getElementById('locked-addr').innerText = "📍 " + dir;
-            document.querySelector('.guide-msg').style.display = 'none';
         }
         function volverPaso1() {
             document.getElementById('step-1-location').style.display = 'block';
             document.getElementById('step-2-details').style.display = 'none';
-            document.querySelector('.guide-msg').style.display = 'flex';
         }
 
-        // 4. RUTAS
+        // 4. RUTAS (Intacto)
         function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
         async function buscarYCalcular(){
             const q = document.getElementById('city-input').value; if(!q)return;
@@ -261,7 +282,7 @@
         }
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); }
 
-        // 5. MOTOR 3D PRINCIPAL (BLINDADO)
+        // 5. MOTOR 3D PRINCIPAL (SERENITO OVERLAY)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -298,7 +319,7 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // EDIFICIOS EN EL SUELO (Y=0)
+                // EDIFICIOS ATERRIZADOS (Y=0)
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
                 
@@ -314,7 +335,7 @@
             }
         }
 
-        // 7. FIREBASE
+        // 7. FIREBASE & IMÁGENES
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -329,13 +350,37 @@
                 document.getElementById('r-email').value = u.email;
             }
         });
+
+        // Historial con FOTOS y CORRELATIVO
         function verHistorial() {
             document.getElementById('hist-modal').style.display = 'flex';
             const list = document.getElementById('hist-content');
             db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get().then(snap => {
                 list.innerHTML = snap.empty ? "Sin reportes." : "";
-                snap.forEach(doc => { const d=doc.data(); list.innerHTML += `<div style="background:#333; padding:10px; margin-bottom:5px; border-left:3px solid gold;"><b>${d.direccion}</b><br>${d.descripcion}</div>`; });
+                snap.forEach(doc => { 
+                    const d=doc.data();
+                    const ticketID = d.fecha.seconds ? `#${d.fecha.seconds.toString().substr(-6)}` : "N/A";
+                    let imgHTML = d.foto_evidencia ? `<img src="${d.foto_evidencia}" class="hist-thumb" onclick="expandImg('${d.foto_evidencia}')">` : "";
+                    
+                    list.innerHTML += `
+                        <div class="hist-card">
+                            <div style="display:flex; justify-content:space-between; font-size:10px; color:#aaa;">
+                                <span>📅 ${d.fecha.toDate().toLocaleDateString()}</span>
+                                <span style="color:gold;">TICKET ${ticketID}</span>
+                            </div>
+                            <b>${d.direccion}</b><br>
+                            ${d.descripcion}
+                            <div>${imgHTML}</div>
+                            <div style="font-size:10px; background:#444; display:inline-block; padding:2px 5px; border-radius:3px; margin-top:5px;">${d.estado || 'Ingresado'}</div>
+                        </div>`;
+                });
             });
+        }
+
+        // Expandir Imagen
+        window.expandImg = function(src) {
+            document.getElementById('img-full').src = src;
+            document.getElementById('img-modal').style.display = 'flex';
         }
         
         async function enviarReporteFinal() {
@@ -343,7 +388,23 @@
             const dir = document.getElementById('r-dir').value;
             const desc = document.getElementById('r-desc').value;
             const phone = document.getElementById('r-phone').value;
-            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: phone, direccion: dir, descripcion: desc, fecha: new Date(), estado: "Ingresado" });
+            
+            // Subir foto como Base64 (Simple para MVP)
+            const file = document.getElementById('evidencia-file').files[0];
+            let base64 = null;
+            if(file) {
+                base64 = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            await db.collection("incidencias").add({ 
+                uid: user.uid, user: user.displayName, email: user.email, phone: phone,
+                direccion: dir, descripcion: desc, foto_evidencia: base64, 
+                fecha: new Date(), estado: "Ingresado" 
+            });
             alert("✅ Reporte Enviado Correctamente");
             volverPaso1();
         }
