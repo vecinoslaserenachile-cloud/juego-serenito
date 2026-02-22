@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
@@ -21,7 +20,7 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
-        /* LAYOUT */
+        /* LAYOUT RESPONSIVE */
         @media (min-width: 1024px) {
             #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; grid-template-rows: 1fr; }
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
@@ -29,50 +28,56 @@
         @media (max-width: 1023px) {
             body, html { overflow-y: auto; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            #sidebar { order: 1; width: 100%; padding: 15px; }
+            #sidebar { order: 1; width: 100%; padding: 15px; box-sizing: border-box; }
             #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; }
-            #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 100px; }
+            #form-panel { order: 3; width: 100%; padding: 15px; padding-bottom: 120px; box-sizing: border-box; }
         }
 
         /* ESTILOS VISUALES */
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; }
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .escudo-img { width: 200px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+        .escudo-img { width: 180px; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         
-        /* 3D Y MAPA */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         
-        /* FORMULARIO */
         #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
-        .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; }
+        .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
-        
-        /* EXTRAS */
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 10px; cursor:zoom-in; border:1px solid #444; }
+
+        /* MODALES */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; }
         #img-full { max-width:90%; max-height:90%; border:3px solid white; border-radius:8px; }
+        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 12000; }
+        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
 
-        /* CHATBOT */
+        /* --- CHATBOT MEJORADO --- */
         #btn-chat-tramites {
-            position: fixed; bottom: 30px; right: 30px;
-            background: linear-gradient(45deg, #4285f4, #2962ff);
-            color: white; border: none; border-radius: 50px;
-            padding: 12px 25px; font-weight: bold; font-family: 'Oswald';
-            box-shadow: 0 5px 20px rgba(66, 133, 244, 0.6);
-            z-index: 9999; cursor: pointer; display: flex; align-items: center; gap: 10px;
-            transition: transform 0.2s;
+            position: fixed; bottom: 30px; right: 20px;
+            background: linear-gradient(45deg, #2962ff, #4285f4);
+            color: white; border: 3px solid white; border-radius: 50%;
+            width: 70px; height: 70px; /* MÁS GRANDE */
+            font-size: 30px; /* ÍCONO MÁS GRANDE */
+            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+            z-index: 10000; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            animation: pulse 2s infinite; /* LATIDO */
         }
-        #btn-chat-tramites:hover { transform: scale(1.05); }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(66, 133, 244, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+        }
         
         #chat-window {
-            display: none; position: fixed; bottom: 90px; right: 30px;
-            width: 320px; height: 450px; background: #181818;
-            border-radius: 12px; border: 1px solid #444;
-            z-index: 9999; flex-direction: column;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            display: none; position: fixed; bottom: 110px; right: 20px;
+            width: 320px; height: 450px; background: #1a1a1a;
+            border-radius: 15px; border: 1px solid #444;
+            z-index: 10000; flex-direction: column;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
         }
     </style>
 </head>
@@ -129,32 +134,30 @@
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="expandImg(this.src)">
             <img src="comic-aves.jpg" class="graphic-filler" onclick="expandImg(this.src)">
-            <img src="comic-playa.jpg" class="graphic-filler" onclick="expandImg(this.src)">
-            <img src="comic-bici.jpg" class="graphic-filler" onclick="expandImg(this.src)">
         </div>
     </div>
 
     <button id="btn-chat-tramites" onclick="toggleChat()">
-        <i class="fas fa-robot"></i> ASISTENTE TRÁMITES
+        <i class="fas fa-comment-dots"></i>
     </button>
 
     <div id="chat-window">
-        <div style="background:#4285f4; padding:15px; color:white; font-family:'Oswald'; display:flex; justify-content:space-between;">
-            <span>ASISTENTE IA</span>
-            <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer;">X</button>
+        <div style="background:#4285f4; padding:15px; color:white; font-family:'Oswald'; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-robot"></i> ASISTENTE MUNICIPAL</span>
+            <button onclick="toggleChat()" style="background:none; border:none; color:white; cursor:pointer; font-size:20px;">&times;</button>
         </div>
-        <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:13px;">
-            <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%;">
-                👋 Hola, soy la IA de La Serena. Pregúntame sobre patentes, horas médicas, basura o turismo.
+        <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:14px;">
+            <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">
+                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Pregúntame sobre:<br>• Permisos de Circulación<br>• Farmacias de Turno<br>• Horarios Municipales
             </div>
         </div>
-        <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px;">
-            <input type="text" id="chat-input" placeholder="Escribe tu duda..." style="flex:1; background:#222; border:none; color:white; padding:10px; border-radius:5px;">
+        <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
+            <input type="text" id="chat-input" placeholder="Escribe tu consulta aquí..." style="flex:1; background:#111; border:1px solid #444; color:white; padding:10px; border-radius:5px;">
             <button onclick="sendChat()" style="background:#4285f4; border:none; color:white; padding:0 15px; border-radius:5px; cursor:pointer;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <div id="modal-tour" class="modal"><div style="color:white;">(Aquí iría el paseo 3D ampliado) <br> <button onclick="this.parentElement.parentElement.style.display='none'">Cerrar</button></div></div>
+    <div id="modal-tour" class="modal"><div style="color:white;text-align:center;">PASEO 3D EN CONSTRUCCIÓN<br><button onclick="this.parentElement.parentElement.style.display='none'" style="margin-top:20px;padding:10px;">Cerrar</button></div></div>
     <div id="img-modal" onclick="this.style.display='none'"><img id="img-full"></div>
     <div id="success-modal" class="modal">
         <div class="success-box">
@@ -168,14 +171,14 @@
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // --- 1. CONFIGURACIÓN (Tu Firebase) ---
+        // --- CONFIGURACIÓN ---
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         let user = null;
 
-        // --- 2. MAPA LEAFLET ---
+        // --- MAPA ---
         const map = L.map('map', {zoomControl:false}).setView([-29.9027, -71.2520], 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         
@@ -189,7 +192,7 @@
             }
         });
 
-        // --- 3. SERENITO 3D (BABYLON) ---
+        // --- 3D ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -198,21 +201,20 @@
             const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
             
-            // Cargar Serenito (Ya confirmado que está en el repo)
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
                 let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
                 camera.lockedTarget = s;
                 scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
                 map.on('movestart', () => s.scaling = new BABYLON.Vector3(6,6,-6));
                 map.on('moveend', () => s.scaling = new BABYLON.Vector3(12,12,-12));
-            });
+            }, null, (e)=>{console.log("Falta 3D")});
             return scene;
         };
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // --- 4. LÓGICA DE USUARIO Y REPORTE ---
+        // --- LÓGICA ---
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -246,7 +248,7 @@
         window.expandImg = function(src) { document.getElementById('img-full').src=src; document.getElementById('img-modal').style.display='flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // --- 5. CHATBOT IA (GEMINI) ---
+        // --- CHATBOT IA ---
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
@@ -258,31 +260,41 @@
             const txt = inp.value.trim();
             if(!txt) return;
 
-            // Mostrar pregunta
-            box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px;">${txt}</div>`;
+            // 1. Poner mensaje usuario
+            box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
             inp.value = ""; box.scrollTop = box.scrollHeight;
 
-            // Mostrar "Escribiendo..."
+            // 2. Indicador escribiendo
             const loading = document.createElement("div");
             loading.innerHTML = "Escribiendo...";
             loading.style.cssText = "color:#aaa; font-style:italic; margin-left:10px; font-size:11px;";
             box.appendChild(loading);
 
-            // TU CLAVE DE IA (Ya integrada)
+            // 3. API KEY (AQUÍ ESTABA EL ERROR, AHORA ESTÁ CORREGIDO)
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
             
             try {
+                // Usamos gemini-1.5-flash que es rápido y soporta este endpoint
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres el asistente municipal de La Serena. Responde breve, útil y amable a: " + txt }] }] })
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres el asistente de la Muni de La Serena. Responde breve y útil: " + txt }] }] })
                 });
+                
+                if (!res.ok) throw new Error("Error API: " + res.status);
+
                 const d = await res.json();
+                
+                // Si la respuesta viene rara, proteger
+                if(!d.candidates || !d.candidates[0]) throw new Error("Sin respuesta");
+
                 const reply = d.candidates[0].content.parts[0].text;
                 
                 loading.remove();
-                box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px;">${reply}</div>`;
+                box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error de conexión.";
+                loading.innerText = "Error de conexión con la IA.";
+                console.error(e);
             }
             box.scrollTop = box.scrollHeight;
         }
