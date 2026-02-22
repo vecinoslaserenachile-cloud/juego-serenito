@@ -20,7 +20,7 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET & SCROLL */
+        /* BASE */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
@@ -29,7 +29,7 @@
             scroll-behavior: smooth;
         }
 
-        /* --- ESCRITORIO (FIJO 3 COLUMNAS) --- */
+        /* --- ESCRITORIO --- */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout {
@@ -41,7 +41,7 @@
             #mobile-helper { display: none; }
         }
 
-        /* --- MÓVIL (SCROLL INFINITO) --- */
+        /* --- MÓVIL --- */
         @media (max-width: 1023px) {
             body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
@@ -58,7 +58,7 @@
             }
         }
 
-        /* --- ESTILOS VISUALES --- */
+        /* --- COMPONENTES --- */
 
         /* IZQUIERDA */
         #sidebar { 
@@ -69,23 +69,30 @@
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         
-        /* ESCUDO Y MARCA */
+        /* --- AJUSTE DE LOGO SOLICITADO --- */
         .escudo-img { 
-            width: 70px; /* Tamaño ajustado */
-            margin-bottom: 10px; 
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); /* Sombra para resaltar sobre rojo */
+            width: 220px; /* Aumentado para igualar el ancho del texto */
+            max-width: 90%;
+            height: auto;
+            margin-bottom: 5px; 
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); 
         }
         
         .rdmls-brand { margin-bottom: 15px; }
         .rdmls-sigla { 
-            font-family: 'Oswald', sans-serif; font-size: 48px; font-weight: 700; 
-            color: white; line-height: 0.9; margin: 0; letter-spacing: 2px;
-            text-shadow: 2px 2px 0px #300000;
+            font-family: 'Oswald', sans-serif; 
+            font-size: 54px; /* Letra más grande y sólida */
+            font-weight: 700; 
+            color: white; 
+            line-height: 0.9; 
+            margin: 0; 
+            letter-spacing: 1px;
+            text-shadow: 3px 3px 0px #300000;
         }
         .rdmls-sub { 
-            font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 400; 
+            font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 400; 
             color: var(--serena-gold); margin-top: 5px; line-height: 1.2; 
-            text-transform: uppercase; letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
         .digital-clock { font-family: 'Oswald', sans-serif; font-size: 28px; margin: 5px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
@@ -148,9 +155,9 @@
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
         
-        /* MODAL DE ÉXITO */
-        #success-modal { background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 12000; }
-        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.2); }
+        /* MODAL ÉXITO */
+        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 12000; }
+        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
 
     </style>
 </head>
@@ -162,7 +169,7 @@
 
         <div id="sidebar">
             <div class="radio-header">
-                <img src="escudo.png" class="escudo-img" alt="Escudo La Serena">
+                <img src="escudo.png" class="escudo-img" alt="Ilustre Municipalidad La Serena">
                 
                 <div class="rdmls-brand">
                     <h1 class="rdmls-sigla">RDMLS</h1>
@@ -183,7 +190,7 @@
 
             <div class="weather-advanced">
                  <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
-                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
+                 <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
 
             <div class="route-box">
@@ -230,7 +237,7 @@
                 <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
                 <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
                 <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
-                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
+                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">CONFIRMAR</button>
             </div>
 
             <div id="step-2-details">
@@ -274,12 +281,12 @@
     </div>
     <div id="img-modal" onclick="this.style.display='none'"><img id="img-full" src=""></div>
     
-    <div id="success-modal" class="modal">
+    <div id="success-modal" class="modal" style="align-items:center; justify-content:center; background:rgba(0,0,0,0.85);">
         <div class="success-box">
             <i class="fas fa-check-circle" style="font-size:60px; color:#00e676; margin-bottom:20px;"></i>
             <h2 style="color:white; margin:0 0 10px 0;">¡GRACIAS!</h2>
             <p style="color:#ccc; font-size:14px; line-height:1.5;">Tu reporte ha sido enviado exitosamente.</p>
-            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:20px; width:100%;">CERRAR</button>
+            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:20px; width:100%;">ACEPTAR</button>
         </div>
     </div>
 
@@ -301,14 +308,17 @@
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
+            
             const inp = document.getElementById('r-dir');
             if(document.activeElement === inp) return;
+
             try {
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
                 let d = await r.json();
                 let a = d.address;
                 let calle = a.road || a.pedestrian || "";
                 let num = a.house_number;
+                
                 if(calle) {
                     if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); } 
                     else { inp.value = `${calle} (Ingresa N°)`; inp.classList.add('alert'); }
@@ -447,6 +457,8 @@
         }
         window.expandImg = function(src) { document.getElementById('img-full').src = src; document.getElementById('img-modal').style.display = 'flex'; }
         
+        function cerrarSuccess() { document.getElementById('success-modal').style.display = 'none'; volverPaso1(); }
+
         async function enviarReporteFinal() {
             if(!user) return;
             const file = document.getElementById('evidencia-file').files[0];
