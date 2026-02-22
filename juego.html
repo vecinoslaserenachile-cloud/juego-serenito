@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Sólida v68 Plus</title>
+    <title>VLS - Viajero Preciso v68</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -21,108 +21,68 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
 
-        /* LAYOUT ESCRITORIO (3 COLUMNAS v68) */
-        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 350px 1fr 320px; grid-template-rows: 1fr; }
-        
-        /* MÓVIL (SCROLL PERMITIDO) */
-        @media (max-width: 1023px) { 
-            body, html { height: auto; overflow-y: visible; overflow-x: hidden; }
-            #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; } 
-            #sidebar, #right-col { height: auto; overflow: visible; }
-            #stage-area { height: 500px; min-height: 50vh; order: 2; }
-            #sidebar { order: 1; }
-            #right-col { order: 3; margin-bottom: 60px; }
-        }
+        /* LAYOUT */
+        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 350px 1fr; grid-template-rows: 1fr; }
+        @media (max-width: 1023px) { #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } }
 
-        /* --- IZQUIERDA --- */
-        #sidebar { 
-            background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); 
-            padding: 15px; display: flex; flex-direction: column; gap: 10px; 
-            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto; 
-        }
-        
-        .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        /* IZQUIERDA */
+        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto; }
+        .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
         .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
-        .city-news-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; }
-        .weather-advanced { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-left: 4px solid var(--serena-gold); display: flex; justify-content: space-between; align-items: center; }
+        .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; transition: opacity 0.5s; }
+        .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* MÓDULOS DE RELLENO (NUEVOS) */
-        .module-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
-        .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 5px; }
-        
-        /* Calendario */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 9px; gap: 2px; }
-        .cal-head { color: #aaa; padding: 2px; }
-        .cal-day { padding: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; }
-        .cal-today { background: var(--serena-gold); color: black; font-weight: bold; }
-
-        /* Clima Full */
-        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; }
-        .env-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; display: flex; align-items: center; gap: 5px; }
-
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
+        /* CHIPS DESLIZABLES */
         .chip-scroll-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #333; }
         .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; white-space: nowrap; flex-shrink: 0; }
         .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
         
-        .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 150px; }
-        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
+        .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 200px; }
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .trans-val { font-weight: bold; font-size: 14px; color: white; }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* --- CENTRO --- */
-        #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
+        /* CENTRO */
+        #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .btn-tour:hover { transform: scale(1.05); }
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
         .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; pointer-events: none; }
 
-        /* --- DERECHA --- */
-        #right-col { 
-            background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; 
-            display: flex; flex-direction: column; gap: 15px; /* Espaciado entre elementos */
-        }
-        @media (max-width: 1023px) { #right-col { border-left: none; border-top: 4px solid var(--serena-gold); } }
-        
-        .user-header { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        /* DERECHA */
+        #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
+        @media (max-width: 1023px) { #form-panel { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; border-top: 4px solid var(--serena-gold); } }
+        .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
-        
-        .f-input { width: 100%; padding: 10px; margin-bottom: 5px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
-        .f-input:focus { border-color: var(--serena-gold); outline: none; }
-        .f-input.alert { border-color: #ff3d00; background: rgba(255,61,0,0.1); }
+        .f-input { width: 100%; padding: 10px; margin-bottom: 4px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
+        .f-input:focus { border-color: var(--serena-gold); background: #222; outline: none; }
+        .f-input.alert { border-color: #ff3d00; background: rgba(255, 61, 0, 0.1); }
         .vereda-detail { font-size: 10px; color: #888; margin-bottom: 10px; font-style: italic; text-align: right; }
         .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
 
         #step-2-details { display: none; }
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .upload-btn { background: #333; border: 1px dashed #666; color: #ccc; padding: 10px; text-align: center; border-radius: 5px; cursor: pointer; font-size: 11px; }
-        
-        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
+        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
         .back-link { color: #aaa; font-size: 11px; text-decoration: underline; cursor: pointer; display: block; text-align: center; margin-top: 10px; }
-
-        /* RELLENO DERECHA (INFO CARD) */
-        .info-card {
-            background: #222; border: 1px solid #444; border-radius: 8px; padding: 15px; margin-top: auto; /* Empujar al fondo */
-        }
-        .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; color: #ccc; }
-        .info-icon { width: 20px; text-align: center; color: var(--serena-gold); }
 
         /* MODALES */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; }
         .close-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: white; cursor: pointer; border-radius: 5px; font-weight: bold; z-index: 10001; color: black; }
         #hist-modal { background: rgba(0,0,0,0.95); align-items: center; justify-content: center; }
-        .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 1px solid var(--serena-gold); }
+        .hist-box { width: 90%; max-width: 450px; background: #222; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 1px solid var(--serena-gold); }
         .hist-card { background: #333; padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid var(--serena-gold); }
-        .hist-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #555; margin-left: 10px; cursor: zoom-in; }
+        .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 5px; cursor: pointer; border: 1px solid #555; }
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
 
@@ -148,44 +108,38 @@
             </div>
 
             <div class="weather-advanced">
-                 <div style="font-size:10px; color:var(--serena-gold);">CLIMA ACTUAL</div>
-                 <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+                 <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
+                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px;">📍 DESDE: PLAZA DE ARMAS</div>
+                
                 <div class="search-row">
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
+                
                 <div class="chip-scroll-container">
-                    <div class="chip" onclick="setDest('Coquimbo, Chile')">Coquimbo</div>
-                    <div class="chip" onclick="setDest('Vicuña, Coquimbo')">Vicuña</div>
-                    <div class="chip" onclick="setDest('Ovalle, Chile')">Ovalle</div>
-                    <div class="chip" onclick="setDest('Santiago, Chile')">Santiago</div>
-                    <div class="chip" onclick="setDest('Mendoza, Argentina')">Mendoza</div>
-                    <div class="chip" onclick="setDest('Lima, Peru')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo (Puerto)')">Coquimbo</div>
+                    <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
+                    <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
+                    <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
+                    <div class="chip" onclick="calcDirect(-36.8201, -73.0444, 'Concepción')">Concepción</div>
+                    <div class="chip" onclick="calcDirect(-41.4689, -72.9345, 'Puerto Montt')">P. Montt</div>
+                    <div class="chip" onclick="calcDirect(-18.4783, -70.3126, 'Arica')">Arica</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-31.5375, -68.5364, 'San Juan (ARG)')">San Juan</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-34.9011, -56.1645, 'Montevideo (URU)')">Montevideo</div>
                 </div>
+
                 <div class="route-list" id="route-output">
                     <div style="font-size:10px; color:#ccc; text-align:center; padding:10px;">Selecciona destino.</div>
                 </div>
-                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()">CERRAR RUTA</button>
-            </div>
-
-            <div class="module-box" style="margin-top:auto;">
-                <span class="mod-title" id="cal-month">CALENDARIO</span>
-                <div class="cal-grid">
-                    <div class="cal-head">L</div><div class="cal-head">M</div><div class="cal-head">M</div><div class="cal-head">J</div><div class="cal-head">V</div><div class="cal-head">S</div><div class="cal-head">D</div>
-                </div>
-                <div class="cal-grid" id="cal-days" style="margin-bottom:10px;"></div>
-                
-                <span class="mod-title" style="margin-top:10px; border-top:1px solid #444; padding-top:5px;">DETALLE AMBIENTAL</span>
-                <div class="env-grid">
-                    <div class="env-item"><i class="fas fa-wind" style="color:cyan;"></i> <span id="w-wind">--</span></div>
-                    <div class="env-item"><i class="fas fa-water" style="color:cornflowerblue;"></i> <span id="w-tide">Alta</span></div>
-                    <div class="env-item"><i class="fas fa-umbrella-beach" style="color:orange;"></i> UV 8</div>
-                    <div class="env-item"><i class="fas fa-moon" style="color:silver;"></i> Luna</div>
-                </div>
+                <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()"><i class="fas fa-times-circle"></i> CERRAR RUTA</button>
             </div>
         </div>
 
@@ -193,94 +147,69 @@
             <div id="map"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
             <canvas id="renderCanvas"></canvas>
-            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la dirección en el puntero</div>
+            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la incidencia en el centro</div>
             <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO</button>
         </div>
 
-        <div id="right-col">
+        <div id="form-panel">
             <div class="user-header" id="user-bar">
-                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
+                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
             <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: DIRECCIÓN</h4>
-                <div style="font-size:10px; color:#aaa;">Número de calle obligatorio:</div>
-                <input type="text" id="r-dir" class="f-input" placeholder="Mueve el mapa...">
-                <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:5px; color:gold; font-family:monospace;">GPS: --</div>
-                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">CONFIRMAR</button>
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: CONFIRMAR DIRECCIÓN</h4>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
+                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
+                <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
+                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
             </div>
 
             <div id="step-2-details">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:3px solid gold; font-size:11px;" id="locked-addr"></div>
-                <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
+                <div style="background:#333; padding:5px; font-size:11px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
+                <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono (Contacto)">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Descripción..."></textarea>
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
                 
-                <div class="upload-grid">
-                    <label class="upload-btn"><i class="fas fa-camera"></i> CÁMARA<input type="file" hidden capture="environment" accept="image/*" id="file-cam"></label>
-                    <label class="upload-btn"><i class="fas fa-folder-open"></i> GALERÍA<input type="file" hidden accept="image/*,video/*" id="file-gal"></label>
-                </div>
+                <label style="display:block; background:#333; padding:12px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px; border-radius:6px; color:#ccc;">
+                    <i class="fas fa-camera fa-lg"></i> <i class="fas fa-images fa-lg"></i> FOTO O GALERÍA
+                    <input type="file" hidden accept="image/*,video/*" id="evidencia-file">
+                </label>
                 
-                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR</button>
-                <span class="back-link" onclick="volverPaso1()">Corregir</span>
-            </div>
-
-            <div class="info-card">
-                <div style="font-size:12px; font-weight:bold; color:var(--serena-gold); margin-bottom:10px;">INFORMACIÓN ÚTIL</div>
-                <div class="info-row"><div class="info-icon"><i class="fas fa-shield-alt"></i></div> FONO SEGURIDAD: 1455</div>
-                <div class="info-row"><div class="info-icon"><i class="fas fa-ambulance"></i></div> SAMU: 131</div>
-                <div class="info-row"><div class="info-icon"><i class="fas fa-fire-extinguisher"></i></div> BOMBEROS: 132</div>
-                <div class="info-row"><div class="info-icon"><i class="fas fa-clock"></i></div> FARMACIA TURNO: Consultar</div>
+                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+                <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
             </div>
         </div>
 
     </div>
 
     <div id="modal-tour" class="modal">
-        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">CERRAR PASEO <i class="fas fa-times"></i></button>
+        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER A LA APP <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
-    
     <div id="hist-modal" class="modal">
         <div class="hist-box">
-            <h3 style="color:var(--serena-gold);">MIS REPORTES</h3>
+            <h3>MIS REPORTES</h3>
             <div id="hist-content">Cargando...</div>
             <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px;">Cerrar</button>
         </div>
     </div>
-    <div id="img-modal" onclick="this.style.display='none'"><img id="img-full" src=""></div>
+    <div id="img-modal" onclick="this.style.display='none'">
+        <img id="img-full" src="">
+    </div>
 
-    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous" autoplay></audio>
+    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
 
         // 1. CLIMA & TICKER
-        const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro.", "Fono Seguridad: 1455"];
+        const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro Monumental.", "Fono Seguridad: 1455"];
         let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
-        async function w(){ try{ 
-            let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
-            document.getElementById('w-temp').innerText=d.current_weather.temperature;
-            document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
-        }catch(e){} } w();
+        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-        // 2. CALENDARIO
-        function initCal() {
-            const now = new Date();
-            const m = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
-            document.getElementById('cal-month').innerText = `CALENDARIO - ${m[now.getMonth()]}`;
-            const days = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-            const start = new Date(now.getFullYear(), now.getMonth(), 1).getDay() || 7;
-            let h = "";
-            for(let i=1;i<start;i++) h+=`<div></div>`;
-            for(let i=1;i<=days;i++) h+=`<div class="${(i===now.getDate())?'cal-day cal-today':'cal-day'}">${i}</div>`;
-            document.getElementById('cal-days').innerHTML = h;
-        }
-        initCal();
-
-        // 3. MAPA & GEOCODING
+        // 2. MAPA & GEOCODING
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
@@ -288,7 +217,8 @@
         map.on('moveend', async () => {
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
-            document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
+            document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
+            
             const inp = document.getElementById('r-dir');
             if(document.activeElement === inp) return;
 
@@ -298,43 +228,54 @@
                 let a = d.address;
                 let calle = a.road || a.pedestrian || "";
                 let num = a.house_number;
+                
                 if(calle) {
-                    if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); }
+                    if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); } 
                     else { inp.value = `${calle} (Ingresa N°)`; inp.classList.add('alert'); }
-                } else inp.value = "";
+                } else inp.value = "Ubicación Desconocida";
             } catch(e) {}
         });
 
-        // 4. RUTAS
-        function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
+        // 3. RUTAS (DIRECTO Y BÚSQUEDA)
         function calcDirect(lat, lon, name) {
-            const R=6371; const dist = R * 2 * Math.atan2(Math.sqrt(Math.sin((lat-LS_COORDS[0])*Math.PI/360)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lon-LS_COORDS[1])*Math.PI/360)**2), Math.sqrt(1-(...arguments))) * 1.35;
-            renderRoute(dist, name, lat, lon);
+            // Función directa para chips con coordenadas precisas
+            const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
+            const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
+            renderRouteResult(dist, name, lat, lon);
         }
-        async function buscarYCalcular(){
+
+        function buscarYCalcular(){
             const q = document.getElementById('city-input').value; if(!q)return;
-            try {
-                const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`);
-                const d = await r.json(); if(!d.length)return;
-                calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
-            } catch(e){}
+            document.getElementById('route-output').innerHTML = "Calculando...";
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
+                .then(r=>r.json())
+                .then(d=>{
+                    if(!d.length) { document.getElementById('route-output').innerHTML = "No encontrado"; return; }
+                    calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
+                });
         }
-        function renderRoute(dist, name, lat, lon) {
+
+        function renderRouteResult(dist, name, lat, lon) {
             const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
-            document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center; color:white; font-weight:bold;">${name}</div>
-                <div class="trans-row"><div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
-                <div class="trans-row"><div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
-                <div class="trans-row bike"><div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                <div class="trans-row"><div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
-            document.getElementById('btn-reset-route').style.display='block';
+            let h = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${name}</div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
+                <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
+                <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
+            if(dist>350) h+=`<div class="trans-row"><div class="trans-icon"><i class="fas fa-plane"></i></div> <div class="trans-val">${(dist/800+2).toFixed(1)} h</div> <div style="font-size:9px">Avión</div></div>`;
+            h+=`<div style="text-align:center; font-size:10px; color:gold; margin-top:5px;">Dist: ${Math.round(dist)} km</div>`;
+            
+            document.getElementById('route-output').innerHTML = h;
+            document.getElementById('btn-reset-route').style.display = 'block';
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
         }
-        function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; document.getElementById('route-output').innerHTML=""; map.flyTo(LS_COORDS, 17); }
 
-        // 5. MOTOR 3D
+        function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); document.getElementById('route-output').innerHTML=""; }
+
+        // 4. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -354,7 +295,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 6. PASEO
+        // 5. PASEO HISTÓRICO
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -385,7 +326,7 @@
             }
         }
 
-        // 7. FIREBASE
+        // 6. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -394,7 +335,7 @@
         auth.onAuthStateChanged(u => {
             if(u) {
                 user = u;
-                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <br> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Mis Reportes</a></div>`;
+                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Historial</a></div>`;
                 document.getElementById('step-1-location').style.opacity = "1";
                 document.getElementById('step-1-location').style.pointerEvents = "auto";
                 document.getElementById('r-email').value = u.email;
@@ -405,7 +346,7 @@
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN SIN NÚMERO\nDebes escribir el número de la casa.");
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
@@ -434,16 +375,20 @@
         
         async function enviarReporteFinal() {
             if(!user) return;
-            const fileCam = document.getElementById('file-cam').files[0];
-            const fileGal = document.getElementById('file-gal').files[0];
-            const finalFile = fileCam || fileGal;
-            
+            const dir = document.getElementById('r-dir').value;
+            const desc = document.getElementById('r-desc').value;
+            const phone = document.getElementById('r-phone').value;
+            const file = document.getElementById('evidencia-file').files[0];
             let base64 = null;
-            if(finalFile) {
-                base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=(e)=>r(e.target.result); reader.readAsDataURL(finalFile); });
+            if(file) {
+                base64 = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
             }
-            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
-            alert("✅ Reporte Enviado");
+            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: phone, direccion: dir, descripcion: desc, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
+            alert("✅ Enviado");
             volverPaso1();
         }
 
