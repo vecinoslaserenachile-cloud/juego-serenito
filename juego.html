@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Master Stable v80</title>
+    <title>VLS - Renacimiento v81</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,7 +20,7 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET & BASE */
+        /* RESET */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
@@ -28,37 +28,30 @@
             width: 100%; height: 100%;
         }
 
-        /* --- ESCRITORIO (3 COLUMNAS FIJAS) --- */
+        /* --- ESCRITORIO (3 COLUMNAS FIJAS - LA BELLEZA ORIGINAL) --- */
         @media (min-width: 1024px) {
-            body { overflow: hidden; } 
+            body { overflow: hidden; } /* Fijo, sin scroll global */
             #main-layout {
                 display: grid; width: 100vw; height: 100vh;
-                grid-template-columns: 340px 1fr 320px;
+                grid-template-columns: 340px 1fr 320px; /* Izq | Mapa | Der */
                 grid-template-rows: 1fr;
             }
-            #sidebar, #right-col { overflow-y: auto; }
+            #sidebar, #right-col { overflow-y: auto; } /* Scroll solo en paneles */
         }
 
-        /* --- MÓVIL (SCROLL VERTICAL FLUIDO) --- */
+        /* --- MÓVIL (SCROLL INFINITO) --- */
         @media (max-width: 1023px) {
-            /* Permitir scroll en body */
-            body, html { height: auto !important; overflow-y: auto !important; overflow-x: hidden; }
-            
+            body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
             #main-layout {
-                display: flex; 
-                flex-direction: column; 
-                width: 100%; 
-                min-height: 100vh;
-                height: auto;
+                display: flex; flex-direction: column; width: 100%; min-height: 100vh;
             }
-            
-            /* Orden y Tamaños Móvil */
-            #sidebar { order: 1; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; }
-            #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index:1; } /* Altura fija mapa */
-            #right-col { order: 3; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; padding-bottom: 60px; }
+            /* Orden: Radio -> Mapa -> Formulario */
+            #sidebar { order: 1; width: 100%; height: auto; padding: 15px; box-sizing: border-box; }
+            #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; }
+            #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 60px; }
         }
 
-        /* --- ESTILOS VISUALES (v67/68) --- */
+        /* --- ESTILOS COMPONENTES --- */
 
         /* IZQUIERDA */
         #sidebar { 
@@ -69,14 +62,14 @@
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .station-title { font-family: 'Oswald', sans-serif; font-size: 20px; color: white; text-transform: uppercase; margin-bottom: 5px; line-height: 1.1; letter-spacing: 1px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 10px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 34px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
         .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
+        /* Módulos (Calendario & Clima - Estilo v67 recuperado) */
         .module-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
         .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; }
 
-        /* Calendario & Clima */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; gap: 2px; }
         .cal-head { color: #aaa; padding: 2px; }
         .cal-day { padding: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; }
@@ -100,12 +93,12 @@
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* CENTRO */
+        /* CENTRO (MAPA & SERENITO) */
         #stage-area { background: #333; overflow: hidden; position: relative; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 25px; border-radius: 30px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
         .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .btn-tour { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 25px; border-radius: 30px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; font-size: 13px; white-space: nowrap; }
         .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; white-space: nowrap; }
 
         /* DERECHA */
@@ -114,6 +107,7 @@
         
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
+        
         .f-input { width: 100%; padding: 12px; margin-bottom: 8px; background: #333; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
         .f-input:focus { border-color: var(--serena-gold); outline: none; }
         .f-input.alert { border-color: #ff3d00; background: rgba(255, 61, 0, 0.1); }
@@ -235,7 +229,7 @@
     </div>
 
     <div id="modal-tour" class="modal">
-        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">VOLVER A LA APP <i class="fas fa-times"></i></button>
+        <button class="close-btn" onclick="document.getElementById('modal-tour').style.display='none'">CERRAR PASEO <i class="fas fa-times"></i></button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
     <div id="hist-modal" class="modal">
@@ -252,36 +246,33 @@
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
         
-        // 1. RELOJ START
+        // 1. RELOJ & FECHA (Robustez Prioritaria)
         setInterval(() => {
             const el = document.getElementById('clock');
             if(el) el.innerText = new Date().toLocaleTimeString('es-CL');
         }, 1000);
 
-        // 2. CALENDARIO START
+        // 2. CALENDARIO INIT
         function initCal() {
             const now = new Date();
             const m = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
-            const elMonth = document.getElementById('cal-month');
-            if(elMonth) elMonth.innerText = `CALENDARIO - ${m[now.getMonth()]}`;
-            
+            document.getElementById('cal-month').innerText = `CALENDARIO - ${m[now.getMonth()]}`;
             const days = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
             const start = new Date(now.getFullYear(), now.getMonth(), 1).getDay() || 7;
             let h = "";
             for(let i=1;i<start;i++) h+=`<div></div>`;
             for(let i=1;i<=days;i++) h+=`<div class="${(i===now.getDate())?'cal-day cal-today':'cal-day'}">${i}</div>`;
-            const elDays = document.getElementById('cal-days');
-            if(elDays) elDays.innerHTML = h;
+            document.getElementById('cal-days').innerHTML = h;
         }
         initCal();
 
-        // 3. CLIMA ASYNC (No bloqueante)
+        // 3. CLIMA ASYNC (No bloquea la carga)
         async function w(){ try{ 
             let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
             document.getElementById('w-temp').innerText=d.current_weather.temperature;
             document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
         }catch(e){} } 
-        setTimeout(w, 500); // Retraso leve para priorizar UI
+        setTimeout(w, 100);
 
         // 4. MAPA & GEOCODING
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
@@ -291,9 +282,7 @@
         map.on('moveend', async () => {
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
-            const elGps = document.getElementById('gps-coords');
-            if(elGps) elGps.innerText = `GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-            
+            document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
             const inp = document.getElementById('r-dir');
             if(document.activeElement === inp) return;
 
@@ -411,7 +400,7 @@
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
+                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes escribir el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
