@@ -308,7 +308,7 @@
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // 5. PASEO 3D (BLOQUEO DE PISO IMPLEMENTADO)
+        // 5. PASEO 3D (BLOQUEO DE PISO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -318,7 +318,7 @@
                 const s = new BABYLON.Scene(tourEngine);
                 s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 
-                // CÁMARA CON LÍMITE (NO PASA EL PISO)
+                // CÁMARA CON LÍMITE
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
                 cam.upperBetaLimit = Math.PI / 2.2; 
@@ -348,7 +348,7 @@
             }
         }
 
-        // 6. LÓGICA USUARIO + CRM
+        // 6. USUARIO Y CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -403,7 +403,7 @@
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
         
-        // 7. LUPA (ZOOM) PARA TODAS LAS IMÁGENES
+        // 7. LUPA
         window.expandImg = function(src) { 
             const m = document.getElementById('img-modal');
             document.getElementById('img-full').src = src;
@@ -412,11 +412,16 @@
         
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 8. CHATBOT IA REPARADO (CONEXIÓN REST - GEMINI 1.5 FLASH)
+        // 8. CHATBOT IA "CASCADA"
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
         }
+
+        // HABILITAR TECLA ENTER
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendChat();
+        });
 
         async function sendChat() {
             const inp = document.getElementById('chat-input');
@@ -431,29 +436,41 @@
             loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
             box.appendChild(loading);
 
-            // CLAVE IA
             const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
-            try {
-                // LLAMADA REST DIRECTA A GEMINI-1.5-FLASH
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+            
+            // FUNCIÓN PARA PROBAR MODELOS EN CASCADA
+            async function tryModel(modelName) {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_KEY}`, {
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve y útil: " + txt }] }]
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve: " + txt }] }] })
                 });
-                
-                const d = await res.json();
-                
-                if (d.error) throw new Error(d.error.message); // Ver error real
+                if(!res.ok) throw new Error(res.status);
+                return await res.json();
+            }
+
+            try {
+                // INTENTO 1: Flash (Rápido)
+                let d;
+                try {
+                    d = await tryModel("gemini-1.5-flash");
+                } catch(e) {
+                    console.log("Flash falló, probando Pro...");
+                    // INTENTO 2: Pro (Estable)
+                    try {
+                        d = await tryModel("gemini-pro");
+                    } catch(e2) {
+                        console.log("Pro falló, probando 1.0...");
+                        // INTENTO 3: 1.0 Pro (Antiguo pero seguro)
+                        d = await tryModel("gemini-1.0-pro");
+                    }
+                }
 
                 const reply = d.candidates[0].content.parts[0].text;
-                
                 loading.remove();
                 box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
             } catch(e) {
-                loading.innerText = "Error: " + e.message;
-                console.error(e);
+                loading.innerText = "Error total: No se pudo conectar con ningún modelo.";
             }
             box.scrollTop = box.scrollHeight;
         }
