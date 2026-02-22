@@ -10,21 +10,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
@@ -50,13 +40,14 @@
         .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* RUTAS */
+        /* RUTAS (CHIPS) */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
         .go-btn { background: #333; color: var(--serena-gold); border: 1px solid var(--serena-gold); padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .chip { background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; display:inline-block; margin:2px; transition:0.2s; }
-        .chip:hover { background: rgba(255,255,255,0.3); }
+        .chip-scroll-container { display: flex; flex-wrap: wrap; gap: 5px; max-height: 120px; overflow-y: auto; padding-right: 5px; }
+        .chip { background: rgba(255,255,255,0.15); padding: 5px 10px; border-radius: 15px; font-size: 10px; cursor: pointer; transition:0.2s; border: 1px solid transparent; }
+        .chip:hover { border-color: var(--serena-gold); background: rgba(255,255,255,0.25); }
         .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; font-size: 12px; margin-top:5px; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
 
@@ -74,8 +65,8 @@
         .btn-green { width: 100%; background: #2e7d32; color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; text-align: center;}
         
-        /* IMÁGENES CON LUPA */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; transition: 0.3s; }
+        /* IMÁGENES CON LUPA (ZOOM) */
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; opacity: 0.9; cursor: zoom-in; transition: 0.3s; object-fit: cover; }
         .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); transform: scale(1.02); }
 
         /* CHATBOT */
@@ -84,14 +75,16 @@
         #chat-window { display: none; position: fixed; bottom: 120px; right: 20px; width: 320px; height: 450px; background: #1a1a1a; border-radius: 15px; border: 1px solid #444; z-index: 10000; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.9); }
 
         /* MODALES */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:11000; align-items:center; justify-content:center; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:11000; align-items:center; justify-content:center; }
         
-        /* ESTILO PARA BOTÓN CERRAR PASEO */
-        .tour-close-btn { position: absolute; top: 20px; right: 20px; padding: 12px 20px; background: var(--serena-red); color: white; border: none; border-radius: 30px; font-weight: bold; font-family: 'Oswald'; cursor: pointer; z-index: 12000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .tour-close-btn:hover { transform: scale(1.05); }
+        /* BOTÓN CERRAR PASEO */
+        .tour-close-btn { position: absolute; top: 20px; right: 20px; padding: 12px 25px; background: var(--serena-red); color: white; border: 2px solid white; border-radius: 30px; font-weight: bold; font-family: 'Oswald'; cursor: pointer; z-index: 12000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 14px; display:flex; align-items:center; gap:10px; }
+        .tour-close-btn:hover { transform: scale(1.05); background: #d32f2f; }
 
-        #img-full { max-width:95%; max-height:95%; border:3px solid white; border-radius:8px; box-shadow: 0 0 50px black; }
-        
+        /* IMAGEN FULLSCREEN (LUPA) */
+        #img-full { max-width:90%; max-height:85%; border:4px solid white; border-radius:8px; box-shadow: 0 0 50px black; object-fit: contain; }
+        .close-zoom { position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; cursor: pointer; background: rgba(0,0,0,0.5); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; }
+
         /* CRM */
         .hist-box { width: 90%; max-width: 400px; background: #222; max-height: 70vh; overflow-y: auto; padding: 20px; border-radius: 10px; border: 2px solid var(--serena-gold); }
         .hist-item { background: #333; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 3px solid var(--serena-gold); }
@@ -103,9 +96,9 @@
     <div id="main-layout">
         <div id="sidebar">
             <div class="radio-header">
-                <img src="escudo.png" class="escudo-img">
+                <img src="escudo.png" class="escudo-img" alt="Escudo La Serena">
                 <h1 class="rdmls-sigla">RDMLS</h1>
-                <h2 class="rdmls-sub">RADIO DIGITAL MUNICIPAL</h2>
+                <h2 class="rdmls-sub">RADIO DIGITAL MUNICIPAL<br>LA SERENA</h2>
                 <div style="font-size:28px; font-family:'Oswald'; margin:10px 0;" id="clock">00:00:00</div>
                 <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
             </div>
@@ -121,12 +114,18 @@
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
-                <div>
+                <div class="chip-scroll-container">
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
-                    <div class="chip" onclick="calcDirect(-30.2500, -71.5000, 'Tongoy')">Tongoy</div>
-                    <div class="chip" onclick="calcDirect(-30.1900, -71.4200, 'Guanaqueros')">Guanaqueros</div>
+                    <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
+                    <div class="chip" onclick="calcDirect(-36.8201, -73.0444, 'Concepción')">Concepción</div>
+                    <div class="chip" onclick="calcDirect(-18.4783, -70.3126, 'Arica')">Arica</div>
+                    <div class="chip" onclick="calcDirect(-34.9011, -56.1645, 'Montevideo')">Montevideo</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-31.5375, -68.5364, 'San Juan (Arg)')">San Juan</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-34.6037, -58.3816, 'Buenos Aires')">Buenos Aires</div>
                 </div>
                 <div id="route-output"></div>
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()" style="display:none; width:100%; margin-top:5px;">CERRAR RUTA</button>
@@ -186,7 +185,7 @@
         </div>
         <div id="chat-msgs" style="flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; font-size:14px;">
             <div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; color:#ddd;">
-                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Respondo sobre trámites, horarios y servicios.
+                👋 <b>¡Hola Vecino!</b><br>Soy la IA de La Serena. Pregúntame sobre trámites, horarios y servicios.
             </div>
         </div>
         <div style="padding:10px; border-top:1px solid #333; display:flex; gap:5px; background:#222;">
@@ -197,14 +196,14 @@
 
     <div id="modal-tour" class="modal">
         <button class="tour-close-btn" onclick="document.getElementById('modal-tour').style.display='none'">
-            <i class="fas fa-sign-out-alt"></i> CERRAR PASEO
+            <i class="fas fa-arrow-left"></i> VOLVER A RADIO DIGITAL
         </button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
     
-    <div id="img-modal" onclick="this.style.display='none'">
+    <div id="img-modal" class="modal" onclick="this.style.display='none'">
+        <div class="close-zoom">&times;</div>
         <img id="img-full" src="">
-        <div style="color:white; position:absolute; bottom:20px; text-align:center; width:100%;">Toca para cerrar</div>
     </div>
     
     <div id="success-modal" class="modal">
@@ -258,7 +257,6 @@
             const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; 
             
-            // CÁLCULO DE TIEMPOS RESTAURADO
             const tAuto = (dist / 60).toFixed(1);
             const tBus = (dist / 40).toFixed(1);
             const tBici = (dist / 15).toFixed(1);
@@ -308,7 +306,7 @@
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // 5. PASEO 3D (SERENITO + MOVIMIENTO CLICK)
+        // 5. PASEO 3D (BLOQUEO DE PISO IMPLEMENTADO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -317,10 +315,13 @@
                 tourEngine = new BABYLON.Engine(c, true);
                 const s = new BABYLON.Scene(tourEngine);
                 s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+                
+                // CÁMARA CON LÍMITE (NO PASA EL PISO)
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
-                new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
+                cam.upperBetaLimit = Math.PI / 2.2; // ESTO EVITA VER DEBAJO DEL SUELO
                 
+                new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
                 const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
                 const mat = new BABYLON.StandardMaterial("m", s);
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
@@ -328,7 +329,6 @@
                 
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; });
-                
                 let tSer, dest;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
                 
@@ -401,7 +401,7 @@
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
         
-        // 7. LUPA (ZOOM) REPARADA
+        // 7. LUPA (ZOOM) PARA TODAS LAS IMÁGENES
         window.expandImg = function(src) { 
             const m = document.getElementById('img-modal');
             document.getElementById('img-full').src = src;
@@ -410,47 +410,48 @@
         
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // --- MÓDULO CHATBOT V2 (SDK OFICIAL GOOGLE) ---
+        // 8. CHATBOT IA REPARADO (CONEXIÓN SEGURA REST)
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
         }
-    </script>
 
-    <script type="module">
-      import { GoogleGenerativeAI } from "@google/generative-ai";
+        async function sendChat() {
+            const inp = document.getElementById('chat-input');
+            const box = document.getElementById('chat-msgs');
+            const txt = inp.value.trim();
+            if(!txt) return;
 
-      // TU CLAVE
-      const API_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
+            inp.value = ""; box.scrollTop = box.scrollHeight;
 
-      window.sendChat = async function() {
-        const inp = document.getElementById('chat-input');
-        const box = document.getElementById('chat-msgs');
-        const txt = inp.value.trim();
-        if(!txt) return;
+            const loading = document.createElement("div");
+            loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
+            box.appendChild(loading);
 
-        box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
-        inp.value = ""; box.scrollTop = box.scrollHeight;
+            const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
+            try {
+                // MODELO 1.5-FLASH VIA REST (MÁS ROBUSTO QUE LA LIBRERÍA JS)
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve y útil: " + txt }] }] })
+                });
+                
+                const d = await res.json();
+                
+                if(d.error) throw new Error(d.error.message); // Captura errores de Google explícitos
 
-        const loading = document.createElement("div");
-        loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
-        box.appendChild(loading);
-
-        try {
-            const result = await model.generateContent("Eres un asistente municipal de La Serena útil y breve. Responde a: " + txt);
-            const response = await result.response;
-            const text = response.text();
-            
-            loading.remove();
-            box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${text}</div>`;
-        } catch (error) {
-            loading.innerText = "Error de conexión (Cuota o Red).";
-            console.error(error);
+                const reply = d.candidates[0].content.parts[0].text;
+                
+                loading.remove();
+                box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
+            } catch(e) {
+                loading.innerText = "Error: Intenta nuevamente.";
+                console.error(e);
+            }
+            box.scrollTop = box.scrollHeight;
         }
-        box.scrollTop = box.scrollHeight;
-      }
     </script>
 </body>
 </html>
