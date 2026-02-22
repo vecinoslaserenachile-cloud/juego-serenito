@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Rescate Definitivo v82</title>
+    <title>VLS - Resurrección v83</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,7 +20,7 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET TOTAL */
+        /* RESET */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
@@ -28,7 +28,7 @@
             width: 100%; height: 100%;
         }
 
-        /* --- ESCRITORIO (3 COLUMNAS FIJAS) --- */
+        /* --- ESCRITORIO (FIJO Y BONITO) --- */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout {
@@ -39,26 +39,21 @@
             #sidebar, #right-col { overflow-y: auto; }
         }
 
-        /* --- MÓVIL (SCROLL INFINITO - REPARADO) --- */
+        /* --- MÓVIL (ARREGLADO: SCROLL INFINITO) --- */
         @media (max-width: 1023px) {
-            /* Forzar altura automática para permitir scroll */
-            body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
+            body, html { height: auto !important; overflow-y: auto !important; overflow-x: hidden; }
             
             #main-layout {
-                display: flex; 
-                flex-direction: column; 
-                width: 100%; 
-                min-height: 100vh; /* Asegura que cubra al menos la pantalla */
+                display: flex; flex-direction: column; width: 100%; min-height: 100vh;
             }
             
-            /* Órdenes y Alturas Móviles */
+            /* Orden y Alturas para que no se corte */
             #sidebar { order: 1; width: 100%; height: auto; padding: 15px; box-sizing: border-box; }
-            /* Mapa con altura fija para que no desaparezca */
-            #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; }
+            #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; } /* Altura obligatoria */
             #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
         }
 
-        /* --- ESTILOS COMPONENTES --- */
+        /* --- COMPONENTES --- */
 
         /* IZQUIERDA */
         #sidebar { 
@@ -68,17 +63,15 @@
         }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .station-title { font-family: 'Oswald', sans-serif; font-size: 18px; color: white; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .station-title { font-family: 'Oswald', sans-serif; font-size: 22px; color: white; text-transform: uppercase; margin-bottom: 5px; line-height: 1.1; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 34px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
         .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
-        .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; }
-        
-        /* Módulos (Estilo v67 recuperado) */
         .module-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
         .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; }
 
+        /* Calendario & Clima (Estilo v67) */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 10px; gap: 2px; }
         .cal-head { color: #aaa; padding: 2px; }
         .cal-day { padding: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; }
@@ -102,7 +95,7 @@
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* CENTRO (MAPA & SERENITO) */
+        /* CENTRO (MAPA) */
         #stage-area { background: #333; overflow: hidden; position: relative; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
@@ -156,11 +149,6 @@
                 <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
             </div>
 
-            <div class="city-news-box" id="city-ticker">
-                <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
-                <span id="ticker-text">...</span>
-            </div>
-
             <div class="module-box">
                 <span class="mod-title" id="cal-month">CALENDARIO</span>
                 <div class="cal-grid">
@@ -193,8 +181,8 @@
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
                     <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
                     <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
-                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
-                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima')">Lima</div>
                 </div>
 
                 <div class="route-list" id="route-output"></div>
@@ -260,13 +248,13 @@
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
         
-        // 1. RELOJ START
+        // 1. RELOJ & FECHA (EJECUCIÓN INMEDIATA)
         setInterval(() => {
             const el = document.getElementById('clock');
             if(el) el.innerText = new Date().toLocaleTimeString('es-CL');
         }, 1000);
 
-        // 2. CALENDARIO INIT
+        // 2. CALENDARIO (EJECUCIÓN SEGURA)
         function initCal() {
             const now = new Date();
             const m = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
@@ -280,19 +268,20 @@
         }
         initCal();
 
-        // 3. CLIMA ASYNC (No bloqueante)
+        // 3. MAPA (INICIALIZACIÓN PRIORITARIA)
+        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        let routePolyline = null;
+
+        // 4. CLIMA ASYNC (Para no bloquear el mapa)
         async function w(){ try{ 
             let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
             document.getElementById('w-temp').innerText=d.current_weather.temperature;
             document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
         }catch(e){} } 
-        setTimeout(w, 500);
+        setTimeout(w, 500); // Se carga medio segundo después para asegurar que el mapa ya se dibujó
 
-        // 4. MAPA & GEOCODING
-        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        let routePolyline = null;
-
+        // LOGICA DE MAPA
         map.on('moveend', async () => {
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
@@ -342,7 +331,7 @@
         }
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; document.getElementById('route-output').innerHTML=""; map.flyTo(LS_COORDS, 17); }
 
-        // 6. MOTOR 3D
+        // 6. MOTOR 3D (Inicializado después del mapa)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -394,7 +383,7 @@
             }
         }
 
-        // 8. FIREBASE & AUTH
+        // 8. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
