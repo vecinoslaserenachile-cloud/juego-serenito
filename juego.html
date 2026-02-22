@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Feedback Visual v87</title>
+    <title>VLS - Galería Visual v88</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -36,17 +36,13 @@
                 grid-template-columns: 350px 1fr 320px;
                 grid-template-rows: 1fr;
             }
-            #sidebar, #form-panel { overflow-y: auto; }
+            #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* --- MÓVIL (CORRECCIÓN SCROLL) --- */
+        /* --- MÓVIL (SCROLL INFINITO) --- */
         @media (max-width: 1023px) {
             body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
-            
-            #main-layout {
-                display: flex; flex-direction: column; width: 100%; min-height: 100vh;
-            }
-
+            #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
             #sidebar { order: 1; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; }
             #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; }
             #form-panel { order: 3; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
@@ -81,12 +77,11 @@
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 200px; }
         .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
-        .trans-val { font-weight: bold; font-size: 14px; color: white; }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
         /* IMÁGENES DE RELLENO */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0.9; transition: opacity 0.3s; }
-        .graphic-filler:hover { opacity: 1; }
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0.9; transition: opacity 0.3s; object-fit: cover; }
+        .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); }
 
         /* CENTRO */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
@@ -122,6 +117,10 @@
         .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 5px; cursor: pointer; border: 1px solid #555; }
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
+        
+        /* MODAL ÉXITO */
+        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; }
 
     </style>
 </head>
@@ -146,7 +145,7 @@
 
             <div class="weather-advanced">
                  <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
-                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
+                 <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
 
             <div class="route-box">
@@ -170,7 +169,8 @@
                 <button id="btn-reset-route" class="reset-route-btn" onclick="resetRoute()">CERRAR RUTA</button>
             </div>
 
-            <img src="relleno-radio.jpg" class="graphic-filler" alt="Estudio Radio Municipal">
+            <img src="relleno-radio.jpg" class="graphic-filler" alt="Locutores">
+            <img src="serenito-bus.jpg" class="graphic-filler" alt="Serenito Micro 1950">
         </div>
 
         <div id="stage-area">
@@ -186,31 +186,38 @@
                 <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
-            <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: CONFIRMAR DIRECCIÓN</h4>
-                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
-                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
-                <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
-                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">✅ CONFIRMAR UBICACIÓN</button>
+            <div id="step-1-location">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: DIRECCIÓN</h4>
+                <div style="font-size:10px; color:#aaa;">Número obligatorio:</div>
+                <input type="text" id="r-dir" class="f-input" placeholder="Mueve el mapa...">
+                <div class="gps-data" id="gps-coords">GPS: --</div>
+                <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">CONFIRMAR</button>
             </div>
 
             <div id="step-2-details">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:5px; font-size:11px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
-                <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono (Contacto)">
+                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
+                <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Descripción..."></textarea>
                 
-                <label style="display:block; background:#333; padding:12px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px; border-radius:6px; color:#ccc;">
-                    <i class="fas fa-camera fa-lg"></i> <i class="fas fa-images fa-lg"></i> FOTO O GALERÍA
-                    <input type="file" hidden accept="image/*,video/*" id="evidencia-file">
-                </label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
+                        <i class="fas fa-camera"></i> CÁMARA
+                        <input type="file" hidden capture="environment" accept="image/*" id="file-cam">
+                    </label>
+                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
+                        <i class="fas fa-images"></i> GALERÍA
+                        <input type="file" hidden accept="image/*,video/*" id="file-gal">
+                    </label>
+                </div>
                 
-                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
-                <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
+                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR REPORTE</button>
+                <span class="back-link" onclick="volverPaso1()">Corregir</span>
             </div>
 
-            <img src="relleno-personajes.jpg" class="graphic-filler" alt="Personajes La Serena">
+            <img src="relleno-personajes.jpg" class="graphic-filler" alt="Personajes">
+            <img src="serenito-museo.jpg" class="graphic-filler" alt="Serenito Museo">
         </div>
 
     </div>
@@ -226,20 +233,18 @@
             <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px;">Cerrar</button>
         </div>
     </div>
-    <div id="img-modal" onclick="this.style.display='none'">
-        <img id="img-full" src="">
-    </div>
+    <div id="img-modal" onclick="this.style.display='none'"><img id="img-full" src=""></div>
     
-    <div id="success-modal" class="modal" style="align-items:center; justify-content:center; background:rgba(0,0,0,0.8);">
-        <div style="background:#222; padding:30px; border-radius:15px; border:2px solid var(--serena-gold); text-align:center; max-width:300px;">
+    <div id="success-modal" class="modal" style="align-items:center; justify-content:center; background:rgba(0,0,0,0.85);">
+        <div class="success-box">
             <i class="fas fa-check-circle" style="font-size:50px; color:#00e676; margin-bottom:20px;"></i>
-            <h3 style="margin:0 0 10px 0; color:white;">¡REPORTE ENVIADO!</h3>
-            <p style="font-size:12px; color:#ccc; line-height:1.4;">Gracias por colaborar con la Municipalidad de La Serena.</p>
-            <button onclick="cerrarSuccess()" class="btn-green" style="margin-top:15px; width:auto; padding:10px 30px;">ENTENDIDO</button>
+            <h2 style="color:white; margin:0 0 10px 0;">¡GRACIAS!</h2>
+            <p style="color:#ccc;">Tu reporte ha sido enviado a la Municipalidad.</p>
+            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:15px; width:auto; padding:10px 30px;">ACEPTAR</button>
         </div>
     </div>
 
-    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous" autoplay></audio>
 
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
@@ -257,14 +262,17 @@
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
+            
             const inp = document.getElementById('r-dir');
             if(document.activeElement === inp) return;
+
             try {
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
                 let d = await r.json();
                 let a = d.address;
                 let calle = a.road || a.pedestrian || "";
                 let num = a.house_number;
+                
                 if(calle) {
                     if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); } 
                     else { inp.value = `${calle} (Ingresa N°)`; inp.classList.add('alert'); }
@@ -283,7 +291,8 @@
             const q = document.getElementById('city-input').value; if(!q)return;
             document.getElementById('route-output').innerHTML = "Calculando...";
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
-                .then(r=>r.json()).then(d=>{
+                .then(r=>r.json())
+                .then(d=>{
                     if(!d.length) { document.getElementById('route-output').innerHTML = "No encontrado"; return; }
                     calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
                 });
@@ -291,13 +300,13 @@
 
         function renderRouteResult(dist, name, lat, lon) {
             const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
-            let h = `<div style="font-size:12px; font-weight:bold; color:white; margin-bottom:5px;">${name}</div>
-                <div class="trans-row"><div class="trans-icon"><i class="fas fa-car"></i></div> <div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
-                <div class="trans-row"><div class="trans-icon"><i class="fas fa-bus"></i></div> <div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
-                <div class="trans-row bike"><div class="trans-icon"><i class="fas fa-biking"></i></div> <div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                <div class="trans-row"><div class="trans-icon"><i class="fas fa-walking"></i></div> <div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
-            document.getElementById('route-output').innerHTML = h;
-            document.getElementById('btn-reset-route').style.display = 'block';
+            document.getElementById('route-output').innerHTML = `
+                <div style="text-align:center; color:white; font-weight:bold;">${name}</div>
+                <div class="trans-row"><div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
+                <div class="trans-row"><div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
+                <div class="trans-row bike"><div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
+                <div class="trans-row"><div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
+            document.getElementById('btn-reset-route').style.display='block';
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
@@ -313,7 +322,7 @@
             const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
             new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s).intensity = 1.3;
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
-                let ser = m[0]; ser.scaling = new BABYLON.Vector3(12,12,-12); ser.position.y = 0; 
+                let ser = m[0]; ser.scaling = new BABYLON.Vector3(12,12,-12); ser.position.y = -22;
                 cam.lockedTarget = ser;
                 s.registerBeforeRender(() => { ser.rotation.y = Math.PI; });
                 map.on('movestart', () => ser.scaling = new BABYLON.Vector3(6,6,-6));
@@ -324,7 +333,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // PASEO HISTÓRICO (EDIFICIOS BAJADOS A TIERRA)
+        // PASEO HISTÓRICO
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -341,9 +350,9 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // Y=0.5 para que estén apoyados
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0.5; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0.5; });
+                // EDIFICIOS EN EL SUELO (y=0)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
@@ -356,7 +365,7 @@
             }
         }
 
-        // FIREBASE
+        // FIREBASE & AUTH
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -372,10 +381,11 @@
             }
         });
 
+        // VALIDACIÓN
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes escribir el número de la casa.");
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
@@ -402,22 +412,19 @@
         }
         window.expandImg = function(src) { document.getElementById('img-full').src = src; document.getElementById('img-modal').style.display = 'flex'; }
         
-        function cerrarSuccess() { document.getElementById('success-modal').style.display = 'none'; volverPaso1(); }
-
         async function enviarReporteFinal() {
             if(!user) return;
-            const file = document.getElementById('evidencia-file').files[0];
+            const fileCam = document.getElementById('file-cam').files[0];
+            const fileGal = document.getElementById('file-gal').files[0];
+            const finalFile = fileCam || fileGal;
+            
             let base64 = null;
-            if(file) {
-                base64 = await new Promise(resolve => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
+            if(finalFile) {
+                base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=(e)=>r(e.target.result); reader.readAsDataURL(finalFile); });
             }
             await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
             
-            // MOSTRAR MODAL DE ÉXITO EN LUGAR DE ALERT
+            // MODAL DE ÉXITO
             document.getElementById('success-modal').style.display = 'flex';
         }
 
