@@ -48,7 +48,9 @@
         
         /* IA PANEL */
         .ai-panel { background: rgba(66, 133, 244, 0.05); border: 1px solid #4285f4; border-radius: 8px; padding: 20px; margin-top: 10px; }
-        .btn-ai { background: linear-gradient(45deg, #4285f4, #8ab4f8); border: none; color: black; font-weight: bold; padding: 10px 20px; border-radius: 30px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-ai { background: linear-gradient(45deg, #4285f4, #8ab4f8); border: none; color: black; font-weight: bold; padding: 10px 20px; border-radius: 30px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s; }
+        .btn-ai:hover { box-shadow: 0 0 15px rgba(66, 133, 244, 0.4); transform: scale(1.02); }
+        
         .ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; display: none; }
         .ai-item { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; }
     </style>
@@ -98,7 +100,9 @@
                     <div id="ai-start-view">
                         <button class="btn-ai" onclick="analyzeTicket()"><i class="fas fa-sparkles"></i> ANALIZAR CON IA</button>
                     </div>
-                    <div id="ai-loading" style="display:none; color:#4285f4; text-align:center; padding:10px;">Procesando...</div>
+                    <div id="ai-loading" style="display:none; color:#4285f4; text-align:center; padding:10px;">
+                        <i class="fas fa-circle-notch fa-spin"></i> Procesando con Google Gemini...
+                    </div>
                     <div id="ai-results" class="ai-result-grid">
                         <div class="ai-item"><span style="color:#aaa; font-size:10px;">CATEGORÍA</span><br><b id="res-cat" style="color:#4285f4;">--</b></div>
                         <div class="ai-item"><span style="color:#aaa; font-size:10px;">URGENCIA</span><br><b id="res-urg">--</b></div>
@@ -113,18 +117,18 @@
     </div>
 
     <script>
-        // CONFIGURACIÓN
+        // CONFIGURACIÓN FIREBASE (La tuya propia)
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        // TU CLAVE LISTA (NO TOCAR)
+        // TU CLAVE GEMINI (INTEGRADA)
         const GEMINI_API_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
 
         let currentData = null;
         let mapInstance = null;
 
-        // LEER BASE DE DATOS (Limitado a 50 para ahorro)
+        // LEER BASE DE DATOS
         db.collection("incidencias").orderBy("fecha", "desc").limit(50).onSnapshot(snap => {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = "";
@@ -133,11 +137,14 @@
             snap.forEach(doc => {
                 const data = doc.data();
                 const safeData = encodeURIComponent(JSON.stringify(data));
+                const fecha = data.fecha ? new Date(data.fecha.seconds * 1000).toLocaleDateString() : "--";
+                const desc = data.descripcion ? data.descripcion.substring(0,40) : "Sin descripción";
+                
                 tbody.innerHTML += `
                     <tr>
-                        <td>${data.fecha ? new Date(data.fecha.seconds * 1000).toLocaleDateString() : "--"}</td>
+                        <td>${fecha}</td>
                         <td>${data.user || "Anónimo"}</td>
-                        <td style="color:#aaa;">${data.descripcion ? data.descripcion.substring(0,40) : ""}...</td>
+                        <td style="color:#aaa;">${desc}...</td>
                         <td><span class="badge-new">${data.estado || "NUEVO"}</span></td>
                         <td><button class="btn-view" onclick="viewTicket('${doc.id}', '${safeData}')">VER</button></td>
                     </tr>`;
@@ -148,12 +155,13 @@
             currentData = JSON.parse(decodeURIComponent(encodedData));
             document.getElementById('detail-modal').style.display = 'flex';
             document.getElementById('ticket-id').innerText = "#" + id.substring(0,6).toUpperCase();
-            document.getElementById('ticket-desc').innerText = currentData.descripcion;
+            document.getElementById('ticket-desc').innerText = currentData.descripcion || "Sin detalles.";
 
             const img = document.getElementById('evidence-img');
             if(currentData.foto_evidencia) { img.src = currentData.foto_evidencia; img.style.display = 'block'; }
             else { img.style.display = 'none'; }
 
+            // Resetear interfaz IA
             document.getElementById('ai-start-view').style.display = 'block';
             document.getElementById('ai-loading').style.display = 'none';
             document.getElementById('ai-results').style.display = 'none';
@@ -166,29 +174,55 @@
             }, 100);
         }
 
+        // LÓGICA IA BLINDADA (Aquí está la cirugía)
         window.analyzeTicket = async function() {
+            // 1. Validación de texto corto para no romper la IA
+            if(!currentData || !currentData.descripcion || currentData.descripcion.length < 3) {
+                alert("⚠️ EL REPORTE ES MUY CORTO.\nLa IA necesita más detalles para analizar. El vecino solo escribió: '" + (currentData.descripcion || "") + "'");
+                return;
+            }
+
             document.getElementById('ai-start-view').style.display = 'none';
             document.getElementById('ai-loading').style.display = 'block';
 
-            const prompt = `Analiza reporte municipal: "${currentData.descripcion}". Responde SOLO JSON válido: {"categoria": "string", "urgencia": "Alta/Media/Baja", "sentimiento": "string", "respuesta": "texto formal breve"}`;
+            // 2. Prompt optimizado para JSON estricto
+            const prompt = `Analiza este reporte ciudadano de La Serena: "${currentData.descripcion}".
+            Responde EXCLUSIVAMENTE un objeto JSON válido con este formato:
+            {"categoria": "string", "urgencia": "Alta/Media/Baja", "sentimiento": "string", "respuesta": "texto formal breve"}`;
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
+                
                 const data = await response.json();
-                let text = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+                
+                // 3. Blindaje de respuesta vacía
+                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                    throw new Error("La IA no devolvió resultados válidos.");
+                }
+
+                // 4. Limpieza de formato Markdown
+                let text = data.candidates[0].content.parts[0].text;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                
                 const json = JSON.parse(text);
 
                 document.getElementById('ai-loading').style.display = 'none';
                 document.getElementById('ai-results').style.display = 'grid';
-                document.getElementById('res-cat').innerText = json.categoria;
-                document.getElementById('res-urg').innerText = json.urgencia;
-                document.getElementById('res-mood').innerText = json.sentimiento;
-                document.getElementById('res-reply').innerText = json.respuesta;
+                
+                document.getElementById('res-cat').innerText = json.categoria || "General";
+                document.getElementById('res-urg').innerText = json.urgencia || "Media";
+                document.getElementById('res-mood').innerText = json.sentimiento || "Neutro";
+                document.getElementById('res-reply').innerText = json.respuesta || "Recibido.";
+                
+                // Color dinámico
+                if(json.urgencia === 'Alta') document.getElementById('res-urg').style.color = '#ff1744';
+
             } catch (e) {
-                alert("Error IA: " + e);
+                console.error(e);
+                alert("Ocurrió un error al analizar: " + e.message);
                 document.getElementById('ai-loading').style.display = 'none';
                 document.getElementById('ai-start-view').style.display = 'block';
             }
