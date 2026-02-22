@@ -2,100 +2,93 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Serenito IA | Microservicio de Inteligencia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Serenito IA | Consultor Municipal 2026</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        body { margin: 0; font-family: 'Roboto', sans-serif; background: #1a1a1a; color: white; height: 100vh; display: flex; flex-direction: column; }
-        #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px; border-radius: 15px; max-width: 85%; font-size: 14px; line-height: 1.4; }
-        .serenito { background: #333; align-self: flex-start; border-left: 4px solid #ffd700; color: #eee; }
-        .vecino { background: #005c4b; align-self: flex-end; color: white; }
-        
-        #input-area { background: #222; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #444; }
-        input { flex: 1; background: #111; border: 1px solid #555; color: white; padding: 12px; border-radius: 8px; outline: none; }
-        button { background: #b71c1c; border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-        /* FORMULARIO IN-CHAT */
+        body { margin: 0; font-family: 'Roboto', sans-serif; background: #0f0f0f; color: white; height: 100vh; display: flex; flex-direction: column; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 12px 16px; border-radius: 18px; max-width: 85%; font-size: 14px; line-height: 1.5; }
+        .serenito { background: #1e1e1e; align-self: flex-start; border-left: 4px solid #ffd700; color: #f0f0f0; }
+        .vecino { background: #b71c1c; align-self: flex-end; color: white; }
         .ia-form { background: #000; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px solid #ffd700; }
-        .ia-form input, .ia-form textarea { width: 100%; margin-bottom: 8px; font-size: 12px; box-sizing: border-box; }
-        .ia-form button { width: 100%; height: 35px; background: #2e7d32; }
+        .ia-form input, .ia-form textarea { width: 100%; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; box-sizing: border-box; }
+        .ia-form button { width: 100%; background: #2e7d32; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        #input-area { background: #1a1a1a; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
+        input#user-in { flex: 1; background: #000; border: 1px solid #444; color: white; padding: 14px; border-radius: 25px; outline: none; }
+        button#send-btn { background: #ffd700; border: none; color: black; padding: 0 20px; border-radius: 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div id="chat-container">
-        <div class="msg serenito">
-            <b>Serenito:</b> ¡Hola! Soy el asesor experto de La Serena 2026. He sido capacitado con los documentos oficiales de la municipalidad para ayudarte con trámites, turismo y emergencias. ¿Qué necesitas?
-        </div>
+    <div id="chat">
+        <div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Hoy es **22 de febrero de 2026**. Estoy capacitado con los últimos manuales de procedimientos municipales para ayudarte con Patentes, Inspecciones y trámites de Verano. ¿En qué puedo orientarte?</div>
     </div>
-
     <div id="input-area">
-        <input type="text" id="user-in" placeholder="Escribe tu consulta aquí..." onkeypress="if(event.key==='Enter')procesar()">
-        <button onclick="procesar()">ENVIAR</button>
+        <input type="text" id="user-in" placeholder="Dime tu trámite o consulta..." onkeypress="if(event.key==='Enter')procesar()">
+        <button id="send-btn" onclick="procesar()">ENVIAR</button>
     </div>
 
     <script>
-        // CONFIGURACIÓN FIREBASE (Conectado a tu Back-office)
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // AQUÍ PEGAS EL CONOCIMIENTO DE NOTEBOOKLM
-        const KNOWLEDGE_BASE = [
-            { keys: ["horario", "atencion", "abierto"], resp: "La Municipalidad atiende de 08:30 a 14:00 en Prat 451. ¿Buscas alguna oficina en particular?" },
-            { keys: ["licencia", "conducir", "examen"], resp: "Para renovar licencia 2026, debes completar este ticket para la Dirección de Tránsito:", hasForm: true, type: "Tránsito" },
-            { keys: ["faro", "visitar", "turismo"], resp: "El Faro Monumental está abierto de 10:00 a 19:00. ¡Es un imperdible papayero!" }
+        // MOTOR DE CONOCIMIENTO ACTUALIZADO (INCLUYE NUEVOS MANUALES)
+        const BRAIN = [
+            {
+                keys: ["patente", "comercial", "industrial", "profesional", "emprender"],
+                resp: "🏢 **Tramitación de Patentes:** Para obtener tu patente comercial o industrial, el Departamento de Rentas requiere: 1. Acreditación de domicilio, 2. Iniciación de actividades ante el SII y 3. Verificación de zonificación. ¿Quieres que abra un ticket para que el equipo de Rentas revise tu caso?",
+                hasForm: true, type: "Rentas/Patentes"
+            },
+            {
+                keys: ["denuncia", "denunciar", "ruidos", "ilegal", "inspector", "inspección"],
+                resp: "⚖️ **Procedimiento de Inspección:** Toda denuncia formal se ingresa por la Oficina de Partes. Un inspector visitará el lugar y, de detectar una infracción, notificará al Juzgado de Policía Local. Para agilizar, puedo derivar tus datos ahora mismo a la **Unidad de Inspección Municipal**:",
+                hasForm: true, type: "Inspección/Fiscalización"
+            },
+            {
+                keys: ["permiso", "circulación", "pagar", "patente", "vehiculo"],
+                resp: "🚗 **Permiso de Circulación 2026:** ¡Últimas semanas! Puntos habilitados en CCU, Polideportivo Las Compañías y Outlet Peñuelas. Atendemos este sábado de 09:00 a 14:00.",
+                hasForm: true, type: "Tránsito"
+            },
+            {
+                keys: ["historia", "fundada", "pirata", "san francisco"],
+                resp: "🏛️ La Serena (1544) es la segunda más antigua de Chile. Sobrevivimos al pirata Bartholomew Sharp en 1680. Nuestra arquitectura actual se rige por el **'Plan Serena'** neocolonial."
+            },
+            {
+                keys: ["bienestar", "funcionario", "reembolso"],
+                resp: "🏥 **Servicio de Bienestar:** Si eres funcionario municipal, recuerda que las solicitudes de reembolso médico deben incluir los comprobantes originales y el informe del médico tratante según el manual vigente."
+            }
         ];
 
         function procesar() {
             const inpt = document.getElementById('user-in');
             const txt = inpt.value.trim().toLowerCase();
             if(!txt) return;
-
-            addMsg(inpt.value, 'vecino');
-            inpt.value = "";
-
+            addMsg(inpt.value, 'vecino'); inpt.value = "";
+            
             setTimeout(() => {
-                let match = KNOWLEDGE_BASE.find(k => k.keys.some(key => txt.includes(key)));
-                let resp = match ? match.resp : "No tengo ese dato exacto en mis manuales. ¿Deseas ingresar una solicitud al Back-office para que un funcionario te responda?";
-                
-                let html = `<b>Serenito:</b> ${resp}`;
-                if(match && match.hasForm) {
+                let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
+                let res = match ? match.resp : "Entiendo tu requerimiento. 🧐 Para darte una solución oficial, lo derivaré a nuestro **Back-office Municipal**. Por favor, completa los detalles para que un funcionario te contacte:";
+                let html = res;
+                if(match?.hasForm || !match) {
                     html += `<div class="ia-form">
                         <input id="f-nom" placeholder="Tu Nombre">
-                        <textarea id="f-det" placeholder="Detalle del trámite..."></textarea>
-                        <button onclick="enviarTicket('${match.type}')">INGRESAR AHORA</button>
+                        <textarea id="f-det" placeholder="Explica detalladamente tu caso para el funcionario..."></textarea>
+                        <button onclick="enviarTicket('${match?.type || 'Consulta General'}')">ENVIAR A GESTIÓN</button>
                     </div>`;
-                } else if(!match) {
-                    html += `<br><button onclick="enviarTicket('Consulta General')" style="margin-top:10px; width:100%; padding:5px; background:#b71c1c; border:none; color:white; border-radius:4px; cursor:pointer;">SÍ, ENVIAR CONSULTA</button>`;
                 }
                 addMsg(html, 'serenito');
-            }, 600);
+            }, 450);
         }
 
-        function addMsg(txt, cls) {
-            const container = document.getElementById('chat-container');
-            container.innerHTML += `<div class="msg ${cls}">${txt}</div>`;
-            container.scrollTop = container.scrollHeight;
-        }
+        function addMsg(t, c) { const d = document.getElementById('chat'); d.innerHTML += `<div class="msg ${c}">${t}</div>`; d.scrollTop = d.scrollHeight; }
 
         async function enviarTicket(tipo) {
-            const nom = document.getElementById('f-nom')?.value || "Vecino Anónimo";
-            const det = document.getElementById('f-det')?.value || "Consulta por IA";
-            
-            await db.collection("tickets_ia").add({
-                nombre: nom,
-                tipo: tipo,
-                mensaje: det,
-                fecha: new Date(),
-                estado: "Pendiente"
-            });
-            
-            addMsg("<b>Serenito:</b> ¡Listo! Tu requerimiento ya está en el Back-office. Puedes cerrar este chat.", "serenito");
-            // Notificar a la web principal que cierre el frame o haga algo
-            window.parent.postMessage('ticket_enviado', '*');
+            const n = document.getElementById('f-nom').value || "Anónimo";
+            const m = document.getElementById('f-det').value;
+            if(!m) return alert("Por favor, escribe el detalle.");
+            await db.collection("tickets_ia").add({ nombre: n, mensaje: m, tipo: tipo, fecha: new Date(), estado: "Pendiente" });
+            addMsg("✅ **Serenito:** ¡Excelente! He enviado tu caso a la bandeja del funcionario municipal. Recibirás respuesta pronto.", "serenito");
         }
     </script>
 </body>
