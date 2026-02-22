@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Galería Visual v88</title>
+    <title>VLS - Visual Master v89</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -28,7 +28,7 @@
             width: 100%; height: 100%;
         }
 
-        /* --- ESCRITORIO (FIJO 3 COLUMNAS) --- */
+        /* --- ESCRITORIO (FIJO) --- */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout {
@@ -48,7 +48,7 @@
             #form-panel { order: 3; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
         }
 
-        /* --- COMPONENTES --- */
+        /* --- ESTILOS COMPONENTES --- */
 
         /* IZQUIERDA */
         #sidebar { 
@@ -77,11 +77,16 @@
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 200px; }
         .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
+        .trans-val { font-weight: bold; font-size: 14px; color: white; }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* IMÁGENES DE RELLENO */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0.9; transition: opacity 0.3s; object-fit: cover; }
-        .graphic-filler:hover { opacity: 1; border-color: var(--serena-gold); }
+        /* ESTILO PARA IMÁGENES DE RELLENO */
+        .graphic-filler {
+            width: 100%; border-radius: 12px; margin-top: 15px;
+            border: 2px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            opacity: 0.9; transition: all 0.3s; cursor: pointer;
+        }
+        .graphic-filler:hover { opacity: 1; transform: scale(1.02); border-color: var(--serena-gold); }
 
         /* CENTRO */
         #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
@@ -117,10 +122,10 @@
         .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 5px; cursor: pointer; border: 1px solid #555; }
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
-        
-        /* MODAL ÉXITO */
-        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
-        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; }
+
+        /* MODAL ÉXITO (NUEVO) */
+        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 12000; }
+        .success-content { background: #1a1a1a; padding: 30px; border-radius: 15px; text-align: center; border: 2px solid #00e676; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
 
     </style>
 </head>
@@ -150,6 +155,7 @@
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px;">📍 DESDE: PLAZA DE ARMAS</div>
                 
                 <div class="search-row">
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
@@ -160,9 +166,10 @@
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo (Puerto)')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
                     <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
-                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza')">Mendoza</div>
-                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
                 </div>
 
                 <div class="route-list" id="route-output"></div>
@@ -170,15 +177,15 @@
             </div>
 
             <img src="relleno-radio.jpg" class="graphic-filler" alt="Locutores">
-            <img src="serenito-bus.jpg" class="graphic-filler" alt="Serenito Micro 1950">
+            <img src="serenito-bus.jpg" class="graphic-filler" alt="Serenito Micro">
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
             <canvas id="renderCanvas"></canvas>
-            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la dirección</div>
-            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO</button>
+            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la dirección en el puntero</div>
+            <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO 3D</button>
         </div>
 
         <div id="form-panel">
@@ -186,9 +193,9 @@
                 <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
-            <div id="step-1-location">
+            <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: DIRECCIÓN</h4>
-                <div style="font-size:10px; color:#aaa;">Número obligatorio:</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
                 <input type="text" id="r-dir" class="f-input" placeholder="Mueve el mapa...">
                 <div class="gps-data" id="gps-coords">GPS: --</div>
                 <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">CONFIRMAR</button>
@@ -196,24 +203,18 @@
 
             <div id="step-2-details">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
+                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:3px solid gold; font-size:11px;" id="locked-addr">Dir</div>
                 <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Descripción..."></textarea>
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
                 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
-                        <i class="fas fa-camera"></i> CÁMARA
-                        <input type="file" hidden capture="environment" accept="image/*" id="file-cam">
-                    </label>
-                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
-                        <i class="fas fa-images"></i> GALERÍA
-                        <input type="file" hidden accept="image/*,video/*" id="file-gal">
-                    </label>
+                <div class="upload-grid">
+                    <label class="upload-btn"><i class="fas fa-camera"></i> CÁMARA<input type="file" hidden capture="environment" accept="image/*" id="file-cam"></label>
+                    <label class="upload-btn"><i class="fas fa-folder-open"></i> GALERÍA<input type="file" hidden accept="image/*,video/*" id="file-gal"></label>
                 </div>
                 
-                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR REPORTE</button>
-                <span class="back-link" onclick="volverPaso1()">Corregir</span>
+                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+                <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
             </div>
 
             <img src="relleno-personajes.jpg" class="graphic-filler" alt="Personajes">
@@ -230,208 +231,4 @@
         <div class="hist-box">
             <h3>MIS REPORTES</h3>
             <div id="hist-content">Cargando...</div>
-            <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white; border:none; margin-top:10px;">Cerrar</button>
-        </div>
-    </div>
-    <div id="img-modal" onclick="this.style.display='none'"><img id="img-full" src=""></div>
-    
-    <div id="success-modal" class="modal" style="align-items:center; justify-content:center; background:rgba(0,0,0,0.85);">
-        <div class="success-box">
-            <i class="fas fa-check-circle" style="font-size:50px; color:#00e676; margin-bottom:20px;"></i>
-            <h2 style="color:white; margin:0 0 10px 0;">¡GRACIAS!</h2>
-            <p style="color:#ccc;">Tu reporte ha sido enviado a la Municipalidad.</p>
-            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:15px; width:auto; padding:10px 30px;">ACEPTAR</button>
-        </div>
-    </div>
-
-    <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous" autoplay></audio>
-
-    <script>
-        const LS_COORDS = [-29.9027, -71.2520];
-        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('es-CL'), 1000);
-
-        const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro Monumental.", "Fono Seguridad: 1455"];
-        let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
-        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
-
-        const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        let routePolyline = null;
-
-        map.on('moveend', async () => {
-            if(document.getElementById('step-2-details').style.display === 'block') return;
-            const c = map.getCenter();
-            document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
-            
-            const inp = document.getElementById('r-dir');
-            if(document.activeElement === inp) return;
-
-            try {
-                let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
-                let d = await r.json();
-                let a = d.address;
-                let calle = a.road || a.pedestrian || "";
-                let num = a.house_number;
-                
-                if(calle) {
-                    if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); } 
-                    else { inp.value = `${calle} (Ingresa N°)`; inp.classList.add('alert'); }
-                } else inp.value = "Ubicación Desconocida";
-            } catch(e) {}
-        });
-
-        function calcDirect(lat, lon, name) {
-            const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
-            const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
-            renderRouteResult(dist, name, lat, lon);
-        }
-
-        function buscarYCalcular(){
-            const q = document.getElementById('city-input').value; if(!q)return;
-            document.getElementById('route-output').innerHTML = "Calculando...";
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
-                .then(r=>r.json())
-                .then(d=>{
-                    if(!d.length) { document.getElementById('route-output').innerHTML = "No encontrado"; return; }
-                    calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
-                });
-        }
-
-        function renderRouteResult(dist, name, lat, lon) {
-            const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
-            document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center; color:white; font-weight:bold;">${name}</div>
-                <div class="trans-row"><div class="trans-val">${tAuto} h</div> <div style="font-size:9px">Auto</div></div>
-                <div class="trans-row"><div class="trans-val">${tBus} h</div> <div style="font-size:9px">Bus</div></div>
-                <div class="trans-row bike"><div class="trans-val">${tBici} h</div> <div style="font-size:9px; color:#00e676;">Bicicleta</div></div>
-                <div class="trans-row"><div class="trans-val">${tPie} h</div> <div style="font-size:9px">A pie</div></div>`;
-            document.getElementById('btn-reset-route').style.display='block';
-            if(routePolyline) map.removeLayer(routePolyline);
-            routePolyline = L.polyline([LS_COORDS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
-            map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
-        }
-        function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS_COORDS, 17); document.getElementById('route-output').innerHTML=""; }
-
-        // MOTOR 3D
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        const createScene = function() {
-            const s = new BABYLON.Scene(engine);
-            s.clearColor = new BABYLON.Color4(0,0,0,0);
-            const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), s);
-            new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s).intensity = 1.3;
-            BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m) => {
-                let ser = m[0]; ser.scaling = new BABYLON.Vector3(12,12,-12); ser.position.y = -22;
-                cam.lockedTarget = ser;
-                s.registerBeforeRender(() => { ser.rotation.y = Math.PI; });
-                map.on('movestart', () => ser.scaling = new BABYLON.Vector3(6,6,-6));
-                map.on('moveend', () => ser.scaling = new BABYLON.Vector3(12,12,-12));
-            });
-            return s;
-        };
-        const scene = createScene();
-        engine.runRenderLoop(() => scene.render());
-
-        // PASEO HISTÓRICO
-        let tourEngine;
-        function openTour() {
-            document.getElementById('modal-tour').style.display = 'block';
-            if(!tourEngine) {
-                const c = document.getElementById('tour-canvas');
-                tourEngine = new BABYLON.Engine(c, true);
-                const s = new BABYLON.Scene(tourEngine);
-                s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
-                cam.attachControl(c, true); cam.checkCollisions=true; cam.upperBetaLimit=Math.PI/2.2;
-                new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-                const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
-                const mat = new BABYLON.StandardMaterial("m", s);
-                mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
-                g.material = mat; g.checkCollisions=true;
-
-                // EDIFICIOS EN EL SUELO (y=0)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
-                let dest, tSer;
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
-                s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
-                s.onBeforeRenderObservable.add(()=>{
-                    if(!tSer || !dest) return;
-                    let d = dest.subtract(tSer.position); d.y=0;
-                    if(d.length()>1) { tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); tSer.position.addInPlace(d.normalize().scale(1.2)); } else dest=null;
-                });
-                tourEngine.runRenderLoop(() => s.render());
-            }
-        }
-
-        // FIREBASE & AUTH
-        const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth(); const db = firebase.firestore();
-        let user;
-        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-        auth.onAuthStateChanged(u => {
-            if(u) {
-                user = u;
-                document.getElementById('user-bar').innerHTML = `<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px; margin-left:10px;"><b>${u.displayName}</b> <br> <a href="#" onclick="verHistorial()" style="color:gold;">Ver Mis Reportes</a></div>`;
-                document.getElementById('step-1-location').style.opacity = "1";
-                document.getElementById('step-1-location').style.pointerEvents = "auto";
-                document.getElementById('r-email').value = u.email;
-            }
-        });
-
-        // VALIDACIÓN
-        function confirmarUbicacion() {
-            const dir = document.getElementById('r-dir').value;
-            if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
-                document.getElementById('r-dir').focus();
-                return;
-            }
-            document.getElementById('step-1-location').style.display = 'none';
-            document.getElementById('step-2-details').style.display = 'block';
-            document.getElementById('locked-addr').innerText = "📍 " + dir;
-        }
-        function volverPaso1() {
-            document.getElementById('step-1-location').style.display = 'block';
-            document.getElementById('step-2-details').style.display = 'none';
-        }
-
-        function verHistorial() {
-            document.getElementById('hist-modal').style.display = 'flex';
-            const list = document.getElementById('hist-content');
-            db.collection("incidencias").where("uid", "==", user.uid).orderBy("fecha", "desc").get().then(snap => {
-                list.innerHTML = snap.empty ? "Sin reportes." : "";
-                snap.forEach(doc => { 
-                    const d=doc.data();
-                    let imgHTML = d.foto_evidencia ? `<img src="${d.foto_evidencia}" class="hist-thumb" onclick="expandImg('${d.foto_evidencia}')">` : "";
-                    list.innerHTML += `<div class="hist-card"><b>${d.direccion}</b><br>${d.descripcion}<div>${imgHTML}</div></div>`; 
-                });
-            });
-        }
-        window.expandImg = function(src) { document.getElementById('img-full').src = src; document.getElementById('img-modal').style.display = 'flex'; }
-        
-        async function enviarReporteFinal() {
-            if(!user) return;
-            const fileCam = document.getElementById('file-cam').files[0];
-            const fileGal = document.getElementById('file-gal').files[0];
-            const finalFile = fileCam || fileGal;
-            
-            let base64 = null;
-            if(finalFile) {
-                base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=(e)=>r(e.target.result); reader.readAsDataURL(finalFile); });
-            }
-            await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
-            
-            // MODAL DE ÉXITO
-            document.getElementById('success-modal').style.display = 'flex';
-        }
-
-        const p = document.getElementById('audio-player');
-        function toggleRadio() { const icon = document.getElementById('play-icon'); if(p.paused) { p.play(); icon.className="fas fa-pause"; } else { p.pause(); icon.className="fas fa-play"; } }
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
-
-    </script>
-</body>
-</html>
+            <button onclick="document.getElementById('hist-modal').style.display='none'" style="width:100%; padding:10px; background:#444; color:white;
