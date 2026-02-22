@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v26 Blindaje Tanque</title>
+    <title>LA❤️SERENA - v28 Versión Definitiva</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -18,16 +18,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', sans-serif; }
         #renderCanvas { width: 100%; height: 100%; touch-action: none; outline: none; }
         
-        /* PANEL DE ESTADO */
-        #status-panel {
-            position: absolute; top: 100px; left: 15px; z-index: 500;
-            background: rgba(0,0,0,0.85); border-left: 5px solid #ffd700;
-            padding: 12px; border-radius: 0 10px 10px 0; color: white;
-            font-size: 11px; pointer-events: none;
-        }
-
         .top-ui { position: absolute; top: 20px; width: 94%; left: 3%; display: flex; justify-content: space-between; z-index: 100; pointer-events: none; }
-        .pointer { pointer-events: auto; }
         .radio-card { background: rgba(0,0,0,0.9); color: #ffd700; padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 10px; border: 2px solid #ffd700; pointer-events: auto; }
         .login-card { background: white; color: #333; padding: 8px 15px; border-radius: 50px; font-weight: bold; display: flex; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; border: 2px solid white; }
 
@@ -38,23 +29,18 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         
-        /* HISTORIAL CARDS */
         .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
         .admin-reply { background: #000; border: 1px dashed #ffd700; padding: 10px; margin-top: 10px; border-radius: 5px; color: #ffd700; font-size: 13px; }
+        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
-
-    <div id="status-panel">
-        <div style="font-weight:bold; color:#ffd700; margin-bottom:4px;">MOTOR TANQUE v26.0</div>
-        <div id="st-info">Blindaje de rotación activo.</div>
-    </div>
 
     <div class="top-ui">
         <div class="radio-card">
             <i class="fas fa-play" id="icon-play" onclick="toggleRadio()"></i>
             <span style="font-size:12px; font-weight:bold;">RD MLS</span>
-            <input type="range" style="width:50px;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
+            <input type="range" style="width:50px; accent-color:#ffd700;" min="0" max="1" step="0.1" value="0.8" oninput="document.getElementById('audio-player').volume=this.value">
         </div>
         <div class="login-card" onclick="login()">
             <img id="u-img" src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" style="width:25px; border-radius:50%;"> 
@@ -73,7 +59,8 @@
 
     <div id="modal-rep" class="modal"><div class="box">
         <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <video id="cam" autoplay playsinline muted style="width:100%; border-radius:10px; border:2px solid #ffd700; height: 250px; object-fit: cover;"></video>
+        <p id="gps-status" style="font-size:11px; color:#aaa;">📍 Esperando ubicación GPS...</p>
+        <video id="cam" autoplay playsinline muted></video>
         <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas?">
         <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR REPORTE</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
@@ -110,7 +97,7 @@
 
         window.login = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
 
-        // 2. MOTOR 3D
+        // 2. MOTOR 3D BABYLON
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         let scene, camera, serenito, animCaminar, destinoFinal;
@@ -132,7 +119,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // --- EDIFICIOS (RESTAURADOS Y BLINDADOS) ---
+            // --- CARGA DE EDIFICIOS BLINDADA ---
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -144,10 +131,10 @@
                     root.position = new BABYLON.Vector3(x, -b.min.y*scale, z);
                 });
             };
-            load("municipalidad.glb", 610, 160, 170, Math.PI); // Muni Rotada 180°
+            load("municipalidad.glb", 610, 160, 170, Math.PI); // Rotación 180 blindada
             load("intendencia.glb", 430, 410, 190, 0);
 
-            // --- SERENITO TANQUE ---
+            // --- SERENITO (MOVIMIENTO TANQUE BLINDADO) ---
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
                 serenito.rotationQuaternion = null; 
@@ -159,7 +146,7 @@
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // 🛡️ LÓGICA TANQUE BLINDADA (Giro -> Marcha)
+            // 🛑 LÓGICA TANQUE ESTRICTA (GIRO -> PARAR -> CAMINAR)
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             
             s.onBeforeRenderObservable.add(() => {
@@ -175,14 +162,14 @@
                     while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
                     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
 
-                    // FASE 1: GIRO PURO
+                    // FASE 1: GIRO PURO (Bloqueo de avance)
                     if(Math.abs(rotDiff) > 0.05) {
                         serenito.rotation.y += Math.sign(rotDiff) * 0.12; 
                         if(animCaminar) animCaminar.stop(); // No camina mientras gira
                     } 
                     // FASE 2: AVANCE DIRECTO
                     else {
-                        serenito.rotation.y = angleDest; 
+                        serenito.rotation.y = angleDest;
                         serenito.moveWithCollisions(diff.normalize().scale(0.9));
                         if(animCaminar && !animCaminar.isPlaying) animCaminar.play(true);
                     }
@@ -198,10 +185,16 @@
 
         // 3. REPORTES & HISTORIAL
         let streamActivo = null;
+        let coordsGlobal = null;
 
         async function abrirReporte() {
             if(!userActual) return alert("Accede con Google primero.");
             document.getElementById('modal-rep').style.display = 'flex';
+            navigator.geolocation.getCurrentPosition(pos => { 
+                coordsGlobal = pos.coords;
+                document.getElementById('gps-status').innerText = "📍 Ubicación capturada";
+                document.getElementById('gps-status').style.color = "lime";
+            });
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
@@ -215,7 +208,9 @@
                 descripcion: document.getElementById('desc').value,
                 fecha: new Date(),
                 estado: "Ingresado",
-                respuesta_admin: ""
+                respuesta_admin: "",
+                lat: coordsGlobal ? coordsGlobal.latitude : 0,
+                lon: coordsGlobal ? coordsGlobal.longitude : 0
             }).then(() => { alert("¡Reporte enviado!"); cerrarModal('modal-rep'); });
         }
 
@@ -225,14 +220,14 @@
             const lista = document.getElementById('lista');
             lista.innerHTML = "<p style='color:gold;'>Cargando reportes...</p>";
 
-            // CONSULTA A 'incidencias' (minúsculas)
+            // LLAMADA A 'incidencias' EN MINÚSCULA (ÍNDICE LISTO)
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
                 .orderBy("fecha", "desc")
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
-                    if(snap.empty) { lista.innerHTML = "No tienes reportes registrados."; return; }
+                    if(snap.empty) { lista.innerHTML = "Sin registros."; return; }
                     snap.forEach(doc => {
                         const d = doc.data();
                         const fecha = d.fecha ? d.fecha.toDate().toLocaleDateString() : "S/F";
@@ -248,7 +243,7 @@
                 })
                 .catch(err => {
                     console.error(err);
-                    lista.innerHTML = `<p style='color:red;'>Error: Asegúrate de que el índice en Firebase esté habilitado para 'incidencias'.</p>`;
+                    lista.innerHTML = `<p style='color:red;'>Error al cargar el historial. Revisa Firebase.</p>`;
                 });
         }
 
