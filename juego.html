@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Galería Visual v88</title>
+    <title>VLS - Radio Digital Municipal v90</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,12 +20,13 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET */
+        /* RESET & SCROLL */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
             background: var(--dark); color: white;
             width: 100%; height: 100%;
+            scroll-behavior: smooth;
         }
 
         /* --- ESCRITORIO (FIJO 3 COLUMNAS) --- */
@@ -37,6 +38,7 @@
                 grid-template-rows: 1fr;
             }
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
+            #mobile-scroll-strip { display: none; }
         }
 
         /* --- MÓVIL (SCROLL INFINITO) --- */
@@ -45,7 +47,13 @@
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
             #sidebar { order: 1; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; }
             #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; z-index: 1; }
-            #form-panel { order: 3; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
+            #form-panel { order: 3; width: 100%; height: auto !important; padding: 15px; box-sizing: border-box; padding-bottom: 100px; }
+            
+            /* BARRITA LATERAL MÓVIL (AYUDA SCROLL) */
+            #mobile-scroll-strip {
+                display: block; position: fixed; top: 0; right: 0; width: 30px; height: 100vh;
+                background: linear-gradient(90deg, transparent, rgba(255,215,0,0.1)); z-index: 9999;
+            }
         }
 
         /* --- COMPONENTES --- */
@@ -58,13 +66,17 @@
         }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
-        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
+        .escudo-img { width: 50px; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .logo-radio { width: 160px; margin-bottom: 5px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
         .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; transition: opacity 0.5s; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
+        /* RUTAS */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
@@ -89,7 +101,7 @@
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; white-space: nowrap; }
 
         /* DERECHA */
         #form-panel { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
@@ -117,20 +129,25 @@
         .hist-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-top: 5px; cursor: pointer; border: 1px solid #555; }
         #img-modal { display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 11000; align-items: center; justify-content: center; }
         #img-full { max-width: 95%; max-height: 80%; border: 2px solid white; border-radius: 5px; }
-        
+
         /* MODAL ÉXITO */
-        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
-        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; }
+        #success-modal { background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 12000; }
+        .success-box { background: #1a1a1a; padding: 30px; border-radius: 15px; border: 2px solid #00e676; text-align: center; max-width: 300px; box-shadow: 0 0 30px rgba(0,230,118,0.3); }
 
     </style>
 </head>
 <body>
+    
+    <div id="mobile-scroll-strip" title="Zona segura de scroll"></div>
 
     <div id="main-layout">
 
         <div id="sidebar">
             <div class="radio-header">
-                <i class="fas fa-tower-broadcast"></i> RADIO MUNICIPAL<br>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/Escudo_de_La_Serena.svg" class="escudo-img" alt="Escudo">
+                <br>
+                <img src="RDMLS H.jpeg" class="logo-radio" alt="Radio Digital Municipal">
+                
                 <div class="digital-clock" id="clock">00:00:00</div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
                     <button onclick="toggleRadio()" style="width:50px; height:50px; border-radius:50%; border:none; background:white; color:var(--serena-red); font-size:20px; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
@@ -145,11 +162,12 @@
 
             <div class="weather-advanced">
                  <div style="font-size:10px; color:var(--serena-gold);">CLIMA EN VIVO</div>
-                 <div style="font-size:24px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
+                 <div style="font-size:24px; font-weight:bold; margin: 5px 0;"><i class="fas fa-cloud-sun"></i> <span id="w-temp">--</span>°C</div>
             </div>
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
+                <div style="font-size:10px; color:#ccc; margin-bottom:8px; border-bottom:1px solid #555; padding-bottom:5px;">📍 DESDE: PLAZA DE ARMAS</div>
                 
                 <div class="search-row">
                     <input type="text" id="city-input" class="city-input" placeholder="Destino...">
@@ -160,9 +178,10 @@
                     <div class="chip" onclick="calcDirect(-29.9538, -71.3380, 'Coquimbo (Puerto)')">Coquimbo</div>
                     <div class="chip" onclick="calcDirect(-30.0319, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirect(-30.6015, -71.2003, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirect(-31.6308, -71.1653, 'Illapel')">Illapel</div>
                     <div class="chip" onclick="calcDirect(-33.4489, -70.6693, 'Santiago')">Santiago</div>
-                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza')">Mendoza</div>
-                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima')">Lima</div>
+                    <div class="chip" onclick="calcDirect(-32.8895, -68.8458, 'Mendoza (ARG)')">Mendoza</div>
+                    <div class="chip" onclick="calcDirect(-12.0464, -77.0428, 'Lima (PER)')">Lima</div>
                 </div>
 
                 <div class="route-list" id="route-output"></div>
@@ -170,7 +189,7 @@
             </div>
 
             <img src="relleno-radio.jpg" class="graphic-filler" alt="Locutores">
-            <img src="serenito-bus.jpg" class="graphic-filler" alt="Serenito Micro 1950">
+            <img src="serenito-bus.jpg" class="graphic-filler" alt="Bus 1950">
         </div>
 
         <div id="stage-area">
@@ -186,38 +205,32 @@
                 <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
-            <div id="step-1-location">
-                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: DIRECCIÓN</h4>
-                <div style="font-size:10px; color:#aaa;">Número obligatorio:</div>
-                <input type="text" id="r-dir" class="f-input" placeholder="Mueve el mapa...">
-                <div class="gps-data" id="gps-coords">GPS: --</div>
+            <div id="step-1-location" style="opacity:0.5; pointer-events:none;">
+                <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 1: CONFIRMAR DIRECCIÓN</h4>
+                <div style="font-size:10px; color:#ccc; margin-bottom:5px;">El número es obligatorio:</div>
+                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando...">
+                <div class="gps-data" id="gps-coords" style="font-size:10px; text-align:right; margin-bottom:10px; color:gold; font-family:monospace;">GPS: --</div>
                 <button id="btn-confirm-loc" onclick="confirmarUbicacion()" class="btn-green">CONFIRMAR</button>
             </div>
 
             <div id="step-2-details">
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">PASO 2: DETALLES</h4>
-                <div style="background:#333; padding:5px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
-                <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono">
+                <div style="background:#333; padding:5px; font-size:11px; margin-bottom:10px; border-left:2px solid gold;" id="locked-addr">Dir</div>
+                <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono (Contacto)">
                 <input type="email" id="r-email" class="f-input" placeholder="Tu Correo" readonly style="background:#222; color:#888;">
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Descripción..."></textarea>
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Describe qué sucede..."></textarea>
                 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
-                        <i class="fas fa-camera"></i> CÁMARA
-                        <input type="file" hidden capture="environment" accept="image/*" id="file-cam">
-                    </label>
-                    <label style="background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; border-radius:6px;">
-                        <i class="fas fa-images"></i> GALERÍA
-                        <input type="file" hidden accept="image/*,video/*" id="file-gal">
-                    </label>
+                <div class="upload-grid">
+                    <label class="upload-btn"><i class="fas fa-camera"></i> CÁMARA<input type="file" hidden capture="environment" accept="image/*" id="file-cam"></label>
+                    <label class="upload-btn"><i class="fas fa-folder-open"></i> GALERÍA<input type="file" hidden accept="image/*,video/*" id="file-gal"></label>
                 </div>
                 
-                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR REPORTE</button>
-                <span class="back-link" onclick="volverPaso1()">Corregir</span>
+                <button onclick="enviarReporteFinal()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+                <span class="back-link" onclick="volverPaso1()">Corregir Ubicación</span>
             </div>
 
             <img src="relleno-personajes.jpg" class="graphic-filler" alt="Personajes">
-            <img src="serenito-museo.jpg" class="graphic-filler" alt="Serenito Museo">
+            <img src="serenito-museo.jpg" class="graphic-filler" alt="Museo">
         </div>
 
     </div>
@@ -237,10 +250,10 @@
     
     <div id="success-modal" class="modal" style="align-items:center; justify-content:center; background:rgba(0,0,0,0.85);">
         <div class="success-box">
-            <i class="fas fa-check-circle" style="font-size:50px; color:#00e676; margin-bottom:20px;"></i>
+            <i class="fas fa-check-circle" style="font-size:60px; color:#00e676; margin-bottom:20px;"></i>
             <h2 style="color:white; margin:0 0 10px 0;">¡GRACIAS!</h2>
-            <p style="color:#ccc;">Tu reporte ha sido enviado a la Municipalidad.</p>
-            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:15px; width:auto; padding:10px 30px;">ACEPTAR</button>
+            <p style="color:#ccc; font-size:14px; line-height:1.5;">Tu reporte ha sido enviado correctamente a la Municipalidad.</p>
+            <button onclick="document.getElementById('success-modal').style.display='none'; volverPaso1();" class="btn-green" style="margin-top:20px; width:100%;">ACEPTAR</button>
         </div>
     </div>
 
@@ -262,17 +275,14 @@
             if(document.getElementById('step-2-details').style.display === 'block') return;
             const c = map.getCenter();
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
-            
             const inp = document.getElementById('r-dir');
             if(document.activeElement === inp) return;
-
             try {
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
                 let d = await r.json();
                 let a = d.address;
                 let calle = a.road || a.pedestrian || "";
                 let num = a.house_number;
-                
                 if(calle) {
                     if(num) { inp.value = `${calle} #${num}`; inp.classList.remove('alert'); } 
                     else { inp.value = `${calle} (Ingresa N°)`; inp.classList.add('alert'); }
@@ -350,9 +360,9 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // EDIFICIOS EN EL SUELO (y=0)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
+                // EDIFICIOS ATERRIZADOS (Y=0.2)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0.2; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0.2; });
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
                 s.onPointerDown = (e,p) => { if(p.hit && p.pickedMesh===g) dest=p.pickedPoint; };
@@ -381,7 +391,6 @@
             }
         });
 
-        // VALIDACIÓN
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
@@ -414,17 +423,18 @@
         
         async function enviarReporteFinal() {
             if(!user) return;
-            const fileCam = document.getElementById('file-cam').files[0];
-            const fileGal = document.getElementById('file-gal').files[0];
-            const finalFile = fileCam || fileGal;
-            
+            const file = document.getElementById('evidencia-file').files[0];
             let base64 = null;
-            if(finalFile) {
-                base64 = await new Promise(r => { const reader=new FileReader(); reader.onload=(e)=>r(e.target.result); reader.readAsDataURL(finalFile); });
+            if(file) {
+                base64 = await new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
             }
             await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, email: user.email, phone: document.getElementById('r-phone').value, direccion: document.getElementById('r-dir').value, descripcion: document.getElementById('r-desc').value, foto_evidencia: base64, fecha: new Date(), estado: "Ingresado" });
             
-            // MODAL DE ÉXITO
+            // MOSTRAR MODAL DE ÉXITO
             document.getElementById('success-modal').style.display = 'flex';
         }
 
