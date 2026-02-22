@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Gold Edition v78</title>
+    <title>VLS - Magia Recuperada v79</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -20,27 +20,26 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         
-        /* RESET & SCROLL */
+        /* RESET */
         body, html { 
             margin: 0; padding: 0; 
             font-family: 'Roboto', sans-serif; 
             background: var(--dark); color: white;
-            /* En escritorio fijo, en móvil automático */
-            height: 100%; 
+            width: 100%; height: 100%;
         }
 
-        /* --- LAYOUT ESCRITORIO (3 COLUMNAS FIJAS) --- */
+        /* --- ESCRITORIO (3 COLUMNAS FIJAS - LA MAGIA) --- */
         @media (min-width: 1024px) {
-            body { overflow: hidden; }
             #main-layout {
                 display: grid; width: 100vw; height: 100vh;
                 grid-template-columns: 350px 1fr 320px;
                 grid-template-rows: 1fr;
+                overflow: hidden;
             }
             #sidebar, #right-col { overflow-y: auto; }
         }
 
-        /* --- LAYOUT MÓVIL (VERTICAL CON SCROLL INFINITO) --- */
+        /* --- MÓVIL (SCROLL INFINITO - SIN CORTES) --- */
         @media (max-width: 1023px) {
             body, html { height: auto !important; overflow-y: visible !important; overflow-x: hidden; }
             
@@ -50,16 +49,16 @@
                 width: 100%; 
                 min-height: 100vh;
             }
-
-            /* Orden Lógico Móvil */
+            
+            /* Orden Vertical Lógico */
             #sidebar { order: 1; width: 100%; height: auto; padding: 15px; box-sizing: border-box; }
-            #stage-area { order: 2; width: 100%; height: 500px; position: relative; } /* Altura fija para mapa */
-            #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 50px; }
+            #stage-area { order: 2; width: 100%; height: 500px !important; position: relative; }
+            #right-col { order: 3; width: 100%; height: auto; padding: 15px; box-sizing: border-box; padding-bottom: 60px; }
         }
 
-        /* --- ESTILOS COMPONENTES --- */
+        /* --- COMPONENTES --- */
 
-        /* 1. IZQUIERDA */
+        /* IZQUIERDA */
         #sidebar { 
             background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); 
             padding: 20px; display: flex; flex-direction: column; gap: 15px; 
@@ -67,14 +66,15 @@
         }
         
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
-        .station-title { font-family: 'Oswald', sans-serif; font-size: 18px; color: white; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
-        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 32px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .vol-slider { width: 100%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
+        .escudo-img { width: 50px; margin-bottom: 5px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .station-title { font-family: 'Oswald', sans-serif; font-size: 18px; color: white; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; line-height: 1.2; }
+        .digital-clock { font-family: 'Oswald', sans-serif; font-size: 34px; margin: 5px 0; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .vol-slider { width: 90%; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; }
 
         .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; }
         
-        /* Módulos Recuperados (Calendario/Clima) */
+        /* Módulos (Calendario & Clima) */
         .module-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 3px solid var(--serena-gold); }
         .mod-title { font-size: 10px; color: #ccc; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; }
 
@@ -83,8 +83,8 @@
         .cal-day { padding: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; }
         .cal-today { background: var(--serena-gold); color: black; font-weight: bold; }
 
-        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; margin-top: 10px; }
-        .env-item { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 4px; display: flex; align-items: center; gap: 5px; }
+        .env-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 10px; margin-top: 5px; }
+        .env-item { background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; display: flex; align-items: center; gap: 6px; }
 
         /* Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
@@ -97,19 +97,19 @@
         .chip:hover { border-color: white; background: rgba(255,255,255,0.25); }
         
         .route-list { margin-top: 5px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 150px; }
-        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
+        .trans-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.6); border-radius: 6px; border-bottom: 1px solid #444; }
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.15); }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* 2. CENTRO */
-        #stage-area { background: #333; overflow: hidden; position: relative; }
+        /* CENTRO */
+        #stage-area { position: relative; flex-grow: 1; background: #333; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .center-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); width: 40px; height: 40px; z-index: 20; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; font-size: 13px; }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 30; pointer-events: none; white-space: nowrap; }
+        .btn-tour { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 25px; border-radius: 30px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; white-space: nowrap; }
 
-        /* 3. DERECHA */
+        /* DERECHA */
         #right-col { background: #1a1a1a; padding: 20px; border-left: 1px solid #333; }
         @media (max-width: 1023px) { #right-col { border-left: none; border-top: 4px solid var(--serena-gold); } }
         
@@ -147,6 +147,7 @@
 
         <div id="sidebar">
             <div class="radio-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/Escudo_de_La_Serena.svg" class="escudo-img">
                 <div class="station-title">RADIO DIGITAL MUNICIPAL<br>LA SERENA</div>
                 <div class="digital-clock" id="clock">00:00:00</div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
@@ -157,7 +158,7 @@
 
             <div class="city-news-box" id="city-ticker">
                 <i class="fas fa-bullhorn" style="margin-right:8px; font-size:14px;"></i> 
-                <span id="ticker-text">...</span>
+                <span id="ticker-text">Conectando...</span>
             </div>
 
             <div class="module-box">
@@ -171,7 +172,7 @@
                 <div style="font-size:24px; font-weight:bold; margin-bottom:5px;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
                 <div class="env-grid">
                     <div class="env-item"><i class="fas fa-wind" style="color:cyan;"></i> <span id="w-wind">--</span></div>
-                    <div class="env-item"><i class="fas fa-water" style="color:cornflowerblue;"></i> <span id="w-tide">Alta</span></div>
+                    <div class="env-item"><i class="fas fa-water" style="color:cornflowerblue;"></i> <span id="w-tide">--</span></div>
                     <div class="env-item"><i class="fas fa-umbrella-beach" style="color:orange;"></i> UV 8</div>
                     <div class="env-item"><i class="fas fa-moon" style="color:silver;"></i> Luna</div>
                 </div>
@@ -205,13 +206,13 @@
             <div id="map"></div>
             <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" class="center-pin">
             <canvas id="renderCanvas"></canvas>
-            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Mueve el mapa</div>
+            <div class="guide-msg"><i class="fas fa-arrows-alt"></i> Ubica la dirección en el puntero</div>
             <button class="btn-tour" onclick="openTour()"><i class="fas fa-cube"></i> PASEO HISTÓRICO 3D</button>
         </div>
 
         <div id="right-col">
             <div class="user-header" id="user-bar">
-                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
+                <button onclick="login()" style="background:#4285F4; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;"><i class="fab fa-google"></i> Acceder</button>
             </div>
 
             <div id="step-1-location">
@@ -258,9 +259,14 @@
 
     <script>
         const LS_COORDS = [-29.9027, -71.2520];
-        setInterval(() => { const c=document.getElementById('clock'); if(c) c.innerText = new Date().toLocaleTimeString('es-CL'); }, 1000);
+        
+        // 1. RELOJ & FECHA (Robustez)
+        setInterval(() => {
+            const el = document.getElementById('clock');
+            if(el) el.innerText = new Date().toLocaleTimeString('es-CL');
+        }, 1000);
 
-        // 1. CLIMA & TICKER
+        // 2. TICKER & CLIMA
         const msgs = ["Paga tu permiso de circulación.", "Feria de Abastos abierta.", "Cuidemos el Faro.", "Fono Seguridad: 1455"];
         let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
         
@@ -268,9 +274,10 @@
             let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); 
             document.getElementById('w-temp').innerText=d.current_weather.temperature;
             document.getElementById('w-wind').innerText=d.current_weather.windspeed+" km/h";
+            document.getElementById('w-tide').innerText = (new Date().getHours()%12 < 6) ? "Baja" : "Alta";
         }catch(e){} } w();
 
-        // CALENDARIO
+        // 3. CALENDARIO
         function initCal() {
             const now = new Date();
             const m = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
@@ -284,7 +291,7 @@
         }
         initCal();
 
-        // 2. MAPA & GEOCODING
+        // 4. MAPA & GEOCODING
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
@@ -309,7 +316,7 @@
             } catch(e) {}
         });
 
-        // 3. RUTAS
+        // 5. RUTAS
         function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
         function calcDirect(lat, lon, name) {
             const R=6371; const dist = R * 2 * Math.atan2(Math.sqrt(Math.sin((lat-LS_COORDS[0])*Math.PI/360)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin((lon-LS_COORDS[1])*Math.PI/360)**2), Math.sqrt(1-(...arguments))) * 1.35;
@@ -338,7 +345,7 @@
         }
         function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; document.getElementById('route-output').innerHTML=""; map.flyTo(LS_COORDS, 17); }
 
-        // 4. MOTOR 3D
+        // 6. MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -358,7 +365,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 5. PASEO HISTÓRICO
+        // 7. PASEO HISTÓRICO
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -375,6 +382,7 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
+                // EDIFICIOS EN EL PISO (Y=0)
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=0; });
                 BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=0; });
                 let dest, tSer;
@@ -389,7 +397,7 @@
             }
         }
 
-        // 6. FIREBASE & AUTH
+        // 8. FIREBASE
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -405,11 +413,10 @@
             }
         });
 
-        // VALIDACIÓN
         function confirmarUbicacion() {
             const dir = document.getElementById('r-dir').value;
             if(!dir.match(/\d+/) && !dir.includes("S/N")) {
-                alert("⚠️ DIRECCIÓN INCOMPLETA\nDebes escribir el número de la casa.");
+                alert("⚠️ DIRECCIÓN SIN NÚMERO\nPor favor, escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
