@@ -16,6 +16,14 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
@@ -40,7 +48,7 @@
         .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
-        /* RUTAS (CHIPS) */
+        /* RUTAS */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
@@ -225,15 +233,52 @@
 
     <audio id="audio-player" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
+    <script type="module">
+      import { GoogleGenerativeAI } from "@google/generative-ai";
+
+      const API_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      
+      // MODELO 'gemini-pro' (MÁS ESTABLE QUE FLASH)
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+      window.sendChat = async function() {
+        const inp = document.getElementById('chat-input');
+        const box = document.getElementById('chat-msgs');
+        const txt = inp.value.trim();
+        if(!txt) return;
+
+        box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
+        inp.value = ""; box.scrollTop = box.scrollHeight;
+
+        const loading = document.createElement("div");
+        loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
+        box.appendChild(loading);
+
+        try {
+            const result = await model.generateContent("Eres asistente municipal de La Serena. Responde breve: " + txt);
+            const response = await result.response;
+            const text = response.text();
+            
+            loading.remove();
+            box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${text}</div>`;
+        } catch (error) {
+            loading.innerText = "Error: " + error.message;
+            console.error(error);
+        }
+        box.scrollTop = box.scrollHeight;
+      }
+    </script>
+
     <script>
-        // 1. FIREBASE
+        // --- 1. FIREBASE ---
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         let user = null;
 
-        // 2. MAPA LEAFLET
+        // --- 2. MAPA LEAFLET ---
         const LS_COORDS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
@@ -249,7 +294,7 @@
             }
         });
 
-        // 3. CLIMA Y RUTAS
+        // --- 3. CLIMA Y RUTAS ---
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
         
         function calcDirect(lat, lon, name) {
@@ -287,7 +332,7 @@
                 });
         }
 
-        // 4. MOTOR 3D PRINCIPAL
+        // --- 4. MOTOR 3D Y PASEO ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const createScene = function() {
@@ -295,6 +340,7 @@
             scene.clearColor = new BABYLON.Color4(0,0,0,0);
             const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
             new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+            
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
                 let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = 0;
                 camera.lockedTarget = s;
@@ -308,7 +354,6 @@
         engine.runRenderLoop(() => scene.render());
         window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
 
-        // 5. PASEO 3D (BLOQUEO DE PISO IMPLEMENTADO)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -318,7 +363,7 @@
                 const s = new BABYLON.Scene(tourEngine);
                 s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 
-                // CÁMARA CON LÍMITE (NO PASA EL PISO)
+                // CÁMARA CON LÍMITE (SUELO)
                 const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
                 cam.attachControl(c, true);
                 cam.upperBetaLimit = Math.PI / 2.2; 
@@ -348,7 +393,7 @@
             }
         }
 
-        // 6. LÓGICA USUARIO + CRM
+        // --- 5. LÓGICA USUARIO Y CRM ---
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => {
             if(u) {
@@ -403,7 +448,7 @@
 
         function toggleRadio() { const p = document.getElementById('audio-player'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
         
-        // 7. LUPA (ZOOM) PARA TODAS LAS IMÁGENES
+        // --- 6. EXTRAS ---
         window.expandImg = function(src) { 
             const m = document.getElementById('img-modal');
             document.getElementById('img-full').src = src;
@@ -412,44 +457,9 @@
         
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
 
-        // 8. CHATBOT IA REPARADO (GEMINI PRO)
         function toggleChat() {
             const w = document.getElementById('chat-window');
             w.style.display = (w.style.display === 'none' || w.style.display === '') ? 'flex' : 'none';
-        }
-
-        async function sendChat() {
-            const inp = document.getElementById('chat-input');
-            const box = document.getElementById('chat-msgs');
-            const txt = inp.value.trim();
-            if(!txt) return;
-
-            box.innerHTML += `<div style="background:#005c4b; padding:10px; border-radius:10px; align-self:flex-end; max-width:85%; margin-bottom:5px; color:white;">${txt}</div>`;
-            inp.value = ""; box.scrollTop = box.scrollHeight;
-
-            const loading = document.createElement("div");
-            loading.innerText = "Escribiendo..."; loading.style.cssText = "color:#aaa; margin-left:10px; font-size:12px;";
-            box.appendChild(loading);
-
-            // CLAVE IA
-            const GEMINI_KEY = "AIzaSyAIdlM8XhnRj-GRiH3flyNkYlGSguwe-QI"; 
-            try {
-                // MODELO 'gemini-pro' (Estable)
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres asistente municipal de La Serena. Responde breve: " + txt }] }] })
-                });
-                const d = await res.json();
-                const reply = d.candidates[0].content.parts[0].text;
-                
-                loading.remove();
-                box.innerHTML += `<div style="background:#333; padding:10px; border-radius:10px; align-self:flex-start; max-width:85%; margin-bottom:5px; color:#ddd;">${reply}</div>`;
-            } catch(e) {
-                loading.innerText = "Error de red.";
-                console.error(e);
-            }
-            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
