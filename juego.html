@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VLS - Golden Master v59</title>
+    <title>VLS - Precisión Absoluta v60</title>
     
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     
@@ -21,20 +21,32 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; overflow: hidden; }
 
-        /* LAYOUT */
-        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 340px 1fr; grid-template-rows: 1fr; }
-        @media (max-width: 1023px) { #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; } }
+        /* GRID MAESTRO */
+        #main-layout {
+            display: grid; width: 100vw; height: 100vh;
+            grid-template-columns: 340px 1fr; grid-template-rows: 1fr;
+        }
+        @media (max-width: 1023px) {
+            #main-layout { display: flex; flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+        }
 
-        /* IZQUIERDA */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; }
+        /* --- IZQUIERDA --- */
+        #sidebar {
+            background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
+            padding: 20px; display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50; overflow-y: auto;
+        }
+        
         .radio-header { text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; }
         .digital-clock { font-family: 'Orbitron', sans-serif; font-size: 26px; margin: 10px 0; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
         .vol-slider { width: 100px; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(0,0,0,0.3); margin-top: 10px; cursor: pointer; }
         .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; }
 
+        /* Ticker & Clima */
         .city-news-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border-left: 4px solid #00e676; font-size: 11px; display: flex; align-items: center; transition: opacity 0.5s; }
         .weather-advanced { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         
+        /* Rutas */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); display: flex; flex-direction: column; }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 8px; border-radius: 4px; border: none; font-size: 12px; }
@@ -47,24 +59,26 @@
         .trans-row.bike { border: 1px solid #00e676; background: rgba(0, 230, 118, 0.1); }
         .reset-route-btn { background: #ff3d00; color: white; border: none; padding: 8px; width: 100%; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 11px; display: none; }
 
-        /* CENTRO */
+        /* --- CENTRO --- */
         #stage-area { position: relative; flex-grow: 1; min-height: 60vh; background: #333; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 15px; border-radius: 8px; border: 2px solid white; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
         .btn-tour:hover { transform: scale(1.05); }
-        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; pointer-events: none; }
+        .guide-msg { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--serena-gold); color: var(--serena-gold); font-size: 12px; z-index: 20; display: flex; gap: 8px; align-items: center; pointer-events: none; }
 
-        /* DERECHA */
+        /* --- DERECHA --- */
         #form-panel { position: absolute; bottom: 20px; right: 20px; width: 320px; background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 30; }
         @media (max-width: 1023px) { #form-panel { position: relative; bottom: auto; right: auto; width: auto; margin: 0; border-radius: 0; border-top: 4px solid var(--serena-gold); } }
         .user-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; background: #444; }
         
-        /* INPUT DE DIRECCIÓN EDITABLE */
+        /* INPUT DE DIRECCIÓN PRECISA */
         .f-input { width: 100%; padding: 10px; margin-bottom: 4px; background: #333; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         .f-input:focus { border-color: var(--serena-gold); background: #222; outline: none; }
-        
+        .f-input.alert-missing { border-color: #ff3d00; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(255, 61, 0, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(255, 61, 0, 0);} 100% {box-shadow: 0 0 0 0 rgba(255, 61, 0, 0);} }
+
         .vereda-detail { font-size: 10px; color: #888; margin-bottom: 10px; font-style: italic; text-align: right; }
         .gps-data { font-size: 10px; color: var(--serena-gold); font-family: monospace; text-align: right; margin-bottom: 5px; }
 
@@ -103,7 +117,7 @@
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
                 <div class="search-row">
-                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad (Ej: Ovalle, París...)">
+                    <input type="text" id="city-input" class="city-input" placeholder="Ciudad...">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
                 <div class="quick-chips">
@@ -134,11 +148,10 @@
                 <h4 style="margin:0 0 10px 0; color:var(--serena-gold);">REPORTAR</h4>
                 <div class="gps-data" id="gps-coords">GPS: --, --</div>
                 
-                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Calle y Número (Obligatorio)">
+                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); border-color:var(--serena-gold); font-weight:bold;" placeholder="Detectando dirección...">
                 
                 <div class="vereda-detail" id="r-vereda"></div>
-                <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle de la incidencia..."></textarea>
-                
+                <textarea id="r-desc" class="f-input" rows="2" placeholder="Detalle..."></textarea>
                 <label style="display:block; background:#333; padding:10px; text-align:center; border:1px dashed #666; cursor:pointer; margin-bottom:10px;">
                     <i class="fas fa-camera"></i> FOTO EVIDENCIA
                     <input type="file" hidden accept="image/*" id="evidencia-file">
@@ -172,7 +185,7 @@
         let mIdx = 0; setInterval(() => { const el=document.getElementById('ticker-text'); el.style.opacity=0; setTimeout(()=>{el.innerText=msgs[mIdx]; el.style.opacity=1; mIdx=(mIdx+1)%msgs.length;},500); }, 5000);
         async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
 
-        // 2. MAPA & GEOCODING REAL (EDITABLE)
+        // 2. MAPA & GEOCODING REAL (SIN SIMULACIÓN)
         const map = L.map('map', { zoomControl: false }).setView(LS_COORDS, 17);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
         let routePolyline = null;
@@ -180,35 +193,33 @@
         map.on('moveend', async () => {
             const c = map.getCenter();
             document.getElementById('gps-coords').innerText = `GPS: ${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
-            
-            // Solo autocompletar si el campo está vacío o dice "Detectando..."
-            // Para no borrar lo que el usuario está escribiendo manualmente
-            const currentVal = document.getElementById('r-dir').value;
-            if(!currentVal.includes("Manual")) {
-                document.getElementById('r-dir').placeholder = "Detectando...";
-            }
+            document.getElementById('r-dir').classList.remove('alert-missing'); // Quitar alerta
             
             try {
+                // AddressDetails=1 + Zoom 18 para máxima precisión
                 let r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`);
                 let d = await r.json();
-                let a = d.address;
+                let addr = d.address;
                 
-                let calle = a.road || a.pedestrian || "";
-                let num = a.house_number || "";
+                let calle = addr.road || addr.pedestrian || "Ubicación sin nombre";
+                let num = addr.house_number;
                 
-                if(calle) {
-                    if(num) document.getElementById('r-dir').value = `${calle} #${num}`;
-                    else document.getElementById('r-dir').value = `${calle} (Ingrese Número)`;
+                if(num) {
+                    document.getElementById('r-dir').value = `${calle} #${num}`;
+                } else {
+                    // SI NO HAY NÚMERO, NO INVENTAR. DEJAR CAMPO PARA QUE USUARIO COMPLETE.
+                    document.getElementById('r-dir').value = `${calle} (Falta N°)`;
+                    document.getElementById('r-dir').classList.add('alert-missing'); // Alerta visual
                 }
 
-                // Cálculo Vereda
+                // Cálculo Vereda (Geometría Básica)
                 let vereda = (c.lat % 0.0002 > 0.0001) ? "Vereda Norte/Oriente" : "Vereda Sur/Poniente";
                 document.getElementById('r-vereda').innerText = vereda;
 
-            } catch(e) {}
+            } catch(e) { document.getElementById('r-dir').value = "Error de red"; }
         });
 
-        // 3. RUTAS (HAVERSINE CORREGIDO)
+        // 3. RUTAS (HAVERSINE)
         function setDest(c){document.getElementById('city-input').value=c; buscarYCalcular();}
         async function buscarYCalcular(){
             const q = document.getElementById('city-input').value; if(!q)return;
@@ -219,7 +230,7 @@
                 
                 const R=6371; const dLat=(lat-LS_COORDS[0])*Math.PI/180; const dLon=(lon-LS_COORDS[1])*Math.PI/180;
                 const a=Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
+                const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35; // Factor ruta
 
                 const tPie=(dist/5).toFixed(1), tBici=(dist/18).toFixed(1), tAuto=(dist/90).toFixed(1), tBus=(dist/75).toFixed(1);
                 
@@ -260,7 +271,7 @@
         const scene = createScene();
         engine.runRenderLoop(() => scene.render());
 
-        // 5. PASEO HISTÓRICO (BLINDADO: EDIFICIOS ALTOS)
+        // 5. PASEO HISTÓRICO (EDIFICIOS ELEVADOS)
         let tourEngine;
         function openTour() {
             document.getElementById('modal-tour').style.display = 'block';
@@ -278,9 +289,9 @@
                 mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s);
                 g.material = mat; g.checkCollisions=true;
 
-                // EDIFICIOS SUBIDOS (Y=18)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=18; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=18; });
+                // EDIFICIOS ELEVADOS (Y=30)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=80; m[0].position.y=30; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(35,35,35); m[0].position.x=-80; m[0].position.y=30; });
                 
                 let dest, tSer;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
@@ -298,7 +309,7 @@
             }
         }
 
-        // 6. AUTH & ENVÍO VALIDADO
+        // 6. AUTH & VALIDACIÓN DIRECCIÓN
         const firebaseConfig = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(); const db = firebase.firestore();
@@ -326,16 +337,15 @@
             const dir = document.getElementById('r-dir').value;
             const desc = document.getElementById('r-desc').value;
             
-            // VALIDACIÓN ESTRICTA DE DIRECCIÓN
-            const tieneNumero = /\d+/.test(dir); // Busca al menos un número
-            if (!tieneNumero && !dir.includes("Aprox")) {
-                alert("⚠️ DIRECCIÓN INCOMPLETA\nPor favor, ingresa el número de calle exacto o una referencia numérica.");
+            // VALIDACIÓN: ¿Tiene número?
+            if(dir.includes("Falta") || !dir.match(/\d/)) {
+                alert("⚠️ FALTA NÚMERO\nEl sistema no detectó numeración exacta. Por favor, edita el campo de dirección y escribe el número de la casa.");
                 document.getElementById('r-dir').focus();
                 return;
             }
 
             await db.collection("incidencias").add({ uid: user.uid, user: user.displayName, direccion: dir, descripcion: desc, fecha: new Date(), estado: "Ingresado" });
-            alert("✅ Reporte Ingresado Correctamente");
+            alert("Reporte Enviado");
         }
 
         const p = document.getElementById('audio-player');
