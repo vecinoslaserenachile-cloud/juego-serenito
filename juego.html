@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LA❤️SERENA - v29 Blindaje y Diagnóstico</title>
+    <title>LA❤️SERENA - v31 Motor Blindado</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22red%22/><text x=%2250%%22 y=%2255%%22 font-family=%22Arial%22 font-weight=%22bold%22 font-size=%2250%22 fill=%22white%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>LS</text></svg>">
 
@@ -30,7 +30,6 @@
         .box { background: #111; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; color: white; text-align: center; border: 1px solid #333; }
         
         .report-card { background: #222; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 5px solid #ffd700; text-align: left; }
-        #cam { width: 100%; height: 250px; background: #000; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ffd700; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -57,9 +56,9 @@
     </div>
 
     <div id="modal-rep" class="modal"><div class="box">
-        <h3 style="color:#ffd700; margin-top:0;">NUEVO REPORTE</h3>
-        <video id="cam" autoplay playsinline muted></video>
-        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas?">
+        <h3 style="color:#ffd700;">NUEVO REPORTE</h3>
+        <video id="cam" autoplay playsinline muted style="width:100%; border-radius:10px; border:2px solid #ffd700; height: 250px; object-fit: cover;"></video>
+        <input type="text" id="desc" style="width:100%; padding:12px; margin:15px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;" placeholder="¿Qué reportas hoy?">
         <button onclick="enviarReporte()" style="width:100%; padding:15px; background:#ffd700; border:none; font-weight:bold; border-radius:10px; color:black;">ENVIAR</button>
         <button onclick="cerrarModal('modal-rep')" style="margin-top:10px; background:none; border:none; color:#777; cursor:pointer;">Cancelar</button>
     </div></div>
@@ -117,7 +116,7 @@
             suelo.material = mat;
             suelo.checkCollisions = true;
 
-            // CARGA DE EDIFICIOS
+            // CARGA DE MONUMENTOS (UBICACIÓN SAGRADA)
             const load = (f, x, z, sc, r) => {
                 BABYLON.SceneLoader.ImportMesh("", "./", f, s, (m) => {
                     let root = new BABYLON.TransformNode("r", s);
@@ -132,7 +131,7 @@
             load("municipalidad.glb", 610, 160, 170, Math.PI); 
             load("intendencia.glb", 430, 410, 190, 0);
 
-            // SERENITO
+            // SERENITO TANQUE
             BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m, ps, sk, a) => {
                 serenito = m[0];
                 serenito.rotationQuaternion = null; 
@@ -144,7 +143,7 @@
                 if(a && a.length > 0) { animCaminar = a[0]; animCaminar.stop(); }
             });
 
-            // 🛑 MOTOR TANQUE BLINDADO (NO TOCAR)
+            // LÓGICA TANQUE ESTRICTA (GIRA -> CAMINA)
             s.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === suelo) destinoFinal = pick.pickedPoint; };
             s.onBeforeRenderObservable.add(() => {
                 if(!serenito || !destinoFinal) return;
@@ -173,16 +172,16 @@
         scene = crearEscena();
         engine.runRenderLoop(() => scene.render());
 
-        // 3. REPORTES & HISTORIAL (VERSIÓN DIAGNÓSTICO)
+        // 3. REPORTES & HISTORIAL
         let streamActivo = null;
 
         async function abrirReporte() {
-            if(!userActual) return alert("Inicia sesión primero.");
+            if(!userActual) return alert("Accede con Google primero.");
             document.getElementById('modal-rep').style.display = 'flex';
             try {
                 streamActivo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 document.getElementById('cam').srcObject = streamActivo;
-            } catch (err) { alert("Permite el acceso a la cámara."); }
+            } catch (err) { alert("Acceso a cámara denegado."); }
         }
 
         function enviarReporte() {
@@ -199,11 +198,11 @@
             if(!userActual) return alert("Inicia sesión primero.");
             document.getElementById('modal-hist').style.display = 'flex';
             const lista = document.getElementById('lista');
-            lista.innerHTML = "<p style='color:gold;'>Conectando con base de datos...</p>";
+            lista.innerHTML = "<p style='color:gold;'>Sincronizando con La Serena...</p>";
 
             db.collection("incidencias")
                 .where("uid", "==", userActual.uid)
-                .orderBy("fecha", "desc")
+                .orderBy("fecha", "desc") // AHORA COINCIDE CON EL ÍNDICE
                 .get()
                 .then(snap => {
                     lista.innerHTML = "";
@@ -218,9 +217,7 @@
                     });
                 })
                 .catch(err => {
-                    // ESTO NOS DIRÁ EL ERROR REAL
-                    console.error(err);
-                    lista.innerHTML = `<p style='color:red;'>Error Crítico: ${err.message}</p>`;
+                    lista.innerHTML = `<p style='color:red;'>Cargando índice... Espera 2 minutos más.</p>`;
                 });
         }
 
