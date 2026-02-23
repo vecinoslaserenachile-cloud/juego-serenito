@@ -32,9 +32,8 @@
         .clock { font-family: 'Oswald'; font-size: 30px; text-align: center; color: var(--serena-gold); }
         
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 12px; margin-top: 5px; border-bottom: 1px solid #444; }
-        .chip { background: #444; padding: 5px 10px; font-size: 11px; border-radius: 15px; cursor: pointer; display: inline-block; margin: 2px; transition: 0.3s; }
-        .chip:hover { background: var(--serena-gold); color: black; }
+        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 12px; margin-top: 5px; }
+        .chip { background: #444; padding: 4px 8px; font-size: 10px; border-radius: 10px; cursor: pointer; display: inline-block; margin: 2px; }
 
         /* CENTRO MAPA */
         #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
@@ -42,23 +41,21 @@
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
-        /* FORMULARIO DERECHA */
+        /* CENTRAL DE GESTIÓN (DERECHA) */
         #form-panel { background: #111; padding: 20px; border-left: 1px solid #333; }
         .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; }
         
-        #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         /* CHAT GADGET */
         #chat-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; }
-        .chat-sphere { background: white; border-radius: 50%; padding: 8px; border: 4px solid var(--serena-gold); box-shadow: 0 0 25px rgba(255,215,0,0.6); }
-        #chat-ia-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.8); }
+        .chat-sphere { background: white; border-radius: 50%; padding: 8px; border: 4px solid var(--serena-gold); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        #chat-ia-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; }
 
-        /* LUPA */
-        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; align-items: center; justify-content: center; }
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; }
+        /* MODAL TOUR 3D */
+        #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
+        .close-tour { position: absolute; top: 20px; right: 20px; z-index: 20001; background: var(--serena-red); color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -68,13 +65,10 @@
             <img src="escudo.png" class="escudo-img">
             <h1 class="rdmls-sigla">RDMLS</h1>
             <div class="clock" id="clock">00:00:00</div>
-            
-            <div style="text-align:center;">
-                <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer; font-size:24px;"><i class="fas fa-play" id="play-icon"></i></button>
-            </div>
+            <div style="text-align:center;"><button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button></div>
 
             <div class="route-box">
-                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">DISTANCIAS DESDE LA SERENA</div>
+                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">PLANIFICADOR SUDAMÉRICA</div>
                 <input type="text" id="city-input" class="f-input" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde viajamos?">
                 <div id="route-output"></div>
                 <div style="margin-top:10px;">
@@ -84,26 +78,28 @@
                     <div class="chip" onclick="calcDirectReal(-34.6037, -58.3816, 'Buenos Aires')">B. Aires</div>
                 </div>
             </div>
-            
             <img src="relleno-radio.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-            <img src="serenito-bus.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirTour()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
+            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
         </div>
 
         <div id="form-panel">
-            <div id="user-header" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+            <div id="login-zone" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
                 <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
             </div>
-            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">REPORTE VECINAL 2026</h4>
-            <input type="text" id="r-dir" class="f-input" placeholder="Ubicación detectada...">
-            <textarea id="r-desc" class="f-input" rows="3" placeholder="¿Qué sucede en este punto?"></textarea>
-            <button id="btn-env-reporte" onclick="enviarReporteCiudadano()" class="btn-red">ENVIAR AL BACK-OFFICE</button>
-            <div id="success-feedback">🌟 ¡MUCHAS GRACIAS!<br>Tu reporte ha sido ingresado al sistema.</div>
+            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
+            <input type="text" id="r-dir" class="f-input" placeholder="Dirección del reporte...">
+            <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
+            <div style="margin-bottom:10px;">
+                <label style="font-size:11px; color:#aaa;">Adjuntar Foto/Cámara:</label>
+                <input type="file" id="r-foto" accept="image/*" capture="environment" style="font-size:11px; color:white; margin-top:5px;">
+            </div>
+            <button id="btn-env-rep" onclick="enviarGestion()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+            <div id="success-msg" style="display:none; background:#1b5e20; color:white; padding:10px; border-radius:8px; margin-top:10px; text-align:center; font-weight:bold;">✅ ¡MUCHAS GRACIAS! Reporte recibido.</div>
 
             <img src="comic-cielo.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
             <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
@@ -114,14 +110,17 @@
         <div class="chat-sphere"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="55"></div>
     </div>
     <div id="chat-ia-frame">
-        <div style="background:var(--serena-red); padding:12px; display:flex; justify-content:space-between; align-items:center;">
-            <b style="font-family:'Oswald'; color:white; font-size:14px;">SERENITO IA 2026</b>
+        <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center;">
+            <b style="font-family:'Oswald'; color:white;">SERENITO IA 2026</b>
             <i class="fas fa-times" onclick="toggleIAHub()" style="color:white; cursor:pointer;"></i>
         </div>
-        <iframe src="ia.html" id="iframe-ia" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
+        <iframe src="ia.html" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
     </div>
 
-    <div id="modal-lupa" onclick="this.style.display='none'"><div class="close-lupa">&times;</div><img id="img-full" src="" style="max-width:90%; border:4px solid white; border-radius:10px;"></div>
+    <div id="modal-tour-3d">
+        <button class="close-tour" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER A RDMLS</button>
+        <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
+    </div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
@@ -129,20 +128,31 @@
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
-        let user = null;
+        let user = null, routeLine = null;
 
         const LS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        map.on('moveend', () => {
-            const c = map.getCenter();
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
-                if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
-            });
-        });
+        // RUTAS CON TRAZADO Y ICONOS
+        function calcDirectReal(lat, lon, name) {
+            const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3;
+            
+            document.getElementById('route-output').innerHTML = `
+                <div style="font-size:13px; font-weight:bold; margin-top:10px; color:var(--serena-gold);">${name} (${dist.toFixed(0)} km)</div>
+                <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)} h</span> Avión</div>
+                <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)} h</span> Auto</div>
+                <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)} h</span> Bus</div>
+                <div class="trans-row"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${(dist/18).toFixed(1)} h</span> Bici</div>
+            `;
+            if(routeLine) map.removeLayer(routeLine);
+            routeLine = L.polyline([LS, [lat,lon]], {color:'var(--serena-red)', weight:4, dashArray:'10,10'}).addTo(map);
+            map.fitBounds(routeLine.getBounds(), {padding:[50,50]});
+        }
 
-        // 3D
+        // 3D SERENITO
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
@@ -154,45 +164,39 @@
         });
         engine.runRenderLoop(() => scene.render());
 
-        // RUTAS CON ICONOS REALES
-        function calcDirectReal(lat, lon, name) {
-            const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3;
-            document.getElementById('route-output').innerHTML = `
-                <div style="font-size:13px; font-weight:bold; margin-top:10px; color:var(--serena-gold);">${name} (${dist.toFixed(0)} km)</div>
-                <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)} h</span> Avión</div>
-                <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)} h</span> Auto</div>
-                <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)} h</span> Bus</div>
-                <div class="trans-row"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${(dist/18).toFixed(1)} h</span> Bici</div>
-                <div class="trans-row"><i class="fas fa-walking"></i> <span>${(dist/5).toFixed(1)} h</span> Pie</div>
-            `;
-        }
-        function buscarRutaReal() {
-            const q = document.getElementById('city-input').value; if(!q) return;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`).then(r=>r.json()).then(d=>{
-                if(d.length) calcDirectReal(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
-            });
+        // PASEO HISTORICO REPARADO
+        let tourEngine;
+        function abrirTourReal() {
+            document.getElementById('modal-tour-3d').style.display = 'block';
+            if(!tourEngine) {
+                const c = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(c, true);
+                const s = new BABYLON.Scene(tourEngine); s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+                const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
+                tCam.attachControl(c, true); tCam.upperBetaLimit = Math.PI / 2.2; // BLOQUEO SUELO
+                new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), s);
+                const g = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, s);
+                const m = new BABYLON.StandardMaterial("tm", s); m.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); g.material = m;
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ m[0].scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=m[0]; });
+                tourEngine.runRenderLoop(() => s.render());
+            }
         }
 
-        function toggleRadio() { const r=document.getElementById('radio'); const i=document.getElementById('play-icon'); if(r.paused){r.play(); i.className="fas fa-pause";}else{r.pause(); i.className="fas fa-play";} }
-        function abrirLupa(src) { document.getElementById('img-full').src = src; document.getElementById('modal-lupa').style.display = 'flex'; }
-        function toggleIAHub() { const c = document.getElementById('chat-ia-frame'); c.style.display = (c.style.display==='none'?'block':'none'); }
+        async function enviarGestion() {
+            if(!user) return alert("Inicia sesión primero");
+            const btn = document.getElementById('btn-env-rep'); btn.disabled = true;
+            const file = document.getElementById('r-foto').files[0];
+            let base64 = null;
+            if(file) { base64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); }); }
+            await db.collection("tickets_ia").add({ nombre: user.displayName, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
+            document.getElementById('success-msg').style.display = 'block';
+            setTimeout(() => { document.getElementById('success-msg').style.display='none'; btn.disabled=false; }, 4000);
+        }
+
+        function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
+        function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-        auth.onAuthStateChanged(u => { if(u){ user=u; document.getElementById('user-header').innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><img src="${u.photoURL}" style="width:30px;border-radius:50%;border:2px solid gold;"><b>${u.displayName}</b></div>`; } });
-        
-        async function enviarReporteCiudadano() {
-            if(!user) return alert("Por favor, inicia sesión para reportar.");
-            const btn = document.getElementById('btn-env-reporte'); btn.disabled = true;
-            try {
-                await db.collection("tickets_ia").add({ nombre: user.displayName, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, fecha: new Date(), estado: "Pendiente", tipo: "Reporte Ciudadano" });
-                document.getElementById('success-feedback').style.display = 'block';
-                setTimeout(() => { document.getElementById('success-feedback').style.display = 'none'; btn.disabled = false; }, 5000);
-            } catch(e) { alert("Error al enviar."); btn.disabled = false; }
-        }
-
+        auth.onAuthStateChanged(u => { if(u){ user=u; document.getElementById('login-zone').innerHTML=`<b>${u.displayName}</b>`; } });
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); });
     </script>
 </body>
 </html>
