@@ -18,90 +18,112 @@
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #111; }
+        
+        /* BASE (MÓVIL POR DEFECTO) */
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
+        
+        /* En móvil permitimos scroll vertical fluido */
+        body { overflow-y: auto; overflow-x: hidden; }
 
-        /* --- LAYOUT MAESTRO (GRID AREAS) --- */
-        #main-layout { width: 100vw; height: 100vh; display: grid; }
+        /* LAYOUT FLEX PARA MÓVIL (Orden Solicitado) */
+        #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
 
-        /* ESCRITORIO: 3 COLUMNAS (La izquierda se divide en Header y Tools) */
+        /* ORDEN MÓVIL: 1. Header -> 2. Mapa -> 3. Formulario -> 4. Herramientas */
+        #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 50; }
+        #stage-area     { order: 2; height: 50vh; width: 100%; position: relative; z-index: 10; border-bottom: 2px solid var(--serena-gold); }
+        #form-panel     { order: 3; padding: 20px; background: var(--panel); }
+        #sidebar-tools  { order: 4; padding: 20px; background: #1a1a1a; padding-bottom: 80px; } /* Espacio final */
+
+        /* ESCRITORIO (BLINDADO - NO TOCAR) */
         @media (min-width: 1024px) {
-            body { overflow: hidden; }
+            body, html { overflow: hidden; } /* Fijo en PC */
             #main-layout {
+                display: grid;
                 grid-template-columns: 360px 1fr 360px;
-                grid-template-rows: auto 1fr; /* Fila auto para cabecera, resto para tools */
+                grid-template-rows: auto 1fr;
                 grid-template-areas: 
                     "header map form"
                     "tools  map form";
+                height: 100vh;
             }
-            #sidebar-header { grid-area: header; }
-            #sidebar-tools  { grid-area: tools; overflow-y: auto; }
-            #stage-area     { grid-area: map; height: 100%; }
-            #form-panel     { grid-area: form; height: 100%; overflow-y: auto; }
+            #sidebar-header { grid-area: header; order: unset; }
+            #sidebar-tools  { grid-area: tools; order: unset; overflow-y: auto; background: linear-gradient(180deg, #8e0000 0%, #5f0000 100%); }
+            #stage-area     { grid-area: map; order: unset; height: 100%; border: none; }
+            #form-panel     { grid-area: form; order: unset; height: 100%; overflow-y: auto; padding-bottom: 20px; }
             
-            /* Scrollbars finos */
+            /* Scrollbars finos PC */
             #sidebar-tools, #form-panel { scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* MÓVIL: VERTICAL (Header -> Map -> Form -> Tools) */
-        @media (max-width: 1023px) {
-            body { overflow-y: auto; } /* Permitir scroll en el body */
-            #main-layout {
-                display: flex; flex-direction: column; height: auto;
-            }
-            #sidebar-header { order: 1; padding-bottom: 10px; }
-            #stage-area     { order: 2; height: 55vh; width: 100%; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
-            #form-panel     { order: 3; }
-            #sidebar-tools  { order: 4; }
-        }
-
-        /* --- ESTILOS DE COMPONENTES --- */
+        /* --- COMPONENTES --- */
         
-        /* 1. HEADER (Identidad) */
-        #sidebar-header { background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 50; }
-        .escudo-img { width: 100px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 40px; margin: 5px 0 0 0; line-height: 1; }
-        .clock { font-family: 'Oswald'; font-size: 24px; color: var(--serena-gold); margin-bottom: 10px; }
+        /* HEADER IDENTIDAD */
+        .escudo-img { width: 90px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 35px; margin: 5px 0 0 0; line-height: 1; }
+        .clock { font-family: 'Oswald'; font-size: 22px; color: var(--serena-gold); margin-bottom: 5px; }
         
-        /* 2. MAPA */
-        #stage-area { position: relative; background: #222; overflow: hidden; }
+        /* MAPA Y 3D */
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        /* 3. FORMULARIO & CRM */
-        #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
-        .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* FORMULARIOS */
+        .f-input { width: 100%; padding: 12px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
         
+        /* CRM */
         .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 300px; overflow-y: auto; }
-        .ticket-card { background: #1a1a1a; padding: 10px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 8px; font-size: 11px; }
+        .ticket-card { background: #161616; padding: 12px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 10px; font-size: 12px; }
         .ticket-card.respondido { border-left-color: #00e676; }
         .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
-        .ticket-resp { background: #111; padding: 8px; border-radius: 4px; margin-top: 8px; color: #00e676; font-style: italic; border-top: 1px solid #222; }
+        .ticket-resp { background: #0d2b15; padding: 8px; border-radius: 4px; margin-top: 8px; color: #69f0ae; font-style: italic; border: 1px dashed #2e7d32; }
 
-        /* 4. TOOLS (Planificador) - Fondo continuo del sidebar en PC */
-        #sidebar-tools { background: linear-gradient(180deg, #8e0000 0%, #5f0000 100%); padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        /* HERRAMIENTAS Y CHIPS (Scroll horizontal en móvil) */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 6px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 4px; }
-        .chip-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
-        .chip { background: #222; padding: 5px 10px; font-size: 10px; border-radius: 20px; cursor: pointer; border: 1px solid #444; color: #ccc; }
-        .chip:hover { border-color: var(--serena-gold); color: white; background: #333; }
+        .chip-container { 
+            margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; 
+        }
+        /* Ajuste chips móvil: Scroll horizontal para "variar alternativas" */
+        @media (max-width: 1023px) {
+            .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; }
+            .chip { flex: 0 0 auto; } /* No encoger */
+        }
+        .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 20px; cursor: pointer; border: 1px solid #555; color: #ddd; transition: 0.3s; }
+        .chip:hover { border-color: var(--serena-gold); color: white; background: #444; }
 
-        /* IMÁGENES */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
-        .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; line-height: 1.2; }
+        /* IMÁGENES Y LUPA */
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; object-fit: cover; }
+        .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
 
         /* CHAT GADGET */
-        #chat-ia-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
+        #chat-ia-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; }
-        #chat-ia-frame { display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 90px; height: 60vh; } }
+        #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 80px; height: 60vh; } }
 
-        /* MODALES */
-        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
-        #lupa-caption { margin-top: 20px; max-width: 800px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 20px; }
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; }
+        /* MODAL LUPA (ZOOM MÓVIL) */
+        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; overflow: hidden; }
+        
+        /* Imagen en móvil: Ancho completo, scroll si es larga */
+        #img-f-zoom { 
+            width: auto; max-width: 95%; max-height: 80vh; 
+            border: 2px solid white; border-radius: 5px; 
+            transition: transform 0.3s ease; /* Para el zoom */
+            cursor: zoom-in;
+        }
+        /* Clase para activar zoom al tocar */
+        #img-f-zoom.zoomed { transform: scale(2.5); cursor: zoom-out; }
+
+        @media (max-width: 1023px) {
+            #img-f-zoom { width: 100%; height: auto; max-height: unset; object-fit: contain; } /* Full width móvil */
+            #modal-lupa { overflow-y: auto; display: block; padding-top: 50px; } /* Permitir scroll nativo */
+            .close-lupa { position: fixed; top: 20px; right: 20px; z-index: 31000; }
+        }
+
+        #lupa-caption { margin-top: 10px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 18px; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; }
+        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
     </style>
@@ -115,7 +137,7 @@
             <h1 class="rdmls-sigla">RDMLS</h1>
             <div class="clock" id="clock">00:00:00</div>
             <div style="text-align:center;">
-                <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; box-shadow: 0 0 15px rgba(255,255,255,0.3);"><i class="fas fa-play" id="play-icon"></i></button>
+                <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer; box-shadow: 0 0 15px rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto;"><i class="fas fa-play" id="play-icon" style="font-size:24px; margin-left:4px;"></i></button>
             </div>
         </div>
 
@@ -127,10 +149,14 @@
                 <div class="chip-container">
                     <div class="chip" onclick="calcDirectReal(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
                     <div class="chip" onclick="calcDirectReal(-30.2292, -71.0851, 'Andacollo')">Andacollo</div>
+                    <div class="chip" onclick="calcDirectReal(-30.2905, -71.4939, 'Tongoy')">Tongoy</div>
+                    <div class="chip" onclick="calcDirectReal(-30.1963, -71.4172, 'Guanaqueros')">Guanaqueros</div>
+                    <div class="chip" onclick="calcDirectReal(-30.0356, -70.5202, 'Paihuano')">Paihuano</div>
+                    <div class="chip" onclick="calcDirectReal(-30.6936, -70.9575, 'Monte Patria')">M. Patria</div>
                     <div class="chip" onclick="calcDirectReal(-33.4489, -70.6693, 'Santiago')">Santiago</div>
                     <div class="chip" onclick="calcDirectReal(-36.8201, -73.0444, 'Concepción')">Concepción</div>
                     <div class="chip" onclick="calcDirectReal(-12.0464, -77.0428, 'Lima')">Lima</div>
-                    <div class="chip" onclick="calcDirectReal(-34.6037, -58.3816, 'Buenos Aires')">B. Aires</div>
+                    <div class="chip" onclick="calcDirectReal(-34.6037, -58.3816, 'B. Aires')">B. Aires</div>
                 </div>
             </div>
             <div style="margin-top:20px;">
@@ -144,12 +170,12 @@
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO 3D</button>
+            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO 3D</button>
         </div>
 
         <div id="form-panel">
             <div id="user-header" style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #333;">
-                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Login Vecino</button>
+                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
             </div>
             
             <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
@@ -194,7 +220,12 @@
         <iframe src="ia.html" style="width:100%; height:calc(100% - 35px); border:none;"></iframe>
     </div>
 
-    <div id="modal-lupa" onclick="this.style.display='none'"><span class="close-lupa">&times;</span><img id="img-f-zoom" src="" style="max-height:75%; border:4px solid white; border-radius:10px;"><div id="lupa-caption"></div></div>
+    <div id="modal-lupa" onclick="closeLupa(event)">
+        <div class="close-lupa" onclick="document.getElementById('modal-lupa').style.display='none'">&times;</div>
+        <img id="img-f-zoom" src="" onclick="toggleZoom(event)">
+        <div id="lupa-caption"></div>
+    </div>
+
     <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
@@ -334,7 +365,18 @@
 
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
         function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
-        function lupa(s, t) { document.getElementById('img-f-zoom').src=s; document.getElementById('lupa-caption').innerText=t; document.getElementById('modal-lupa').style.display='flex'; }
+        
+        // LUPA MEJORADA (Zoom)
+        function lupa(s, t) { 
+            const img = document.getElementById('img-f-zoom');
+            img.src = s; 
+            img.classList.remove('zoomed'); // Reset zoom
+            document.getElementById('lupa-caption').innerText = t; 
+            document.getElementById('modal-lupa').style.display = 'flex'; 
+        }
+        function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
+        function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
+
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
         window.addEventListener("resize", () => { engine.resize(); if(tourEngine) tourEngine.resize(); });
     </script>
