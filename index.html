@@ -2,183 +2,161 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Digital Municipal La Serena - Vecinos RDMLS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDMLS - Vecinos La Serena spa</title>
     <style>
-        /* CSS DEL SITIO MARAVILLOSO RECAPITULADO */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
-        #contenedor-principal { max-width: 1200px; margin: 0 auto; background: white; min-height: 100vh; }
+        :root { --primary: #007bff; --staff: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* LOGIN DISCRETO */
-        .login-box { padding: 40px; text-align: center; max-width: 400px; margin: 0 auto; }
-        .staff-access-piola { margin-top: 50px; font-size: 11px; color: #ccc; border-top: 1px solid #eee; padding-top: 15px; }
-        .staff-access-piola a { color: #bbb; text-decoration: none; cursor: pointer; }
-
-        /* PASEO 3D Y MOTOR TIPO TANQUE */
-        #motor-3d { width: 100%; height: 500px; background: #000; position: relative; }
-        .edificio { position: absolute; background: #888; border: 1px solid #555; }
+        /* LOGIN CARD */
+        .login-card { max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn-ingresar { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        /* CUADRO DE DISTANCIAS Y MAPA */
-        #cuadro-distancias { background: white; border: 2px solid #007bff; padding: 15px; border-radius: 10px; }
-        .btn-pastilla { display: inline-block; padding: 8px 15px; margin: 5px; background: #e1f5fe; border-radius: 20px; cursor: pointer; }
+        /* ACCESO FUNCIONARIOS (PIOLA) */
+        .staff-access { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; font-size: 12px; }
+        .staff-link { color: #aaa; text-decoration: none; cursor: pointer; }
+        #form-staff { display: none; margin-top: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; }
 
-        /* CÁMARA Y SELFIE */
-        #camara-full { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:1000; }
-        #video-preview { width: 100%; height: 100%; object-fit: cover; }
-        #serenito-sticker { position: absolute; bottom: 20px; right: 20px; width: 180px; pointer-events: none; }
+        /* DASHBOARD & MOTOR 3D */
+        .header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        #paseo-3d { height: 400px; background: #222; position: relative; overflow: hidden; margin: 20px; border-radius: 8px; }
+        .motor-tanque { color: #0f0; font-family: monospace; position: absolute; top: 10px; left: 10px; font-size: 10px; }
+        
+        /* CUADRO DE DISTANCIAS */
+        .distancias-box { margin: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn-pastilla { display: inline-block; padding: 8px 16px; margin: 5px; background: #e9ecef; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .btn-pastilla:hover { background: var(--primary); color: white; }
+        #resultado-distancia { margin-top: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid var(--primary); display: none; }
+
+        /* SELFIE OVERLAY */
+        #camera-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        #serenito-humanizado { position: absolute; bottom: 0; right: 0; width: 40%; max-width: 250px; z-index: 1001; }
+        
+        /* HISTORIAL */
+        .historial-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .status-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
 
-<div id="contenedor-principal">
-    <div id="pantalla-login" class="login-box">
-        <h2>Vecinos La Serena</h2>
+<div class="container" id="main-container">
+    <div id="pantalla-login" class="login-card">
+        <h2 style="margin-bottom: 5px;">Vecinos La Serena</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Radio Digital Municipal (RDMLS)</p>
+        
         <input type="text" id="rutInput" placeholder="RUT (11111111-1)">
-        <button onclick="validarIngreso()" style="background:#007bff; color:white; width:100%; padding:10px;">Ingresar</button>
-        
-        <div class="staff-access-piola">
-            <a onclick="abrirAccesoStaff()">Gestión Municipal</a>
-            <div id="form-staff-oculto" style="display:none; margin-top:10px;">
-                <input type="text" id="userStaff" placeholder="Usuario" style="width:80px;">
-                <input type="password" id="passStaff" placeholder="Clave" style="width:80px;">
-                <button onclick="loginFuncionario()">Entrar</button>
+        <button class="btn-ingresar" onclick="validarAcceso()">Ingresar</button>
+
+        <div class="staff-access">
+            <a class="staff-link" onclick="document.getElementById('form-staff').style.display='block'; this.style.display='none'">Acceso Funcionarios / Gestión</a>
+            <div id="form-staff">
+                <input type="password" id="passStaff" placeholder="Clave Administrativa" style="font-size: 12px;">
+                <button onclick="accesoGestion()" style="background: var(--staff); color: white; border: none; padding: 8px; width: 100%; border-radius: 4px;">Entrar a Backoffice</button>
             </div>
         </div>
     </div>
 
-    <div id="pantalla-app" style="display:none;">
-        <header style="background:#007bff; color:white; padding:10px; display:flex; justify-content:space-between;">
-            <span>Radio Digital Municipal (RDMLS)</span>
-            <button onclick="salir()" style="background:red; color:white;">Salir</button>
-        </header>
-
-        <div id="aviso-bloqueo" style="display:none; background:#fff3cd; padding:15px; color:#856404; text-align:center;">
-            <strong>CUENTA RESTRINGIDA:</strong> Solo puedes consultar el historial y el Paseo 3D.
+    <div id="pantalla-app" style="display: none;">
+        <div class="header">
+            <strong>RDMLS - Bienvenido, <span id="userName"></span></strong>
+            <button onclick="location.reload()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Salir</button>
         </div>
 
-        <section id="paseo-historico">
-            <h3>Paseo 3D Histórico</h3>
-            <div id="motor-3d">
-                <div class="edificio" style="width:50px; height:100px; left:200px; bottom:0;"></div>
-            </div>
-        </section>
+        <div id="aviso-bloqueo" style="display:none; background: #fff3cd; padding: 15px; text-align: center; color: #856404; font-weight: bold; border-bottom: 1px solid #ffeeba;">
+            ⚠️ CUENTA RESTRINGIDA: Solo acceso a Historial y Paseo 3D
+        </div>
 
-        <section id="cuadro-distancias">
-            <h3>Distancias desde La Serena</h3>
-            <div id="botones-ciudades">
-                <div class="btn-pastilla" onclick="verDistancia('Vicuña')">Vicuña</div>
-                <div class="btn-pastilla" onclick="verDistancia('Andacollo')">Andacollo</div>
-                <div class="btn-pastilla" onclick="verDistancia('Punta de Choros')">Punta de Choros</div>
-                <div class="btn-pastilla" onclick="verDistancia('Ovalle')">Ovalle</div>
-                <div class="btn-pastilla" onclick="verDistancia('Coquimbo')">Coquimbo</div>
-            </div>
-            <div id="resultado-distancia" style="margin-top:10px; font-weight:bold;"></div>
-            <button onclick="cerrarCuadro()" style="display:none;" id="btn-cerrar-dist">Cerrar Resultados</button> </section>
+        <div id="paseo-3d">
+            <div class="motor-tanque">MOTOR_TANQUE_V2.1: ONLINE | FPS: 60 | EDIFICIOS: CARGADOS</div>
+            <div style="position: absolute; color: white; bottom: 20px; left: 20px;">Paseo Histórico 3D - La Serena</div>
+        </div>
 
-        <button onclick="activarCamara()" style="width:100%; padding:20px; background:orange; font-weight:bold;">📸 SELFIE CON SERENITO</button>
+        <div class="distancias-box">
+            <h4 style="margin-top: 0;">Cuadro de Distancias Regionales</h4>
+            <div id="pastillas-ciudades">
+                <div class="btn-pastilla" onclick="calcDist('Vicuña', '62 km')">Vicuña</div>
+                <div class="btn-pastilla" onclick="calcDist('Andacollo', '54 km')">Andacollo</div>
+                <div class="btn-pastilla" onclick="calcDist('Punta de Choros', '114 km')">Punta de Choros</div>
+                <div class="btn-pastilla" onclick="calcDist('Ovalle', '86 km')">Ovalle</div>
+                <div class="btn-pastilla" onclick="calcDist('Illapel', '283 km')">Illapel</div>
+                <div class="btn-pastilla" onclick="calcDist('Parque Fray Jorge', '110 km')">Parque Fray Jorge</div>
+                <div class="btn-pastilla" onclick="calcDist('Algarrobito', '12 km')">Algarrobito</div>
+                <div class="btn-pastilla" onclick="calcDist('Coquimbo', '12 km')">Coquimbo</div>
+            </div>
+            <div id="resultado-distancia">
+                <span id="txt-dist"></span>
+                <button onclick="document.getElementById('resultado-distancia').style.display='none'" style="float: right; background: none; border: none; color: blue; cursor: pointer; text-decoration: underline;">Cerrar</button>
+            </div>
+        </div>
+
+        <button onclick="abrirCamara()" style="width: calc(100% - 40px); margin: 0 20px; padding: 15px; background: orange; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">📸 SELFIE CON SERENITO</button>
+
+        <div style="padding: 20px;">
+            <h4>Tu Historial de Requerimientos</h4>
+            <div id="lista-historial">
+                <div class="historial-item"><span>Luminaria - Calle Prat</span> <span class="status-pill">Resuelto</span></div>
+                <div class="historial-item"><span>Aseo Urbano - Plaza Armas</span> <span class="status-pill" style="background:#fff3cd; color:#856404;">En Proceso</span></div>
+            </div>
+        </div>
         
-        <section id="seccion-historial">
-            <h3>Historial de Requerimientos</h3>
-            <div id="lista-historial"></div>
-        </section>
-
-        <footer id="footer-stats" style="margin-top:20px; border-top:1px solid #ccc;">
-            <div id="clima">Cargando tiempo La Serena...</div>
-            <div id="chat-status">Chat: Conectado</div>
-        </footer >
-    </div>
-
-    <div id="pantalla-gestion" style="display:none; padding:20px;">
-        <h2>Panel de Gestión - Vecinos La Serena spa</h2>
-        <div id="requerimientos-pendientes">
-            </div>
+        <footer style="padding: 15px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #999;">
+            Chat: Conectado | Tiempo: 18°C despejado | RDMLS 2026
+        </footer>
     </div>
 </div>
 
-<div id="camara-full">
-    <video id="video-preview" autoplay playsinline></video>
-    <img src="serenito.png" id="serenito-sticker" alt="Serenito">
-    <div style="position:absolute; bottom:30px; width:100%; text-align:center;">
-        <button onclick="capturarFoto()" style="width:70px; height:70px; border-radius:50%; border:5px solid white;"></button>
-        <button onclick="cerrarCamara()" style="background:red; color:white; margin-left:20px;">X</button>
+<div id="camera-view">
+    <video id="video-feed" autoplay playsinline></video>
+    <img src="serenito.png" id="serenito-humanizado" alt="Serenito Mascota">
+    <div style="position: absolute; bottom: 30px; width: 100%; text-align: center;">
+        <button onclick="tomarFoto()" style="width: 70px; height: 70px; border-radius: 50%; border: 5px solid white; background: rgba(255,255,255,0.3);"></button>
+        <p style="color: white; margin-top: 10px;">Capturar Foto</p>
     </div>
 </div>
 
 <script>
-    // ESTADO DEL USUARIO
-    const usuarioSimulado = {
-        rut: "11111111-1",
-        nombre: "Rodrigo Godoy",
-        bloqueado: true, // Prueba para ver historial bloqueado
-        historial: [
-            { id: 501, tipo: "Luminaria", status: "Recibido" }
-        ]
-    };
+    const userDB = { rut: "11111111-1", nombre: "Rodrigo Godoy", bloqueado: true };
 
-    function validarIngreso() {
+    function validarAcceso() {
         const input = document.getElementById('rutInput').value;
-        if(input === usuarioSimulado.rut) {
+        if (input === userDB.rut) {
             document.getElementById('pantalla-login').style.display = 'none';
             document.getElementById('pantalla-app').style.display = 'block';
+            document.getElementById('userName').innerText = userDB.nombre;
             
-            // PARCHE 2: SI ESTÁ BLOQUEADO, MOSTRAR AVISO PERO NO CERRAR LA APP
-            if(usuarioSimulado.bloqueado) {
+            if (userDB.bloqueado) {
                 document.getElementById('aviso-bloqueo').style.display = 'block';
-                // Deshabilitar funciones de envío de reporte
+                // El historial sigue siendo visible abajo
             }
-            cargarHistorial();
+        } else {
+            alert("RUT no registrado en RDMLS");
         }
     }
 
-    // ACCESO PIOLA FUNCIONARIO
-    function abrirAccesoStaff() {
-        document.getElementById('form-staff-oculto').style.display = 'block';
+    function accesoGestion() {
+        alert("Accediendo al Backoffice Municipal de La Serena...");
+        // Redirección o cambio de vista a gestión de funcionarios
     }
 
-    function loginFuncionario() {
-        // Lógica de acceso directo a gestión
-        document.getElementById('pantalla-login').style.display = 'none';
-        document.getElementById('pantalla-gestion').style.display = 'block';
+    function calcDist(ciudad, km) {
+        const res = document.getElementById('resultado-distancia');
+        res.style.display = 'block';
+        document.getElementById('txt-dist').innerText = `Distancia a ${ciudad}: ${km}`;
     }
 
-    // CUADRO DISTANCIAS
-    function verDistancia(ciudad) {
-        document.getElementById('resultado-distancia').innerText = "Distancia a " + ciudad + ": Calculando...";
-        document.getElementById('btn-cerrar-dist').style.display = 'inline-block';
-    }
-    
-    function cerrarCuadro() {
-        document.getElementById('resultado-distancia').innerText = "";
-        document.getElementById('btn-cerrar-dist').style.display = 'none';
-    }
-
-    // SELFIE CON SERENITO (PARCHE)
-    async function activarCamara() {
-        const camara = document.getElementById('camara-full');
-        camara.style.display = 'block';
+    async function abrirCamara() {
+        const camView = document.getElementById('camera-view');
+        camView.style.display = 'block';
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        document.getElementById('video-preview').srcObject = stream;
+        document.getElementById('video-feed').srcObject = stream;
     }
 
-    function capturarFoto() {
-        alert("¡Foto con Serenito capturada! Se guardará en registros");
-        cerrarCamara();
-    }
-
-    function cerrarCamara() {
-        document.getElementById('camara-full').style.display = 'none';
-        const stream = document.getElementById('video-preview').srcObject;
-        stream.getTracks().forEach(track => track.stop());
-    }
-
-    function cargarHistorial() {
-        const lista = document.getElementById('lista-historial');
-        usuarioSimulado.historial.forEach(h => {
-            lista.innerHTML += `<div>REQ #${h.id} - ${h.tipo} - <b>${h.status}</b></div>`;
-        });
-    }
-
-    function salir() {
-        location.reload(); // Salida perfecta
+    function tomarFoto() {
+        alert("Recibido y Gracias. Tu registro con Serenito ha sido guardado.");
+        location.reload();
     }
 </script>
 </body>
