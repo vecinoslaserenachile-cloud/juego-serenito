@@ -16,8 +16,8 @@
     </style>
 </head>
 <body>
-    <div id="chat"><div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Conozco las direcciones municipales y trámites. Pregúntame lo que necesites.</div></div>
-    <div style="padding:10px; background:#1a1a1a; display:flex; gap:5px; border-top:1px solid #333;"><input type="text" id="in" placeholder="Escribe tu consulta..." onkeypress="if(event.key==='Enter')hablar()"><button onclick="hablar()" style="width:50px; background:#b71c1c; color:white; border:none; border-radius:5px;">></button></div>
+    <div id="chat"><div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Estoy aquí para orientarte sobre trámites municipales o recibir tus reportes.</div></div>
+    <div style="padding:10px; background:#1a1a1a; display:flex; gap:5px; border-top:1px solid #333;"><input type="text" id="in" placeholder="Escribe aquí..." onkeypress="if(event.key==='Enter')hablar()"><button onclick="hablar()" style="width:50px; background:#b71c1c; color:white; border:none; border-radius:5px;">></button></div>
 
     <script>
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
@@ -25,19 +25,15 @@
         const db = firebase.firestore();
         let turnos = 0;
 
-        // CEREBRO: EMPATÍA + DATOS
         const BRAIN = [
-            // EMPATÍA / CHÁCHARA
             { keys: ["hola", "buenas", "que tal", "hello"], resp: "¡Hola! 👋 Qué gusto saludarte vecino/a. ¿Cómo va tu día en La Serena?" },
+            { keys: ["bien", "excelente", "super", "todo bien"], resp: "¡Qué buena noticia! 🎉 Me alegra mucho. Recuerda que estoy aquí si necesitas saber sobre trámites o delegaciones." },
+            { keys: ["mal", "maso", "regular", "pesimo"], resp: "Uh, lamento escuchar eso. A veces resolver pendientes ayuda. ¿Necesitas reportar algo a la muni?" },
             { keys: ["clima", "calor", "frio", "tiempo"], resp: "El clima en La Serena siempre tiene su encanto ⛅. ¿Te puedo ayudar con algún trámite hoy?" },
             { keys: ["gracias", "te pasaste", "chao"], resp: "¡De nada! Estoy para servirte. Que tengas un excelente día." },
-
-            // DATOS DUROS
             { keys: ["pampa", "delegacion pampa"], resp: "📍 **Delegación La Pampa:** Larraín Alcalde #3500. Horario: 08:30 a 14:00 hrs." },
             { keys: ["antena", "delegacion antena"], resp: "📍 **Delegación La Antena:** 18 de Septiembre s/n. Horario: 08:30 a 14:00 hrs." },
             { keys: ["centro", "municipalidad"], resp: "📍 **Edificio Consistorial:** Prat #451, frente a la Plaza de Armas." },
-            
-            // TRÁMITES (TICKETS)
             { keys: ["patente", "negocio"], resp: "🏢 **Patentes:** Se requiere verificar zonificación. ¿Deseas abrir un ticket para Rentas?", type: "ticket" },
             { keys: ["denuncia", "ruidos", "basura"], resp: "⚖️ **Fiscalización:** Para enviar un inspector necesito detalles. ¿Ingresamos el reporte?", type: "ticket" }
         ];
@@ -52,7 +48,7 @@
                 if (match) {
                     if (!match.type) {
                         addMsg(match.resp, 'serenito');
-                        turnos = 0;
+                        turnos = 0; 
                         return;
                     }
                     let html = `<div class="msg serenito">${match.resp}<div class="form-ticket"><input id="f-n" placeholder="Nombre"><textarea id="f-m" placeholder="Detalle..."></textarea><button onclick="enviar()">INGRESAR AHORA</button></div></div>`;
@@ -60,10 +56,11 @@
                     return;
                 }
 
+                // Fallback Conversacional (Ping-Pong)
                 turnos++;
                 let res = "";
-                if (turnos === 1) res = "No tengo esa información exacta, pero cuéntame más para poder ayudarte.";
-                else if (turnos === 2) res = "Entiendo. Para casos complejos, lo mejor es contactar a un funcionario. ¿Quieres abrir un ticket de consulta general?";
+                if (turnos === 1) res = "Entiendo. Cuéntame un poco más para poder orientarte mejor.";
+                else if (turnos === 2) res = "Para temas específicos, lo mejor es contactar a un funcionario. ¿Quieres dejar una consulta general?";
                 else {
                     res = "Aquí tienes el formulario de contacto directo:";
                     let html = `<div class="msg serenito">${res}<div class="form-ticket"><input id="f-n" placeholder="Nombre"><textarea id="f-m" placeholder="Consulta..."></textarea><button onclick="enviar()">ENVIAR</button></div></div>`;
