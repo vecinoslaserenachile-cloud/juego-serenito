@@ -22,7 +22,7 @@
         
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
 
-        /* --- LAYOUT ESCRITORIO --- */
+        /* --- LAYOUT ESCRITORIO (3 COLUMNAS) --- */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout {
@@ -47,19 +47,29 @@
             #mobile-footer { display: none; }
         }
 
-        /* --- LAYOUT MÓVIL --- */
+        /* --- LAYOUT MÓVIL (AJUSTADO SIN ESPACIOS) --- */
         @media (max-width: 1023px) {
             body { overflow-y: auto; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
             #sidebar-wrapper { display: contents; } 
+            
+            /* 1. HEADER */
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
+            
+            /* 2. RUTAS (PLANIFICADOR) */
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
-            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
-            #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
+            
+            /* 3. MAPA */
+            #stage-area { order: 3; height: 45vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); margin: 0; }
+            
+            /* 4. REQUERIMIENTOS (PEGADO AL MAPA) */
+            #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; margin-top: 0; }
+            
+            /* 5. FOOTER */
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
-        /* ESTILOS COMUNES */
+        /* ESTILOS VISUALES */
         .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
         .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
@@ -92,7 +102,6 @@
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
 
-        /* CRM & ADMIN */
         .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 400px; overflow-y: auto; }
         .ticket-card { background: #161616; padding: 12px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 10px; font-size: 12px; }
         .ticket-card.respondido { border-left-color: #00e676; }
@@ -113,7 +122,6 @@
         #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 80px; height: 60vh; } }
 
-        /* MODALES */
         #modal-lupa, #modal-camara, #modal-admin-full { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
         #img-f-zoom { width: auto; max-width: 95%; max-height: 80vh; border: 2px solid white; border-radius: 5px; transition: transform 0.3s ease; cursor: zoom-in; }
         #img-f-zoom.zoomed { transform: scale(2.5); cursor: zoom-out; }
@@ -126,7 +134,7 @@
         /* CABINA FOTOS */
         #camera-wrapper { position: relative; width: 100%; max-width: 400px; border: 2px solid gold; border-radius: 10px; overflow: hidden; background: #000; }
         #cam-video { width: 100%; display: block; }
-        #cam-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; z-index: 10; }
+        #cam-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; z-index: 10; filter: drop-shadow(0 0 10px black); }
         
         .rotatable-icon { transition: transform 0.1s linear; transform-origin: center center; }
 
@@ -134,11 +142,15 @@
         #modal-admin-full { background: #111; overflow-y: auto; display: none; align-items: start; justify-content: start; padding: 0; }
         .admin-panel-container { width: 100%; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid gold; padding-bottom: 20px; margin-bottom: 20px; }
+        
+        /* LOGOUT BTN */
+        .btn-logout { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body onload="initApp()">
 
     <div id="main-layout">
+        
         <div id="sidebar-wrapper">
             <div id="sidebar-header">
                 <img src="escudo.png" class="escudo-img">
@@ -185,7 +197,7 @@
 
                 <div style="margin-top:20px;">
                     <button onclick="abrirCamara()" style="width:100%; background:#222; border:1px solid gold; color:gold; padding:10px; border-radius:8px; cursor:pointer; margin-bottom:15px; font-weight:bold;">
-                        <i class="fas fa-camera"></i> FOTO CON SERENITO
+                        <i class="fas fa-camera"></i> SELFIE CON SERENITO
                     </button>
 
                     <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS')">
@@ -205,7 +217,7 @@
         <div id="form-panel">
             <div class="user-header">
                 <button id="btn-login-vecino" onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
-                <div id="user-info" style="margin-top:10px; display:none; align-items:center; gap:10px;"></div>
+                <div id="user-info" style="margin-top:10px; display:none; align-items:center; gap:5px;"></div>
             </div>
             
             <div id="panel-vecino">
@@ -300,6 +312,7 @@
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
+        let isAdmin = false;
         
         let sIcon = L.divIcon({ 
             html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
@@ -455,7 +468,7 @@
                 .then(r=>r.json()).then(d=>{ if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]); });
         }
 
-        // COMPRESION ROBUSTA PARA MÓVIL
+        // COMPRESION ROBUSTA
         function compressImage(file, quality=0.7, maxWidth=600) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -482,16 +495,30 @@
         }
 
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        
+        // AUTH STATE & LOGOUT
         auth.onAuthStateChanged(u => { 
             if(u){ 
                 user=u; 
                 document.getElementById('user-info').style.display = 'flex';
-                document.getElementById('user-info').innerHTML=`<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px;"><b>${u.displayName}</b></div>`;
+                document.getElementById('user-info').innerHTML=`<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px;"><b>${u.displayName}</b></div><button class="btn-logout" onclick="logout()">Salir</button>`;
                 document.getElementById('btn-login-vecino').style.display = 'none';
                 document.getElementById('crm-box').style.display = 'block';
                 cargarCRM(u.uid);
-            } 
+            } else {
+                user = null;
+                document.getElementById('user-info').style.display = 'none';
+                document.getElementById('btn-login-vecino').style.display = 'block';
+                document.getElementById('crm-box').style.display = 'none';
+                document.getElementById('history-list').innerHTML = '';
+            }
         });
+
+        function logout() {
+            auth.signOut().then(() => {
+                alert("Sesión cerrada.");
+            });
+        }
 
         // --- FUNCIONARIOS ---
         function loginFuncionario() {
@@ -547,7 +574,7 @@
                 if(fileInput.files.length > 0) { 
                     base64 = await compressImage(fileInput.files[0]); 
                 }
-            } catch(e) { console.log("Error foto movil", e); } // Silencioso si falla foto
+            } catch(e) { console.log("Error foto movil", e); } 
 
             try {
                 await db.collection("tickets_ia").add({ userId: user.uid, nombre: "Vecino", telefono: document.getElementById('r-phone').value, asunto: document.getElementById('r-asunto').value, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
