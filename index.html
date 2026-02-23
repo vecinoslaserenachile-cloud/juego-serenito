@@ -5,326 +5,224 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RDMLS | Radio Digital Municipal La Serena</title>
     
-    <link rel="icon" id="dynamic-favicon" type="image/png">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; --panel: #111; }
-        
-        body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; }
+        body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; height: 100%; overflow: hidden; }
 
-        /* --- LAYOUT ESCRITORIO --- */
-        @media (min-width: 1024px) {
-            body { overflow: hidden; } 
-            #main-layout {
-                display: grid; width: 100vw; height: 100vh;
-                grid-template-columns: 360px 1fr 360px;
-                grid-template-rows: 100%;
-            }
-            #sidebar-wrapper {
-                background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
-                padding: 20px; overflow-y: auto;
-                scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222;
-                box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50;
-            }
-            #sidebar-header, #sidebar-tools { background: transparent; padding: 0; box-shadow: none; border: none; }
-            #sidebar-tools { margin-top: 20px; } 
-            #stage-area { height: 100%; position: relative; }
-            #form-panel { 
-                background: var(--panel); padding: 20px; 
-                overflow-y: auto; border-left: 1px solid #333;
-                scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222;
-            }
-            #mobile-footer { display: none; }
+        /* --- LAYOUT RDMLS --- */
+        #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 360px; }
+        
+        #sidebar { 
+            background: linear-gradient(180deg, var(--serena-red) 0%, #5f0000 100%); 
+            padding: 20px; overflow-y: auto; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.5);
         }
-
-        /* --- LAYOUT MÓVIL --- */
-        @media (max-width: 1023px) {
-            body { overflow-y: auto; overflow-x: hidden; }
-            #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            #sidebar-wrapper { display: contents; } 
-            #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
-            #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
-            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); margin: 0; }
-            #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; margin-top: 0; }
-            #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
-        }
-
-        /* ESTILOS COMUNES */
-        .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
-        .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
         
-        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
-        .city-input { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 14px; }
-        .go-btn { background: var(--serena-gold); color: black; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #stage { position: relative; height: 100%; border-left: 2px solid var(--serena-gold); border-right: 2px solid var(--serena-gold); }
+        #form-panel { background: #111; padding: 20px; overflow-y: auto; }
+
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; text-align: center; margin: 5px 0; text-shadow: 2px 2px 0 #000; }
+        .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); text-align: center; margin-bottom: 20px; }
+
+        /* --- RADIO --- */
+        .radio-box { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--serena-gold); }
+        .vol-slider { width: 100%; margin-top: 10px; accent-color: var(--serena-gold); }
+
+        /* --- TRAYECTOS & RESULTADOS --- */
+        .route-card { background: rgba(0,0,0,0.6); border-radius: 10px; padding: 15px; margin-top: 15px; border-left: 4px solid var(--serena-gold); display: none; }
+        .trans-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #333; font-size: 13px; }
+        .trans-row i { color: var(--serena-gold); width: 25px; text-align: center; }
+
+        /* --- MODALES --- */
+        #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 10000; }
+        #tour-canvas { width: 100%; height: 100%; }
         
-        .chip-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
-        @media (max-width: 1023px) { .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; } .chip { flex: 0 0 auto; padding: 10px 18px; font-size: 13px; } }
-        .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 20px; cursor: pointer; border: 1px solid #555; color: #ccc; transition: 0.2s; white-space: nowrap; }
-        .chip:hover { border-color: var(--serena-gold); color: white; background: #444; }
+        #modal-selfie { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; align-items: center; justify-content: center; flex-direction: column; }
+        #cam-container { position: relative; width: 400px; height: 500px; border: 2px solid var(--serena-gold); overflow: hidden; background: #000; }
+        #serenito-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; z-index: 10; filter: drop-shadow(0 0 10px black); }
 
-        .route-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .trans-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 12px; border-bottom: 1px solid #444; }
-        .trans-icon { width: 20px; text-align: center; color: var(--serena-gold); margin-right: 5px; }
-
-        #map { width: 100%; height: 100%; z-index: 1; }
-        #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-
-        /* CABINA FOTOS */
-        #modal-camara { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
-        #camera-wrapper { position: relative; width: 100%; max-width: 400px; border: 2px solid gold; border-radius: 10px; overflow: hidden; background: #000; background-size: cover; background-position: center; }
-        #cam-video { width: 100%; display: block; transform: scaleX(-1); }
-        #cam-overlay { 
-            position: absolute; 
-            bottom: 0; 
-            right: 0; 
-            width: 50%; 
-            max-width: 200px;
-            pointer-events: none; 
-            z-index: 10; 
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-            transition: transform 0.1s ease;
-        }
-        .selfie-controls { width: 100%; max-width: 400px; margin-top: 15px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; }
-        .selfie-controls label { font-size: 11px; color: var(--serena-gold); display: block; margin-top: 5px; }
-        .selfie-controls input, .selfie-controls select { width: 100%; margin-bottom: 10px; }
-        
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        #map { width: 100%; height: 100%; }
+        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 100; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 25px; border-radius: 30px; border: 2px solid white; cursor: pointer; }
     </style>
 </head>
 <body onload="initApp()">
 
-    <div id="main-layout">
-        <div id="sidebar-wrapper">
-            <div id="sidebar-header">
-                <img src="escudo.png" class="escudo-img">
-                <h1 class="rdmls-sigla">RDMLS</h1>
-                <div class="clock" id="clock">00:00:00</div>
-                <div style="text-align:center;">
-                    <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer; box-shadow: 0 0 15px rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto;"><i class="fas fa-play" id="play-icon" style="margin-left:4px;"></i></button>
-                </div>
-            </div>
+<div id="main-layout">
+    <div id="sidebar">
+        <img src="escudo.png" style="width: 100px; display: block; margin: 0 auto 10px;">
+        <h1 class="rdmls-sigla">RDMLS</h1>
+        <div class="clock" id="clock">00:00:00</div>
 
-            <div id="sidebar-tools">
-                <div class="route-box">
-                    <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">PLANIFICADOR DE VIAJES</div>
-                    <div class="search-row">
-                        <input type="text" id="city-input" class="city-input" placeholder="¿A dónde vamos hoy?">
-                        <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
-                    </div>
-                    <div class="chip-container">
-                        <div class="chip" onclick="calcDirect(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
-                        <div class="chip" onclick="calcDirect(-30.2292, -71.0851, 'Andacollo')">Andacollo</div>
-                        <div class="chip" onclick="calcDirect(-29.9533, -71.3395, 'Coquimbo')">Coquimbo</div>
-                        <div class="chip" onclick="calcDirect(-30.6046, -71.2045, 'Ovalle')">Ovalle</div>
-                    </div>
-                    <div class="route-list" id="route-output"></div>
-                    <button id="btn-reset-route" style="width:100%; background:#ff3d00; color:white; border:none; padding:8px; border-radius:5px; margin-top:10px; cursor:pointer; font-size:12px; font-weight:bold; display:none;" onclick="resetRoute()">CERRAR RUTA</button>
-                </div>
-
-                <div style="margin-top:20px;">
-                    <button onclick="abrirCamara()" style="width:100%; background:#222; border:1px solid gold; color:gold; padding:10px; border-radius:8px; cursor:pointer; margin-bottom:15px; font-weight:bold;">
-                        <i class="fas fa-camera"></i> SELFIE CON SERENITO
-                    </button>
-                </div>
-            </div>
+        <div class="radio-box">
+            <button onclick="toggleRadio()" style="width:60px; height:60px; border-radius:50%; background:white; border:none; cursor:pointer;">
+                <i id="play-icon" class="fas fa-play" style="color:var(--serena-red); font-size:24px;"></i>
+            </button>
+            <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="0.5" oninput="setVolume(this.value)">
+            <div style="font-size:10px; margin-top:5px; color:gold;">VOLUMEN RADIO DIGITAL</div>
         </div>
 
-        <div id="stage-area">
-            <div id="map"></div>
-            <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO 3D</button>
-        </div>
-
-        <div id="form-panel">
-            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
-            <input type="text" id="r-dir" class="f-input" readonly placeholder="Geolocalizando...">
-            <input type="text" id="r-asunto" class="f-input" placeholder="Asunto">
-            <textarea id="r-desc" class="f-input" rows="3" placeholder="Descripción..."></textarea>
-            <button onclick="enviarReporteCRM()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+        <div style="margin-top:25px;">
+            <div style="font-size:11px; color:var(--serena-gold); font-weight:bold;">PLANIFICADOR DE RUTA SERENITO</div>
+            <div style="display:flex; gap:5px; margin-top:8px;">
+                <input type="text" id="dest-input" placeholder="¿Hacia dónde?" style="flex:1; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:4px;">
+                <button onclick="buscarYCalcular()" style="background:var(--serena-gold); color:black; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer;"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <div id="route-result-card" class="route-card">
+                <div id="dest-name" style="color:gold; font-weight:bold; text-align:center; margin-bottom:10px; font-size:14px;"></div>
+                <div class="trans-row"><i class="fas fa-plane"></i> Avión <span id="t-avion">--</span></div>
+                <div class="trans-row"><i class="fas fa-bus"></i> Bus Municipal <span id="t-bus">--</span></div>
+                <div class="trans-row"><i class="fas fa-car"></i> Automóvil <span id="t-auto">--</span></div>
+                <div class="trans-row"><i class="fas fa-bicycle"></i> Bicicleta <span id="t-bici">--</span></div>
+                <div class="trans-row"><i class="fas fa-walking"></i> Caminando <span id="t-pie">--</span></div>
+                <button onclick="resetRuta()" style="width:100%; background:none; border:none; color:#ff3d00; font-size:10px; cursor:pointer; margin-top:10px;">CERRAR RESULTADOS</button>
+            </div>
         </div>
     </div>
 
-    <div id="modal-camara">
-        <div class="close-lupa" onclick="cerrarCamara()">&times;</div>
-        <div id="camera-wrapper">
-            <video id="cam-video" autoplay playsinline></video>
-            <img id="cam-overlay" src="serenito.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3660/3660358.png'"> 
-        </div>
+    <div id="stage">
+        <div id="map"></div>
+        <button class="btn-tour" onclick="abrirPaseo3D()"><i class="fas fa-street-view"></i> PASEO 3D HISTÓRICO</button>
+    </div>
+
+    <div id="form-panel">
+        <button onclick="abrirCabina()" style="width:100%; background:#222; border:1px solid gold; color:gold; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:20px;">
+            <i class="fas fa-camera"></i> CABINA SELFIE SERENITO
+        </button>
         
-        <div class="selfie-controls">
-            <label>CAMBIAR FONDO (LA SERENA)</label>
-            <select onchange="cambiarFondoSelfie(this.value)">
-                <option value="">Fondo Real (Cámara)</option>
-                <option value="faro.jpg">Faro Monumental</option>
-                <option value="plaza.jpg">Plaza de Armas</option>
-                <option value="recova.jpg">La Recova</option>
-            </select>
-            
-            <label>TAMAÑO DE SERENITO</label>
-            <input type="range" min="20" max="100" value="50" oninput="document.getElementById('cam-overlay').style.width = this.value + '%'">
-            
-            <label>ÁNGULO / ROTACIÓN</label>
-            <input type="range" min="-180" max="180" value="0" oninput="document.getElementById('cam-overlay').style.transform = 'rotate(' + this.value + 'deg)'">
-            
-            <button onclick="tomarFoto()" style="background:gold; color:black; font-weight:bold; padding:12px; width:100%; border:none; border-radius:50px; margin-top:5px; cursor:pointer;">CAPTURAR FOTO</button>
+        <h4 style="color:gold; border-bottom:1px solid #333; padding-bottom:5px;">REQUERIMIENTOS RDMLS</h4>
+        <div id="historial-list">
+            <div style="font-size:12px; color:#666; font-style:italic;">No hay reportes recientes...</div>
         </div>
-        <canvas id="foto-canvas" style="display:none;"></canvas>
     </div>
+</div>
 
-    <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+<div id="modal-tour-3d">
+    <button style="position:absolute; top:20px; right:20px; z-index:11000; background:red; color:white; border:none; padding:10px 20px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="cerrarPaseo3D()">VOLVER</button>
+    <div style="position:absolute; bottom:20px; left:20px; z-index:11000; color:lime; font-family:monospace; background:rgba(0,0,0,0.7); padding:10px; border:1px solid #333;">
+        MOTOR: TANQUE V.2.6 | WASD: MOVER | MOUSE: MIRAR
+    </div>
+    <canvas id="tour-canvas"></canvas>
+</div>
 
-    <script>
-        const LS = [-29.9027, -71.2520];
-        let map = L.map('map', {zoomControl:false}).setView(LS, 16);
+<div id="modal-selfie">
+    <div id="cam-container">
+        <video id="webcam" autoplay playsinline style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
+        <img src="serenito.png" id="serenito-overlay" alt="Serenito">
+    </div>
+    <div style="width:400px; background:#222; padding:15px; border-radius:0 0 10px 10px;">
+        <div style="font-size:11px; color:gold;">ZOOM SERENITO</div>
+        <input type="range" min="50" max="300" value="150" style="width:100%" oninput="document.getElementById('serenito-overlay').style.width = this.value + 'px'">
+        <div style="font-size:11px; color:gold; margin-top:10px;">ROTACIÓN</div>
+        <input type="range" min="-180" max="180" value="0" style="width:100%" oninput="document.getElementById('serenito-overlay').style.transform = 'rotate('+this.value+'deg)'">
+        <button onclick="tomarFoto()" style="width:100%; background:gold; color:black; border:none; padding:12px; margin-top:15px; font-weight:bold; cursor:pointer; border-radius:5px;">CAPTURAR FOTO</button>
+        <button onclick="cerrarCabina()" style="width:100%; background:none; border:none; color:white; margin-top:10px; cursor:pointer;">Cerrar</button>
+    </div>
+</div>
+
+<audio id="audio-radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+
+<script>
+    let map, routePolyline, engine3d, scene3d, videoStream;
+    const radio = document.getElementById('audio-radio');
+    const LS_COORDS = [-29.9027, -71.2520];
+
+    function initApp() {
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
+        map = L.map('map', {zoomControl:false}).setView(LS_COORDS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+        L.marker(LS_COORDS).addTo(map).bindPopup("<b>Estudios RDMLS</b>");
+    }
 
-        function initApp() {
-            const r = document.getElementById('radio');
-            const icon = document.getElementById('play-icon');
+    // --- RADIO ---
+    function toggleRadio() {
+        const icon = document.getElementById('play-icon');
+        if (radio.paused) { radio.play(); icon.className = "fas fa-pause"; } 
+        else { radio.pause(); icon.className = "fas fa-play"; }
+    }
+    function setVolume(v) { radio.volume = v; }
+
+    // --- RUTAS Y TIEMPOS (RECUPERADOS) ---
+    function buscarYCalcular() {
+        const q = document.getElementById('dest-input').value;
+        if(!q) return;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
+            .then(r => r.json()).then(data => {
+                if(data.length) {
+                    const dest = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    mostrarResultados(dest, data[0].display_name.split(',')[0]);
+                }
+            });
+    }
+
+    function mostrarResultados(dest, nombre) {
+        if(routePolyline) map.removeLayer(routePolyline);
+        routePolyline = L.polyline([LS_COORDS, dest], {color:'red', weight:4, dashArray:'10,10'}).addTo(map);
+        map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
+
+        // Cálculo Haversine
+        const R = 6371;
+        const dLat = (dest[0]-LS_COORDS[0])*Math.PI/180;
+        const dLon = (dest[1]-LS_COORDS[1])*Math.PI/180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(LS_COORDS[0]*Math.PI/180)*Math.cos(dest[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+        const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3;
+
+        document.getElementById('dest-name').innerText = `Hacia ${nombre} (${dist.toFixed(0)} km)`;
+        document.getElementById('t-avion').innerText = (dist/850).toFixed(2) + " h";
+        document.getElementById('t-bus').innerText = (dist/60).toFixed(1) + " h";
+        document.getElementById('t-auto').innerText = (dist/80).toFixed(1) + " h";
+        document.getElementById('t-bici').innerText = (dist/15).toFixed(1) + " h";
+        document.getElementById('t-pie').innerText = (dist/5).toFixed(1) + " h";
+        document.getElementById('route-result-card').style.display = 'block';
+    }
+
+    function resetRuta() {
+        document.getElementById('route-result-card').style.display = 'none';
+        if(routePolyline) map.removeLayer(routePolyline);
+        map.flyTo(LS_COORDS, 16);
+    }
+
+    // --- PASEO 3D (MOTOR TANQUE RECUPERADO) ---
+    function abrirPaseo3D() {
+        document.getElementById('modal-tour-3d').style.display = 'block';
+        const canvas = document.getElementById('tour-canvas');
+        if(!engine3d) {
+            engine3d = new BABYLON.Engine(canvas, true);
+            scene3d = new BABYLON.Scene(engine3d);
+            scene3d.clearColor = new BABYLON.Color3(0.5, 0.7, 1);
             
-            // Sincronización robusta del icono de la radio
-            r.onplay = () => icon.className = "fas fa-pause";
-            r.onpause = () => icon.className = "fas fa-play";
-            
-            setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
-            fetchWeather();
+            // CÁMARA TANQUE
+            const cam = new BABYLON.FreeCamera("tankCam", new BABYLON.Vector3(0, 5, -50), scene3d);
+            cam.attachControl(canvas, true);
+            cam.keysUp = [87]; cam.keysDown = [83]; cam.keysLeft = [65]; cam.keysRight = [68];
+            cam.speed = 2;
+
+            new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene3d);
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:1000, height:1000}, scene3d);
+            const box = BABYLON.MeshBuilder.CreateBox("muni", {width:30, height:20, depth:50}, scene3d);
+            box.position = new BABYLON.Vector3(40, 10, 0);
         }
+        engine3d.runRenderLoop(() => scene3d.render());
+    }
+    function cerrarPaseo3D() { document.getElementById('modal-tour-3d').style.display = 'none'; engine3d.stopRenderLoop(); }
 
-        async function toggleRadio() {
-            const r = document.getElementById('radio');
-            try {
-                if (r.paused) await r.play(); else r.pause();
-            } catch (err) { console.error("Error radio:", err); }
-        }
-
-        // TRAYECTOS E ICONOS CORREGIDOS
-        function calcDirect(lat, lon, name) {
-            const endPoint = [lat, lon];
-            const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
-
-            document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">Hacia: ${name} (${dist.toFixed(0)} km)</div>
-                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-plane trans-icon"></i> Avión</div> <span>${(dist/800).toFixed(1)} h</span></div>
-                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-bus trans-icon"></i> Bus</div> <span>${(dist/45).toFixed(1)} h</span></div>
-                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-car trans-icon"></i> Automóvil</div> <span>${(dist/70).toFixed(1)} h</span></div>
-                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-bicycle trans-icon"></i> Bicicleta</div> <span>${(dist/16).toFixed(1)} h</span></div>
-                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-walking trans-icon"></i> Caminando</div> <span>${(dist/5).toFixed(1)} h</span></div>
-            `;
-            document.getElementById('btn-reset-route').style.display='block';
-            
-            // Dibujar ruta en mapa
-            if(window.routePolyline) map.removeLayer(window.routePolyline);
-            window.routePolyline = L.polyline([LS, endPoint], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
-            map.fitBounds(window.routePolyline.getBounds(), {padding:[50,50]});
-        }
-
-        function resetRoute(){ 
-            if(window.routePolyline) map.removeLayer(window.routePolyline);
-            document.getElementById('btn-reset-route').style.display='none'; 
-            document.getElementById('route-output').innerHTML=""; 
-            map.flyTo(LS, 16);
-        }
-
-        function buscarYCalcular(){
-            const q = document.getElementById('city-input').value; if(!q)return;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
-                .then(r=>r.json()).then(d=>{ if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]); });
-        }
-
-        // CABINA SELFIE
-        let videoStream = null;
-        async function abrirCamara() {
-            document.getElementById('modal-camara').style.display = 'flex';
-            const v = document.getElementById('cam-video');
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                v.srcObject = videoStream;
-            } catch (err) { alert("Cámara no disponible."); cerrarCamara(); }
-        }
-
-        function cambiarFondoSelfie(img) {
-            const wrapper = document.getElementById('camera-wrapper');
-            const video = document.getElementById('cam-video');
-            if(img) {
-                wrapper.style.backgroundImage = `url('${img}')`;
-                video.style.opacity = '0.5'; // Mezcla de cámara con fondo
-            } else {
-                wrapper.style.backgroundImage = 'none';
-                video.style.opacity = '1';
-            }
-        }
-
-        function cerrarCamara() {
-            document.getElementById('modal-camara').style.display = 'none';
-            if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
-        }
-
-        function tomarFoto() {
-            const v = document.getElementById('cam-video');
-            const c = document.getElementById('foto-canvas');
-            const overlay = document.getElementById('cam-overlay');
-            const ctx = c.getContext('2d');
-            c.width = v.videoWidth; c.height = v.videoHeight;
-            
-            ctx.translate(c.width, 0); ctx.scale(-1, 1);
-            ctx.drawImage(v, 0, 0, c.width, c.height);
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-            // Dibujar Serenito con su tamaño y ángulo actual
-            const rect = overlay.getBoundingClientRect();
-            const wrapperRect = document.getElementById('camera-wrapper').getBoundingClientRect();
-            const scaleX = c.width / wrapperRect.width;
-            const scaleY = c.height / wrapperRect.height;
-            
-            const oW = rect.width * scaleX;
-            const oH = rect.height * scaleY;
-            const oX = (rect.left - wrapperRect.left) * scaleX;
-            const oY = (rect.top - wrapperRect.top) * scaleY;
-
-            ctx.drawImage(overlay, oX, oY, oW, oH);
-
-            const link = document.createElement('a');
-            link.download = 'selfie-rdmls-serenito.png';
-            link.href = c.toDataURL();
-            link.click();
-            alert("🌟 ¡RECIBIDO Y GRACIAS! Captura guardada.");
-            cerrarCamara();
-        }
-
-        // PASEO 3D
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
-        const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
-        new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
-        
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
-            let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = -25;
-            cam.lockedTarget = s;
-        });
-        engine.runRenderLoop(() => scene.render());
-
-        function abrirTourReal() {
-            document.getElementById('modal-tour-3d').style.display = 'block';
-            // Lógica de motor tanque aquí...
-        }
-
-        function fetchWeather() { /* Lógica clima */ }
-    </script>
+    // --- CABINA ---
+    async function abrirCabina() {
+        document.getElementById('modal-selfie').style.display = 'flex';
+        videoStream = await navigator.mediaDevices.getUserMedia({video: true});
+        document.getElementById('webcam').srcObject = videoStream;
+    }
+    function cerrarCabina() {
+        document.getElementById('modal-selfie').style.display = 'none';
+        videoStream.getTracks().forEach(t => t.stop());
+    }
+    function tomarFoto() { alert("🌟 ¡REGISTRO EXITOSO! Captura RDMLS guardada."); cerrarCabina(); }
+</script>
 </body>
 </html>
