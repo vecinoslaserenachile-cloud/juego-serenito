@@ -6,21 +6,20 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { margin: 0; font-family: sans-serif; background: #111; color: white; display: flex; flex-direction: column; height: 100vh; }
-        #chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px; border-radius: 12px; max-width: 85%; font-size: 13px; line-height: 1.4; }
-        .serenito { background: #222; border-left: 4px solid #ffd700; align-self: flex-start; }
+        #chat { flex: 1; overflow-y: auto; padding: 15px; }
+        .msg { padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; line-height: 1.4; }
+        .serenito { background: #222; border-left: 4px solid gold; align-self: flex-start; }
         .vecino { background: #005c4b; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 2px; }
         .form-ticket { background: #000; padding: 12px; border: 1px solid gold; border-radius: 8px; margin-top: 10px; }
-        input, textarea { width: 100%; margin-bottom: 5px; background: #222; color: white; border: 1px solid #444; padding: 10px; box-sizing: border-box; border-radius: 4px; }
-        button { width: 100%; background: #b71c1c; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .success-box { border-left: 4px solid #00e676; background: rgba(0, 230, 118, 0.1); padding: 10px; margin-top: 10px; color: #00e676; font-weight: bold; font-size: 12px; }
+        input, textarea { width: 100%; margin-bottom: 5px; background: #222; color: white; border: 1px solid #444; padding: 10px; box-sizing: border-box; }
+        button { width: 100%; background: #b71c1c; color: white; border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 4px; }
     </style>
 </head>
 <body>
-    <div id="chat"><div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Hoy es 22 de febrero de 2026. Estoy entrenado con los manuales de Patentes e Inspecciones. ¿En qué te ayudo?</div></div>
+    <div id="chat"><div class="msg serenito">🌟 ¡Hola Vecino! Soy **Serenito IA**. Hoy es 22 de febrero de 2026. Estoy aquí para escucharte y ayudarte con tus trámites municipales. ¿Qué te trae por aquí hoy?</div></div>
     <div style="padding:10px; background:#1a1a1a; display:flex; gap:5px; border-top: 1px solid #333;">
         <input type="text" id="in" placeholder="Escribe y presiona Enter..." onkeypress="if(event.key==='Enter')hablar()">
-        <button onclick="hablar()" style="width:50px; background:#b71c1c; color:white; border:none; border-radius:5px; cursor:pointer;">></button>
+        <button onclick="hablar()" style="width:50px; background:#b71c1c; color:white; border:none; border-radius:5px;">></button>
     </div>
 
     <script>
@@ -28,12 +27,11 @@
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore();
 
-        // CEREBRO ENTRENADO CON TUS DOCUMENTOS
+        // ENTRENAMIENTO BASADO EN LOS MANUALES PDF PROPORCIONADOS
         const BRAIN = [
-            { keys: ["patente", "industrial", "negocio", "comercial"], resp: "🏢 **Trámite de Patente:** Según el manual municipal, necesitas RUT, acreditación de domicilio y zonificación aprobada. ¿Quieres que abra un ticket para Rentas?", hasForm: true, type: "Patentes" },
-            { keys: ["denuncia", "ruidos", "inspector", "ilegal"], resp: "⚖️ **Fiscalización:** Las denuncias van a la Oficina de Partes y se asigna un inspector. Completa el ticket para derivarlo a Inspección:", hasForm: true, type: "Fiscalización" },
-            { keys: ["permiso", "pagar", "circulacion"], resp: "🚗 **Permiso 2026:** Atendemos de 09:00 a 14:00 en puntos como CCU y Outlet Peñuelas. ¿Necesitas ayuda técnica?" },
-            { keys: ["bus", "electrico", "pago"], resp: "🚌 **Aviso:** Los buses E01 y E02 no aceptan efectivo. Solo pago digital." }
+            { keys: ["patente", "industrial", "negocio"], resp: "🏢 **Trámite de Patentes:** Para patentes industriales o comerciales necesitamos acreditar tu domicilio y zonificación. ¿Quieres que abra un ticket para el Departamento de Rentas?", hasForm: true, type: "Patentes" },
+            { keys: ["denuncia", "ruidos", "inspector", "notificar"], resp: "⚖️ **Fiscalización:** Las denuncias se asignan a un inspector municipal para visita en terreno. ¿Deseas ingresar los detalles para la Unidad de Inspección?", hasForm: true, type: "Inspección" },
+            { keys: ["bus", "electrico", "pago"], resp: "🚌 **Transporte:** Recuerda que los buses eléctricos (E01/E02) solo aceptan pago digital, ya no reciben efectivo." }
         ];
 
         function hablar() {
@@ -43,24 +41,24 @@
             
             setTimeout(() => {
                 let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
-                let res = match ? match.resp : "Entiendo tu consulta. Para darte una solución oficial basada en nuestros manuales, completemos este ticket:";
+                let res = match ? match.resp : "Entiendo tu mensaje perfectamente. Para darte una solución oficial según nuestros manuales de procedimiento, completemos este ticket para el equipo municipal:";
                 let html = `<div class="msg serenito">${res}`;
                 if(match?.hasForm || !match) {
-                    html += `<div class="form-ticket"><input id="f-n" placeholder="Tu Nombre"><textarea id="f-m" placeholder="Detalle de tu solicitud..."></textarea><button onclick="ticket('${match?.type || 'General'}')">ENVIAR A BACK-OFFICE</button></div>`;
+                    html += `<div class="form-ticket"><input id="f-n" placeholder="Tu Nombre"><textarea id="f-m" placeholder="Escribe aquí tu consulta técnica..."></textarea><button onclick="ticket('${match?.type || 'General'}')">INGRESAR REQUERIMIENTO</button></div>`;
                 }
                 html += `</div>`;
                 box.innerHTML += html;
                 box.scrollTop = box.scrollHeight;
-            }, 400);
+            }, 600);
             i.value = "";
         }
 
         async function ticket(tipo) {
             const n = document.getElementById('f-n').value, m = document.getElementById('f-m').value;
-            if(!m) return alert("Escribe el detalle.");
+            if(!m) return alert("Escribe el detalle");
             await db.collection("tickets_ia").add({ nombre: n, mensaje: m, tipo: tipo, fecha: new Date(), estado: "Pendiente" });
             const box = document.getElementById('chat');
-            box.innerHTML += `<div class="success-box">🌟 ¡MUCHAS GRACIAS! Tu solicitud ha sido ingresada con éxito. Un funcionario municipal revisará tu caso pronto.</div>`;
+            box.innerHTML += `<div class="msg serenito" style="border-left:4px solid #00e676; background:rgba(0,230,118,0.1);">✅ **¡MUCHAS GRACIAS!** Tu ticket ha sido enviado al Backoffice. Un funcionario lo revisará pronto.</div>`;
             box.scrollTop = box.scrollHeight;
         }
     </script>
