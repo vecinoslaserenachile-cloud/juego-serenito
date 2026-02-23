@@ -18,15 +18,29 @@
 
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #111; }
-        body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
+        
+        /* ESTILOS BASE (MÓVIL POR DEFECTO - FLUIDEZ VERTICAL) */
+        body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
+        
+        /* En móvil permitimos scroll vertical */
+        body { overflow-y: auto; overflow-x: hidden; }
 
+        #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
+
+        /* ÓRDEN EN MÓVIL: 1. Mapa (Héroe) 2. Sidebar (Radio/Ruta) 3. Formulario */
+        #stage-area { order: 1; height: 50vh; width: 100%; position: relative; z-index: 10; border-bottom: 2px solid var(--serena-gold); }
+        #sidebar { order: 2; padding: 20px; background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); }
+        #form-panel { order: 3; padding: 20px; background: var(--panel); padding-bottom: 100px; } /* Espacio para el chat */
+
+        /* ESTILOS ESPECÍFICOS DE ESCRITORIO (BLINDADOS) */
         @media (min-width: 1024px) {
-            #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; }
-            #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
+            body, html { overflow: hidden; } /* Bloqueamos scroll en PC para app feel */
+            #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 360px; }
+            #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; height: 100%; order: unset; }
+            #stage-area { height: 100%; order: unset; border: none; }
         }
 
-        /* SIDEBAR IZQUIERDO */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
+        /* COMPONENTES GENERALES */
         .escudo-img { width: 130px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 45px; margin: 0; line-height: 0.9; text-align: center; }
         .clock { font-family: 'Oswald'; font-size: 28px; text-align: center; color: var(--serena-gold); margin: 5px 0; }
@@ -37,42 +51,34 @@
         .chip { background: #222; padding: 5px 10px; font-size: 10px; border-radius: 20px; cursor: pointer; border: 1px solid #444; color: #ccc; transition: 0.3s; }
         .chip:hover { border-color: var(--serena-gold); color: white; background: #333; }
 
-        /* COLUMNA 2: MAPA CENTRAL */
-        #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        /* COLUMNA 3: GESTIÓN Y CRM MEJORADO */
-        #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
         .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
 
-        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 400px; overflow-y: auto; }
-        
-        /* TARJETA CRM DETALLADA */
-        .ticket-card { background: #161616; padding: 12px; border-radius: 8px; border-left: 4px solid #b71c1c; margin-bottom: 12px; font-size: 12px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 300px; overflow-y: auto; }
+        .ticket-card { background: #1a1a1a; padding: 10px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 8px; font-size: 11px; }
         .ticket-card.respondido { border-left-color: #00e676; }
-        .ticket-header { display: flex; justify-content: space-between; margin-bottom: 5px; color: #888; font-size: 10px; }
-        .status-pill { padding: 2px 6px; border-radius: 4px; background: #333; color: gold; font-weight: bold; text-transform: uppercase; }
-        .status-pill.resuelto { background: #1b5e20; color: #fff; }
-        .ticket-body { color: #eee; margin-bottom: 8px; line-height: 1.4; }
-        .ticket-img-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #444; margin-top: 5px; cursor: zoom-in; }
-        .ticket-resp { background: #081b0e; padding: 8px; border-radius: 4px; margin-top: 8px; color: #69f0ae; font-style: italic; border: 1px dashed #2e7d32; }
+        .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
+        .ticket-resp { background: #111; padding: 8px; border-radius: 4px; margin-top: 8px; color: #00e676; font-style: italic; border-top: 1px solid #222; }
 
-        /* IMÁGENES */
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
-        .graphic-filler:hover { border-color: var(--serena-gold); transform: scale(1.02); }
         .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; line-height: 1.2; }
 
         /* CHAT GADGET */
         #chat-ia-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); transition: 0.3s; }
         #chat-ia-trigger:hover { transform: scale(1.05); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        
         #chat-ia-frame { display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        /* Ajuste Chat Móvil */
+        @media (max-width: 1023px) {
+            #chat-ia-frame { width: 90%; right: 5%; bottom: 90px; height: 60vh; }
+        }
 
-        /* MODALES */
         #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
         #lupa-caption { margin-top: 20px; max-width: 800px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 20px; }
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; }
@@ -141,10 +147,8 @@
             <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte georreferenciado con éxito.</div>
 
             <div id="crm-box" class="crm-box" style="display:none;">
-                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px; text-transform:uppercase;">MI HISTORIAL DE REPORTES</div>
-                <div id="history-list">
-                    <div style="color:#666; font-size:11px; text-align:center;">Cargando historial...</div>
-                </div>
+                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">HISTORIAL DE REPORTES</div>
+                <div id="history-list"></div>
             </div>
 
             <div style="margin-top:20px;">
@@ -174,7 +178,7 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // FAVICON ROJO RDMLS
+        // FAVICON ROJO
         function crearFavicon() {
             const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
@@ -192,7 +196,7 @@
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // SERENITO MARKER GEORREFERENCIADOR
+        // SERENITO MARKER CON PIN
         const sIcon = L.divIcon({
             html: `<div style="position:relative; width:50px; height:80px;">
                     <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
@@ -202,9 +206,9 @@
         });
         serenitoMarker = L.marker(LS, {icon: sIcon, zIndexOffset: 1000}).addTo(map);
 
-        // GEOREF AUTOMÁTICA AL MOVER MAPA
+        // GEOREF Y DIRECCIÓN AUTOMÁTICA
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
-        map.on('move', () => {
+        map.on('moveend', () => {
             const c = map.getCenter();
             serenitoMarker.setLatLng(c);
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
@@ -217,23 +221,24 @@
             } else {
                 btn.disabled = false; btn.style.background = "var(--serena-red)";
                 document.getElementById('r-dir').style.color = "white";
-                // Delay para no saturar API
-                clearTimeout(window.geoTimer);
-                window.geoTimer = setTimeout(() => {
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`)
-                        .then(r=>r.json())
-                        .then(d=>{
-                            if(d.address) {
-                                const calle = d.address.road || d.address.pedestrian || "Calle sin nombre";
-                                const num = d.address.house_number ? `#${d.address.house_number}` : "";
-                                document.getElementById('r-dir').value = `${calle} ${num}, La Serena`;
-                            }
-                        });
-                }, 500);
+                document.getElementById('r-dir').value = "Geolocalizando..."; 
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}&zoom=18&addressdetails=1`)
+                    .then(r=>r.json())
+                    .then(d=>{
+                        if(d.address) {
+                            const calle = d.address.road || d.address.pedestrian || "Calle sin nombre";
+                            const num = d.address.house_number ? `#${d.address.house_number}` : "";
+                            document.getElementById('r-dir').value = `${calle} ${num}, La Serena`;
+                        } else {
+                             document.getElementById('r-dir').value = "Ubicación detectada";
+                        }
+                    })
+                    .catch(e => document.getElementById('r-dir').value = "Ubicación en mapa (GPS pendiente)");
             }
         });
 
-        // PLANIFICADOR CON BANDERA META Y CAMINATA
+        // PLANIFICADOR (ICONO BICI CORREGIDO)
         const metaIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1169/1169542.png', iconSize: [40, 40], iconAnchor: [20, 40] });
         function calcDirectReal(lat, lon, name) {
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
@@ -253,7 +258,7 @@
         }
         function limpiarRuta() { if(routeLine) map.removeLayer(routeLine); if(destMarker) map.removeLayer(destMarker); document.getElementById('route-output').innerHTML = ""; map.flyTo(LS, 16); }
 
-        // MOTOR 3D ESCENARIO
+        // MOTOR 3D
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
@@ -286,7 +291,7 @@
             }
         }
 
-        // LOGIN Y CRM CORREGIDO Y ENRIQUECIDO
+        // LOGIN Y CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => { 
             if(u){ 
@@ -299,32 +304,25 @@
         });
 
         function cargarCRM(uid) {
-            // Se usa onSnapshot para tiempo real, sin orderBy complejo para evitar error de índice
             db.collection("tickets_ia").where("userId", "==", uid).onSnapshot(snap => {
-                const list = document.getElementById('history-list'); 
-                list.innerHTML = "";
+                const list = document.getElementById('history-list'); list.innerHTML = "";
                 const tickets = [];
                 snap.forEach(doc => tickets.push(doc.data()));
-                
-                // Ordenar en cliente
                 tickets.sort((a,b) => b.fecha.seconds - a.fecha.seconds);
 
-                if(tickets.length === 0) {
-                    list.innerHTML = "<div style='color:#666; text-align:center; padding:10px;'>Aún no tienes reportes.</div>";
-                    return;
-                }
+                if(tickets.length === 0) list.innerHTML = "<div style='color:#666;text-align:center;'>Aún no tienes reportes.</div>";
 
                 tickets.forEach(d => {
                     const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
-                    const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
+                    const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-top:5px;border:1px solid #444;cursor:zoom-in;">` : '';
                     
                     list.innerHTML += `<div class="ticket-card ${d.respuesta ? 'respondido' : ''}">
-                        <div class="ticket-header">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;color:#888;font-size:10px;">
                             <span>${fecha}</span>
-                            <span class="status-pill ${d.estado==='Resuelto'?'resuelto':''}">${d.estado || 'Recibido'}</span>
+                            <span class="status-pill">${d.estado || 'Recibido'}</span>
                         </div>
-                        <div class="ticket-body">
-                            <b style="color:white; display:block;">${d.asunto || 'Sin asunto'}</b>
+                        <div style="color:#eee;margin-bottom:8px;line-height:1.4;">
+                            <b style="color:white;display:block;">${d.asunto || 'Sin asunto'}</b>
                             ${d.mensaje}
                         </div>
                         ${fotoHtml}
@@ -354,16 +352,13 @@
                     fecha: new Date(), 
                     estado: "Pendiente" 
                 });
-                
                 document.getElementById('success-feedback').style.display = 'block';
-                // Limpiar form
                 document.getElementById('r-desc').value = "";
                 document.getElementById('r-foto').value = "";
-                
                 setTimeout(() => { document.getElementById('success-feedback').style.display='none'; btn.disabled=false; btn.innerText="ENVIAR A MUNICIPALIDAD"; }, 5000);
             } catch (error) {
                 console.error(error);
-                alert("Error al enviar. Verifica tu conexión.");
+                alert("Error al enviar.");
                 btn.disabled = false; btn.innerText = "ENVIAR A MUNICIPALIDAD";
             }
         }
