@@ -40,8 +40,6 @@
         /* PANEL DERECHO (NEGRO) */
         #form-panel { background: var(--panel); padding: 20px; overflow-y: auto; }
 
-        /* HEADER SIDEBAR */
-        .escudo-img { width: 100px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0; text-align: center; text-shadow: 2px 2px 0 #000; color: white; }
         .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); text-align: center; margin-bottom: 20px; }
         
@@ -49,7 +47,7 @@
         .radio-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--serena-gold); margin-bottom: 20px; }
         .btn-play { background: white; color: var(--serena-red); border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 24px; box-shadow: 0 0 15px rgba(255,255,255,0.3); }
         .vol-label { font-size: 10px; color: var(--serena-gold); font-weight: bold; margin-top: 10px; display: block; }
-        .vol-slider { width: 100%; accent-color: var(--serena-gold); }
+        .vol-slider { width: 100%; accent-color: var(--serena-gold); cursor: pointer; }
 
         /* PLANIFICADOR Y TABLA DE RESULTADOS */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
@@ -68,13 +66,13 @@
 
         /* CABINA FOTOGRÁFICA */
         #modal-camara { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; }
-        #camera-wrapper { position: relative; width: 400px; height: 500px; border: 3px solid var(--serena-gold); overflow: hidden; background: #000; background-size: cover; }
+        #camera-wrapper { position: relative; width: 400px; height: 500px; border: 3px solid var(--serena-gold); overflow: hidden; background: #000; background-size: cover; background-position: center; }
         #cam-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        #serenito-selfie { position: absolute; cursor: move; z-index: 10; filter: drop-shadow(0 0 10px black); }
+        #serenito-selfie { position: absolute; cursor: move; z-index: 10; filter: drop-shadow(0 0 10px black); transition: transform 0.1s ease; }
         
         .cabina-tools { width: 400px; background: #222; padding: 15px; border: 1px solid #444; border-radius: 0 0 10px 10px; }
         .tool-row { margin-bottom: 10px; font-size: 11px; color: gold; font-weight: bold; }
-        .tool-row input, .tool-row select { width: 100%; accent-color: gold; }
+        .tool-row input, .tool-row select { width: 100%; accent-color: gold; cursor: pointer; }
 
         /* PASEO 3D */
         #modal-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
@@ -107,7 +105,6 @@
                     <input type="text" id="city-input" class="city-input" placeholder="¿Hacia dónde?">
                     <button class="go-btn" onclick="buscarYCalcular()"><i class="fas fa-search"></i></button>
                 </div>
-                
                 <div id="route-output"></div>
             </div>
         </div>
@@ -121,17 +118,14 @@
         <div id="form-panel">
             <h4 style="color:var(--serena-gold); border-bottom: 1px solid #333; padding-bottom: 10px;">GESTIÓN RDMLS</h4>
             <div id="crm-status" style="font-size: 12px; color: #666;">Conectando con base de datos municipal...</div>
-            
-            <div id="history-list" style="margin-top: 20px;">
-                </div>
+            <div id="history-list" style="margin-top: 20px;"></div>
         </div>
     </div>
 
     <div id="modal-camara">
         <div id="camera-wrapper">
             <video id="cam-video" autoplay playsinline></video>
-            <img id="serenito-selfie" src="serenito.png" style="width:150px;" 
-                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/3660/3660358.png'"> 
+            <img id="serenito-selfie" src="serenito.png" style="width:150px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3660/3660358.png'"> 
         </div>
         <div class="cabina-tools">
             <div class="tool-row">TAMAÑO (ZOOM)
@@ -151,7 +145,6 @@
             <button onclick="tomarFoto()" style="width:100%; background:gold; color:black; border:none; padding:12px; border-radius:5px; font-weight:bold; cursor:pointer;">CAPTURAR FOTO</button>
             <button onclick="cerrarCabina()" style="width:100%; background:none; border:none; color:white; margin-top:10px; cursor:pointer; font-size:12px;">Cerrar</button>
         </div>
-        <canvas id="foto-canvas" style="display:none;"></canvas>
     </div>
 
     <div id="modal-3d">
@@ -170,32 +163,22 @@
         const radio = document.getElementById('radio');
 
         function initApp() {
-            // Reloj
             setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
-            
-            // Mapa
             map = L.map('map', {zoomControl:false}).setView(LS, 16);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
             L.marker(LS).addTo(map).bindPopup("<b>RDMLS La Serena</b>");
-
-            // Configurar Drag en Serenito
             dragElement(document.getElementById("serenito-selfie"));
         }
 
         // --- RADIO ---
         function toggleRadio() {
             const icon = document.getElementById('play-icon');
-            if (radio.paused) {
-                radio.play();
-                icon.className = "fas fa-pause";
-            } else {
-                radio.pause();
-                icon.className = "fas fa-play";
-            }
+            if (radio.paused) { radio.play(); icon.className = "fas fa-pause"; } 
+            else { radio.pause(); icon.className = "fas fa-play"; }
         }
         function setVolume(v) { radio.volume = v; }
 
-        // --- TRAYECTOS (Recuperado de image_d4db40.jpg) ---
+        // --- TRAYECTOS (RECUPERADOS) ---
         function buscarYCalcular() {
             const q = document.getElementById('city-input').value;
             if(!q) return;
@@ -203,19 +186,18 @@
                 .then(r => r.json()).then(data => {
                     if(data.length) {
                         const dest = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                        mostrarResultadosTrayecto(dest, data[0].display_name.split(',')[0]);
+                        mostrarResultados(dest, data[0].display_name.split(',')[0]);
                     }
                 });
         }
 
-        function mostrarResultadosTrayecto(dest, nombre) {
+        function mostrarResultados(dest, nombre) {
             if(routePolyline) map.removeLayer(routePolyline);
             routePolyline = L.polyline([LS, dest], {color: 'red', weight: 4, dashArray: '10, 15'}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding: [50, 50]});
 
             const R = 6371;
-            const dLat = (dest[0]-LS[0])*Math.PI/180;
-            const dLon = (dest[1]-LS[1])*Math.PI/180;
+            const dLat = (dest[0]-LS[0])*Math.PI/180; const dLon = (dest[1]-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(dest[0]*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3;
 
@@ -236,20 +218,13 @@
             document.getElementById('cam-video').srcObject = videoStream;
         }
 
-        function ajustarSerenito(prop, val) {
-            document.getElementById('serenito-selfie').style[prop] = val;
-        }
+        function ajustarSerenito(prop, val) { document.getElementById('serenito-selfie').style[prop] = val; }
 
         function cambiarFondoCabina(img) {
             const wrap = document.getElementById('camera-wrapper');
             const video = document.getElementById('cam-video');
-            if(img === 'none') {
-                wrap.style.backgroundImage = 'none';
-                video.style.opacity = '1';
-            } else {
-                wrap.style.backgroundImage = `url('${img}')`;
-                video.style.opacity = '0.5';
-            }
+            if(img === 'none') { wrap.style.backgroundImage = 'none'; video.style.opacity = '1'; }
+            else { wrap.style.backgroundImage = `url('${img}')`; video.style.opacity = '0.5'; }
         }
 
         function cerrarCabina() {
@@ -257,10 +232,7 @@
             if(videoStream) videoStream.getTracks().forEach(t => t.stop());
         }
 
-        function tomarFoto() {
-            alert("🌟 ¡Recibido y Gracias! Captura RDMLS guardada.");
-            cerrarCabina();
-        }
+        function tomarFoto() { alert("🌟 ¡RECIBIDO Y GRACIAS! Captura RDMLS guardada."); cerrarCabina(); }
 
         // --- PASEO 3D (MOTOR TANQUE) ---
         function abrirPaseo3D() {
@@ -270,12 +242,8 @@
                 engine3d = new BABYLON.Engine(canvas, true);
                 scene3d = new BABYLON.Scene(engine3d);
                 scene3d.clearColor = new BABYLON.Color3(0.5, 0.7, 1);
-                
                 const cam = new BABYLON.FreeCamera("tankCam", new BABYLON.Vector3(0, 5, -50), scene3d);
-                cam.attachControl(canvas, true);
-                cam.keysUp = [87]; cam.keysDown = [83]; cam.keysLeft = [65]; cam.keysRight = [68];
-                cam.speed = 1.5;
-
+                cam.attachControl(canvas, true); cam.keysUp = [87]; cam.keysDown = [83]; cam.keysLeft = [65]; cam.keysRight = [68]; cam.speed = 1.5;
                 new BABYLON.HemisphericLight("sun", new BABYLON.Vector3(0, 1, 0), scene3d);
                 BABYLON.MeshBuilder.CreateGround("ground", {width:1000, height:1000}, scene3d);
                 BABYLON.MeshBuilder.CreateBox("muni", {width:30, height:20, depth:50}, scene3d).position = new BABYLON.Vector3(40, 10, 0);
@@ -285,7 +253,6 @@
 
         function cerrarPaseo3D() { document.getElementById('modal-3d').style.display = 'none'; engine3d.stopRenderLoop(); }
 
-        // --- LÓGICA DRAG (Mover a Serenito) ---
         function dragElement(elmnt) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
             elmnt.onmousedown = dragMouseDown;
