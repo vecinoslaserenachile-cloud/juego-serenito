@@ -5,45 +5,55 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #111; color: white; display: flex; flex-direction: column; height: 100vh; }
-        #chat { flex: 1; overflow-y: auto; padding: 15px; }
-        .msg { padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
-        .serenito { background: #222; border-left: 3px solid gold; }
-        .form-box { background: #000; padding: 10px; border: 1px solid gold; margin-top: 5px; }
-        input, textarea { width: 100%; margin-bottom: 5px; background: #222; color: white; border: 1px solid #444; padding: 5px; box-sizing: border-box; }
-        button { width: 100%; background: #b71c1c; color: white; border: none; padding: 10px; cursor: pointer; }
+        body { margin: 0; font-family: sans-serif; background: #111; color: white; height: 100vh; display: flex; flex-direction: column; }
+        #chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px; border-radius: 10px; max-width: 85%; font-size: 13px; line-height: 1.4; }
+        .serenito { background: #222; border-left: 3px solid #ffd700; align-self: flex-start; }
+        .vecino { background: #005c4b; align-self: flex-end; }
+        .form-ticket { background: #000; padding: 10px; border: 1px solid #ffd700; border-radius: 8px; margin-top: 5px; }
+        input, textarea { width: 100%; margin-bottom: 5px; background: #222; border: 1px solid #444; color: white; padding: 8px; box-sizing: border-box; }
+        button { width: 100%; background: #b71c1c; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="chat"><div class="msg serenito">¡Hola! Soy Serenito IA. ¿En qué trámite municipal te ayudo hoy?</div></div>
-    <div style="padding:10px; display:flex; gap:5px;"><input type="text" id="in" onkeypress="if(event.key==='Enter')hablar()" placeholder="Escribe..."><button onclick="hablar()" style="width:40px;">></button></div>
+    <div id="chat">
+        <div class="msg serenito">¡Hola! Soy Serenito IA. Estoy capacitado con los manuales municipales 2026. ¿En qué te ayudo hoy?</div>
+    </div>
+    <div style="padding:10px; background:#1a1a1a; display:flex; gap:5px;">
+        <input type="text" id="in" placeholder="Escribe aquí..." onkeypress="if(event.key==='Enter')hablar()">
+        <button onclick="hablar()" style="width:40px;">></button>
+    </div>
 
     <script>
-        const fb = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
-        firebase.initializeApp(fb);
+        const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
+        firebase.initializeApp(fbCfg);
         const db = firebase.firestore();
 
+        // CONOCIMIENTO EXTRAÍDO DE TUS MANUALES
         const BRAIN = [
-            { keys: ["patente", "permiso", "pagar"], resp: "Puedo ayudarte con tu trámite. Completa estos datos para el Back-office:", hasForm: true }
+            { keys: ["patente", "permiso", "comercial", "industrial"], resp: "Según el manual de Rentas, para patentes industriales necesitamos verificar tu zonificación y acreditar domicilio. ¿Quieres abrir un ticket?" },
+            { keys: ["denuncia", "ruidos", "inspector"], resp: "Las fiscalizaciones se asignan por orden de llegada. Puedo derivar tu caso al equipo de Inspección ahora mismo:" },
+            { keys: ["horario", "abierto", "donde"], resp: "Atendemos de 08:30 a 14:00 en el Edificio Consistorial, Prat 451." }
         ];
 
         function hablar() {
-            const i = document.getElementById('in'); const txt = i.value.toLowerCase();
-            const box = document.getElementById('chat');
-            box.innerHTML += `<div class="msg" style="background:#005c4b; align-self:flex-end;">${i.value}</div>`;
-            
-            let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
-            let res = match ? match.resp : "He recibido tu consulta. Para una respuesta oficial, ingresa tus datos aquí:";
-            let html = `<div class="msg serenito">${res}`;
-            html += `<div class="form-box"><input id="f-n" placeholder="Nombre"><textarea id="f-m" placeholder="Detalle"></textarea><button onclick="enviarTicket()">ENVIAR TICKET</button></div></div>`;
-            box.innerHTML += html;
-            i.value = ""; box.scrollTop = box.scrollHeight;
+            const i = document.getElementById('in'); const txt = i.value.trim().toLowerCase(); if(!txt) return;
+            addMsg(i.value, 'vecino');
+            setTimeout(() => {
+                let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
+                let res = match ? match.resp : "Entiendo. Para darte una respuesta técnica oficial, voy a derivar esto al Backoffice municipal:";
+                let html = `<b>Serenito:</b> ${res}<div class="form-ticket"><input id="f-n" placeholder="Tu Nombre"><textarea id="f-m" placeholder="Detalle de la consulta..."></textarea><button onclick="ticket()">ENVIAR TICKET</button></div>`;
+                addMsg(html, 'serenito');
+            }, 400);
+            i.value = "";
         }
 
-        async function enviarTicket() {
+        function addMsg(t, c) { const d = document.getElementById('chat'); d.innerHTML += `<div class="msg ${c}">${t}</div>`; d.scrollTop = d.scrollHeight; }
+
+        async function ticket() {
             const n = document.getElementById('f-n').value, m = document.getElementById('f-m').value;
             await db.collection("tickets_ia").add({ nombre: n, mensaje: m, fecha: new Date(), estado: "Pendiente" });
-            alert("¡Ticket enviado al Back-office!");
+            addMsg("✅ ¡Ticket enviado! Un funcionario lo revisará pronto.", "serenito");
         }
     </script>
 </body>
