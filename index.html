@@ -59,7 +59,7 @@
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
-        /* ESTILOS VISUALES */
+        /* ESTILOS COMUNES */
         .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
         .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
@@ -92,44 +92,41 @@
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
 
-        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 300px; overflow-y: auto; }
+        /* CRM & ADMIN */
+        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 400px; overflow-y: auto; }
         .ticket-card { background: #161616; padding: 12px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 10px; font-size: 12px; }
         .ticket-card.respondido { border-left-color: #00e676; }
         .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
         .ticket-resp { background: #0d2b15; padding: 8px; border-radius: 4px; margin-top: 8px; color: #69f0ae; font-style: italic; border: 1px dashed #2e7d32; }
-        .ticket-img-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid #444; cursor: zoom-in; }
+        .ticket-img-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid #444; cursor: zoom-in; display: block; }
+        .admin-reply-box { margin-top: 10px; background: #222; padding: 10px; border-radius: 5px; border: 1px solid #444; display: none; }
 
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
         .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; display: block; margin-bottom: 15px; }
         
-        /* BOTÓN IA REDISEÑADO - MÓDULO DE ATENCIÓN */
-        #chat-ia-trigger { 
-            position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; 
-            display: flex; align-items: center; gap: 10px; 
-            background: var(--serena-red); /* FONDO ROJO */
-            padding: 12px 25px; /* MAS GRANDE */
-            border-radius: 50px; 
-            border: 2px solid white; 
-            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
-            transition: transform 0.2s;
-        }
+        /* BOTONES FLOTANTES */
+        #chat-ia-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 12px 25px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); transition: transform 0.2s; }
         #chat-ia-trigger:hover { transform: scale(1.05); }
-        .chat-icon-box { font-size: 24px; color: white; } /* ICONO BLANCO */
+        .chat-icon-box { font-size: 24px; color: white; } 
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
 
         #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 80px; height: 60vh; } }
 
-        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
+        #modal-lupa, #modal-camara { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
         #img-f-zoom { width: auto; max-width: 95%; max-height: 80vh; border: 2px solid white; border-radius: 5px; transition: transform 0.3s ease; cursor: zoom-in; }
         #img-f-zoom.zoomed { transform: scale(2.5); cursor: zoom-out; }
-        @media (max-width: 1023px) { #img-f-zoom { width: 100%; height: auto; max-height: unset; object-fit: contain; } } 
         #lupa-caption { margin-top: 15px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 18px; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; }
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
         
-        /* Clase para rotación suave */
+        /* CABINA FOTOS */
+        #camera-wrapper { position: relative; width: 100%; max-width: 400px; border: 2px solid gold; border-radius: 10px; overflow: hidden; }
+        #cam-video { width: 100%; display: block; }
+        #cam-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; }
+        
         .rotatable-icon { transition: transform 0.1s linear; transform-origin: center center; }
     </style>
 </head>
@@ -182,6 +179,10 @@
                 </div>
 
                 <div style="margin-top:20px;">
+                    <button onclick="abrirCamara()" style="width:100%; background:#222; border:1px solid gold; color:gold; padding:10px; border-radius:8px; cursor:pointer; margin-bottom:15px; font-weight:bold;">
+                        <i class="fas fa-camera"></i> FOTO CON SERENITO
+                    </button>
+
                     <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS')">
                     <span class="img-desc">Cabina RDMLS: La voz de nuestra gente.</span>
                     <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Buses Eléctricos 2026')">
@@ -198,33 +199,44 @@
 
         <div id="form-panel">
             <div class="user-header">
-                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
+                <button id="btn-login-vecino" onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
                 <div id="user-info" style="margin-top:10px; display:none; align-items:center; gap:10px;"></div>
+                <div style="text-align:center; margin-top:10px;">
+                    <span onclick="loginFuncionario()" style="color:#666; font-size:10px; text-decoration:underline; cursor:pointer;">Acceso Funcionarios</span>
+                </div>
             </div>
             
-            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
-            <div style="margin-bottom:15px;">
-                <label style="font-size:11px; color:#aaa;">Ubicación (Mueve el mapa):</label>
-                <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); font-weight:bold; border-color:var(--serena-gold);" readonly placeholder="Geolocalizando...">
-            </div>
-            <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono (+56 9...)" value="+56 9 ">
-            <input type="text" id="r-asunto" class="f-input" placeholder="Asunto (Ej: Bache, Basura)">
-            <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
-            
-            <div style="margin-bottom:10px;">
-                <label style="font-size:11px; color:#aaa;">Evidencia (Foto/Video):</label>
-                <input type="file" id="r-foto" accept="image/*,video/*" style="font-size:11px; color:white; margin-top:5px; width:100%;">
-            </div>
-            
-            <button id="btn-env-rep" onclick="enviarReporteCRM()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
-            <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte enviado.</div>
+            <div id="panel-vecino">
+                <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:11px; color:#aaa;">Ubicación (Mueve el mapa):</label>
+                    <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); font-weight:bold; border-color:var(--serena-gold);" readonly placeholder="Geolocalizando...">
+                </div>
+                <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono (+56 9...)" value="+56 9 ">
+                <input type="text" id="r-asunto" class="f-input" placeholder="Asunto (Ej: Bache, Basura)">
+                <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
+                
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:11px; color:#aaa;">Evidencia (Foto/Video):</label>
+                    <input type="file" id="r-foto" accept="image/*,video/*" capture="environment" style="font-size:11px; color:white; margin-top:5px; width:100%;">
+                </div>
+                
+                <button id="btn-env-rep" onclick="enviarReporteCRM()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+                <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte enviado.</div>
 
-            <div id="crm-box" class="crm-box" style="display:none;">
-                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">HISTORIAL DE REPORTES</div>
-                <div id="history-list"></div>
+                <div id="crm-box" class="crm-box" style="display:none;">
+                    <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">HISTORIAL DE REPORTES</div>
+                    <div id="history-list"></div>
+                </div>
             </div>
 
-            <div style="margin-top:20px;">
+            <div id="panel-funcionario" style="display:none;">
+                <h4 style="color:#00e676; margin:0 0 10px 0; border-bottom:1px solid #00e676; padding-bottom:5px;">GESTIÓN MUNICIPAL</h4>
+                <button onclick="logoutFuncionario()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:4px; font-size:10px; cursor:pointer; margin-bottom:10px;">Cerrar Sesión Admin</button>
+                <div id="admin-ticket-list" class="crm-box" style="max-height:600px;">Cargando tickets...</div>
+            </div>
+
+            <div id="extra-imgs" style="margin-top:20px;">
                 <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena')">
                 <span class="img-desc">Astronomía: Ventana al universo.</span>
                 <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Plan Serena')">
@@ -243,7 +255,6 @@
         <i class="fas fa-headset chat-icon-box"></i>
         <span class="chat-text">SERENITO IA | AYUDA</span>
     </div>
-    
     <div id="chat-ia-frame">
         <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid gold;">
             <b style="color:white; font-size:14px; font-family:'Oswald';">MÓDULO DE ATENCIÓN INTELIGENTE</b>
@@ -258,26 +269,36 @@
         <div id="lupa-caption"></div>
     </div>
 
+    <div id="modal-camara">
+        <div class="close-lupa" onclick="cerrarCamara()">&times;</div>
+        <div id="camera-wrapper">
+            <video id="cam-video" autoplay playsinline></video>
+            <img id="cam-overlay" src="https://cdn-icons-png.flaticon.com/512/684/684908.png"> 
+        </div>
+        <button onclick="tomarFoto()" style="margin-top:20px; background:gold; color:black; border:none; padding:15px 30px; border-radius:50px; font-weight:bold; font-size:18px; cursor:pointer;"><i class="fas fa-camera"></i> CAPTURAR</button>
+        <canvas id="foto-canvas" style="display:none;"></canvas>
+    </div>
+
     <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
+        // GLOBALES
         let serenitoMesh = null;
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
+        let isAdmin = false;
         
-        // ICONO SERENITO GRANDE (STANDBY)
         let sIcon = L.divIcon({ 
-            html: `<div id="serenito-body" style="position:relative; width:50px; height:80px;">
+            html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
                     <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
                     <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));">
                    </div>`, 
             className: 'custom-serenito', iconSize: [50, 80], iconAnchor: [25, 80] 
         });
 
-        // NUEVO ICONO: MINI SERENITO ROTATORIO (PARA TRAYECTO)
         let miniSerenitoIcon = L.divIcon({
             html: `<div id="mini-serenito-body" style="position:relative; width:30px; height:30px; transition: transform 0.1s linear;">
                     <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:30px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));">
@@ -288,13 +309,9 @@
         const ticketIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png', iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40] });
 
         function initApp() {
-            crearFavicon();
-            fetchWeather();
+            crearFavicon(); fetchWeather();
             const r = document.getElementById('radio');
-            r.play().catch(() => {
-                const start = () => { r.play(); document.removeEventListener('click', start); document.removeEventListener('touchstart', start); };
-                document.addEventListener('click', start); document.addEventListener('touchstart', start);
-            });
+            r.play().catch(() => { const s = () => { r.play(); document.removeEventListener('click', s); document.removeEventListener('touchstart', s); }; document.addEventListener('click', s); document.addEventListener('touchstart', s); });
             setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
             window.addEventListener("resize", () => { engine.resize(); setTimeout(() => map.invalidateSize(), 100); });
         }
@@ -329,6 +346,9 @@
         map.on('moveend', () => {
             if (routeInterval) return; 
             const c = map.getCenter(); serenitoMarker.setLatLng(c);
+            const iconBody = document.getElementById('serenito-body');
+            if(iconBody) iconBody.style.transform = 'rotate(0deg)';
+
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
             if(!esValido) {
@@ -349,9 +369,7 @@
             }
         });
 
-        // ----------------------------------------------------
-        // LÓGICA DE RUTA 2D CON MINI-SERENITO GIRATORIO
-        // ----------------------------------------------------
+        // --- MAPA LOGICA ---
         function getBearing(lat1, lng1, lat2, lng2) {
             const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
             const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
@@ -363,9 +381,7 @@
             map.invalidateSize();
             if(routeInterval) clearInterval(routeInterval);
 
-            const startPoint = LS;
-            const endPoint = [lat, lon];
-
+            const startPoint = LS; const endPoint = [lat, lon];
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
@@ -390,16 +406,14 @@
             destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // 1. CAMBIO A MINI-SERENITO
             serenitoMarker.setIcon(miniSerenitoIcon);
 
-            // 2. CALCULAR RUMBO (CORRECCIÓN 180 GRADOS PORQUE LA IMAGEN MIRA AL SUR)
             const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
             const finalAngle = angle - 180;
-            
-            // 3. ANIMAR (LOOP)
-            let steps = 100;
-            let currentStep = 0;
+            const miniBody = document.getElementById('mini-serenito-body');
+            if(miniBody) miniBody.style.transform = `rotate(${finalAngle}deg)`;
+
+            let steps = 100; let currentStep = 0;
             const deltaLat = (endPoint[0] - startPoint[0]) / steps;
             const deltaLng = (endPoint[1] - startPoint[1]) / steps;
 
@@ -409,11 +423,8 @@
                 const newLat = startPoint[0] + (deltaLat * currentStep);
                 const newLng = startPoint[1] + (deltaLng * currentStep);
                 serenitoMarker.setLatLng([newLat, newLng]);
-                
-                // ROTAR MINI-SERENITO EN CADA FRAME
-                const miniBody = document.getElementById('mini-serenito-body');
-                if(miniBody) miniBody.style.transform = `rotate(${finalAngle}deg)`;
-                
+                const mb = document.getElementById('mini-serenito-body');
+                if(mb) mb.style.transform = `rotate(${finalAngle}deg)`;
             }, 50);
         }
 
@@ -423,11 +434,8 @@
             if(destMarker) map.removeLayer(destMarker);
             document.getElementById('btn-reset-route').style.display='none'; 
             map.flyTo(LS, 17); 
-            
-            // VOLVER A SERENITO GRANDE
             serenitoMarker.setIcon(sIcon);
             serenitoMarker.setLatLng(LS);
-            
             document.getElementById('route-output').innerHTML=""; 
         }
 
@@ -437,7 +445,7 @@
                 .then(r=>r.json()).then(d=>{ if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]); });
         }
 
-        function compressImage(file, quality=0.7, maxWidth=1024) {
+        function compressImage(file, quality=0.7, maxWidth=800) { // OPTIMIZADO PARA MÓVIL
             return new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = event => {
@@ -474,11 +482,61 @@
             } 
         });
 
+        // --- FUNCIONARIOS ---
+        function loginFuncionario() {
+            const pwd = prompt("Ingrese Contraseña de Funcionario:");
+            if (pwd === "admin2026") {
+                isAdmin = true;
+                document.getElementById('panel-vecino').style.display = 'none';
+                document.getElementById('panel-funcionario').style.display = 'block';
+                document.getElementById('extra-imgs').style.display = 'none';
+                cargarCRMAdmin();
+            } else { alert("Contraseña incorrecta"); }
+        }
+        function logoutFuncionario() {
+            isAdmin = false;
+            document.getElementById('panel-vecino').style.display = 'block';
+            document.getElementById('panel-funcionario').style.display = 'none';
+            document.getElementById('extra-imgs').style.display = 'block';
+        }
+        
+        function cargarCRMAdmin() {
+            db.collection("tickets_ia").orderBy("fecha", "desc").onSnapshot(snap => {
+                const list = document.getElementById('admin-ticket-list'); list.innerHTML = "";
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    let id = doc.id;
+                    const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
+                    const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
+                    
+                    list.innerHTML += `
+                        <div class="ticket-card ${d.respuesta ? 'respondido' : ''}">
+                            <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;"><span>${fecha}</span> <span>${d.nombre || 'Anon'}</span></div>
+                            <div style="color:white;font-weight:bold;">${d.asunto || 'Sin Asunto'}</div>
+                            <div style="color:#ddd; margin:5px 0;">${d.mensaje}</div>
+                            ${fotoHtml}
+                            <div style="margin-top:10px; padding-top:5px; border-top:1px solid #333;">
+                                ${d.respuesta ? `<div class="ticket-resp">Respuesta: ${d.respuesta}</div>` : 
+                                `<textarea id="resp-${id}" placeholder="Escribir respuesta oficial..." style="width:100%;background:#333;color:white;border:1px solid #555;font-size:11px;"></textarea>
+                                 <button onclick="responderTicket('${id}')" style="margin-top:5px;background:green;color:white;border:none;padding:5px;width:100%;cursor:pointer;">RESPONDER Y CERRAR</button>`}
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        async function responderTicket(id) {
+            const resp = document.getElementById(`resp-${id}`).value;
+            if(!resp) return;
+            await db.collection("tickets_ia").doc(id).update({ respuesta: resp, estado: "Resuelto" });
+            alert("Respuesta enviada.");
+        }
+
+        // --- VECINO CRM ---
         function cargarCRM(uid) {
             db.collection("tickets_ia").where("userId", "==", uid).onSnapshot(snap => {
                 const list = document.getElementById('history-list'); list.innerHTML = "";
-                const tickets = [];
-                snap.forEach(doc => tickets.push(doc.data()));
+                const tickets = []; snap.forEach(doc => tickets.push(doc.data()));
                 tickets.sort((a,b) => b.fecha.seconds - a.fecha.seconds);
                 if(tickets.length === 0) list.innerHTML = "<div style='color:#666;text-align:center;'>Aún no tienes reportes.</div>";
                 tickets.forEach(d => {
@@ -495,8 +553,11 @@
             try {
                 const file = document.getElementById('r-foto').files[0];
                 let base64 = null;
-                if(file) { base64 = await compressImage(file); }
-                await db.collection("tickets_ia").add({ userId: user.uid, nombre: document.getElementById('r-name').value, telefono: document.getElementById('r-phone').value, asunto: document.getElementById('r-subject').value, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
+                if(file) { 
+                    try { base64 = await compressImage(file); } 
+                    catch(e) { alert("Error al procesar la imagen."); btn.disabled=false; return; }
+                }
+                await db.collection("tickets_ia").add({ userId: user.uid, nombre: document.getElementById('r-name').value, telefono: document.getElementById('r-phone').value, asunto: document.getElementById('r-asunto').value, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
                 document.getElementById('success-feedback').style.display = 'block';
                 document.getElementById('r-desc').value = ""; document.getElementById('r-foto').value = "";
                 setTimeout(() => { document.getElementById('success-feedback').style.display='none'; btn.disabled=false; btn.innerText="ENVIAR A MUNICIPALIDAD"; }, 5000);
@@ -512,7 +573,42 @@
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
 
-        // --- ESCENA PRINCIPAL (HOME 3D) ---
+        // --- CABINA FOTOS ---
+        let videoStream = null;
+        async function abrirCamara() {
+            document.getElementById('modal-camara').style.display = 'flex';
+            const video = document.getElementById('cam-video');
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = videoStream;
+            } catch (err) { alert("No se pudo acceder a la cámara. Verifique permisos HTTPS."); cerrarCamara(); }
+        }
+        function cerrarCamara() {
+            document.getElementById('modal-camara').style.display = 'none';
+            if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+        }
+        function tomarFoto() {
+            const v = document.getElementById('cam-video');
+            const c = document.getElementById('foto-canvas');
+            const overlay = document.getElementById('cam-overlay');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            const ctx = c.getContext('2d');
+            
+            ctx.translate(c.width, 0); ctx.scale(-1, 1);
+            ctx.drawImage(v, 0, 0, c.width, c.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            const oW = 150 * (c.width / 400); 
+            const oH = 240 * (c.height / 300); 
+            ctx.drawImage(overlay, c.width - oW - 20, c.height - oH, oW, oH);
+
+            const link = document.createElement('a');
+            link.download = 'foto-con-serenito.png';
+            link.href = c.toDataURL();
+            link.click();
+        }
+
+        // --- PASEO 3D ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
@@ -520,74 +616,42 @@
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
-            let s = m[0]; 
-            s.scaling = new BABYLON.Vector3(12,12,-12); 
-            s.position.y = -25;
+            let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = -25;
             s.rotation = new BABYLON.Vector3(0, Math.PI, 0); 
             cam.lockedTarget = s;
         });
         engine.runRenderLoop(() => scene.render());
 
-        // --- PASEO 3D (MODAL CON TODO) ---
         let tourEngine;
         function abrirTourReal() {
             document.getElementById('modal-tour-3d').style.display = 'block';
             if(!tourEngine) {
-                const tc = document.getElementById('tour-canvas'); 
-                tourEngine = new BABYLON.Engine(tc, true);
-                const ts = new BABYLON.Scene(tourEngine); 
-                ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                
+                const tc = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(tc, true);
+                const ts = new BABYLON.Scene(tourEngine); ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
                 tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
-                
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
-                const gm = new BABYLON.StandardMaterial("gm", ts); 
-                gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
-                ground.material = gm;
+                const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
 
-                // EDIFICIOS NIVELADOS (Y=16)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ 
-                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
-                    m[0].position.x = 100; 
-                    m[0].position.y = 16; 
-                });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", ts, (m)=>{ 
-                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
-                    m[0].position.x = -100; 
-                    m[0].position.y = 16; 
-                });
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = 100; m[0].position.y = 16; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = -100; m[0].position.y = 16; });
 
                 let tSerenito = null; let tTarget = null; let tWalking = false;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ 
-                    tSerenito = m[0]; 
-                    tSerenito.scaling = new BABYLON.Vector3(10,10,-10); 
-                    tSerenito.position.y = 0; 
-                    tSerenito.rotationQuaternion = null; 
-                    tCam.lockedTarget = tSerenito; 
-
+                    tSerenito = m[0]; tSerenito.scaling = new BABYLON.Vector3(10,10,-10); tSerenito.position.y = 0; tSerenito.rotationQuaternion = null; tCam.lockedTarget = tSerenito; 
                     ts.registerBeforeRender(() => {
                         if(tWalking && tSerenito && tTarget) {
                             tSerenito.moveWithCollisions(tSerenito.forward.scale(0.5));
-                            if (BABYLON.Vector3.Distance(tSerenito.position, tTarget) < 2) {
-                                tWalking = false;
-                            }
+                            if (BABYLON.Vector3.Distance(tSerenito.position, tTarget) < 2) tWalking = false;
                         }
                     });
                 });
-                
-                // CLICK -> TANK MOVE
                 ts.onPointerDown = (evt, pick) => { 
                     if(pick.hit && pick.pickedMesh === ground && tSerenito) {
-                        tTarget = pick.pickedPoint;
-                        tTarget.y = 0;
-                        tSerenito.lookAt(tTarget);
-                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); 
-                        tWalking = true;
+                        tTarget = pick.pickedPoint; tTarget.y = 0; tSerenito.lookAt(tTarget); tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); tWalking = true;
                     } 
                 };
-                
                 tourEngine.runRenderLoop(() => ts.render());
             }
         }
