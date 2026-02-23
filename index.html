@@ -56,15 +56,15 @@
 
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
-            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
+            #stage-area { order: 3; height: 55vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
             #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
         /* ESTILOS VISUALES */
         .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 40px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
-        .clock { font-family: 'Oswald'; font-size: 24px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
+        .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
         
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
@@ -252,11 +252,11 @@
     <script>
         // GLOBALES
         let serenitoMesh = null;
-        let isWalking = false;
-        let walkStartPos = null;
-        let walkTargetPos = null;
         let routePolyline = null;
         let destMarker = null;
+        let routeInterval = null; // CONTROLADOR DE ANIMACIÓN RUTA 2D
+        let sIcon = L.divIcon({ html: `<div style="position:relative; width:50px; height:80px;"><img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));"></div>`, className: 'custom-serenito', iconSize: [50, 80], iconAnchor: [25, 80] });
+        
         const ticketIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png',
             iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
@@ -298,11 +298,13 @@
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        const sIcon = L.divIcon({ html: `<div style="position:relative; width:50px; height:80px;"><img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));"></div>`, className: 'custom-serenito', iconSize: [50, 80], iconAnchor: [25, 80] });
         serenitoMarker = L.marker(LS, {icon: sIcon, zIndexOffset: 1000}).addTo(map);
 
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
         map.on('moveend', () => {
+            // Si hay ruta animada, no mover el marcador por drag del mapa
+            if (routeInterval) return;
+
             const c = map.getCenter(); serenitoMarker.setLatLng(c);
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
@@ -324,10 +326,16 @@
             }
         });
 
-        const metaIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1169/1169542.png', iconSize: [40, 40], iconAnchor: [20, 40] });
-        
+        // =======================================================
+        // LÓGICA DE RUTA Y ANIMACIÓN DE CAMINATA 2D (MARCADOR)
+        // =======================================================
         function calcDirect(lat, lon, name) {
             map.invalidateSize();
+            if(routeInterval) clearInterval(routeInterval);
+
+            const startPoint = LS;
+            const endPoint = [lat, lon];
+
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
@@ -348,33 +356,38 @@
             if(routePolyline) map.removeLayer(routePolyline);
             if(destMarker) map.removeLayer(destMarker);
 
-            routePolyline = L.polyline([LS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
-            destMarker = L.marker([lat,lon], {icon: ticketIcon}).addTo(map);
+            // DIBUJAR LÍNEA ROJA
+            routePolyline = L.polyline([startPoint, endPoint], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
+            // TICKET VERDE EN DESTINO
+            destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
+            
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // 1. HOME: LÓGICA DE VIAJE INFINITO 3D
-            if(serenitoMesh) {
-                let dX = (lon - LS[1]) * 1000;
-                let dZ = (lat - LS[0]) * 1000;
-                walkStartPos = new BABYLON.Vector3(0, 0, 0); 
-                walkTargetPos = new BABYLON.Vector3(dX, 0, dZ);
-                
-                serenitoMesh.position = walkStartPos.clone();
-                serenitoMesh.lookAt(walkTargetPos);
-                serenitoMesh.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // GIRAR 180 (CORRECCIÓN ESPALDA)
-                
-                isWalking = true;
-            }
+            // ANIMACIÓN LOOP DE MARCADOR
+            let steps = 100;
+            let currentStep = 0;
+            const deltaLat = (endPoint[0] - startPoint[0]) / steps;
+            const deltaLng = (endPoint[1] - startPoint[1]) / steps;
+
+            routeInterval = setInterval(() => {
+                currentStep++;
+                if (currentStep > steps) {
+                    currentStep = 0; // REINICIAR LOOP (TELEPORT AL INICIO)
+                }
+                const nextLat = startPoint[0] + (deltaLat * currentStep);
+                const nextLng = startPoint[1] + (deltaLng * currentStep);
+                serenitoMarker.setLatLng([nextLat, nextLng]);
+            }, 50); // Velocidad de caminata en mapa
         }
 
         function resetRoute(){ 
+            if(routeInterval) clearInterval(routeInterval); routeInterval = null;
             if(routePolyline) map.removeLayer(routePolyline); 
             if(destMarker) map.removeLayer(destMarker);
             document.getElementById('btn-reset-route').style.display='none'; 
             map.flyTo(LS, 17); 
+            serenitoMarker.setLatLng(LS);
             document.getElementById('route-output').innerHTML=""; 
-            isWalking = false; 
-            if(serenitoMesh) serenitoMesh.position = new BABYLON.Vector3(0,0,0);
         }
 
         function buscarYCalcular(){
@@ -385,18 +398,15 @@
 
         function compressImage(file, quality=0.7, maxWidth=1024) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
+                const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = event => {
-                    const img = new Image();
-                    img.src = event.target.result;
+                    const img = new Image(); img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         let width = img.width; let height = img.height;
                         if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
                         canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
+                        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', quality));
                     };
                 };
@@ -422,9 +432,7 @@
                 const tickets = [];
                 snap.forEach(doc => tickets.push(doc.data()));
                 tickets.sort((a,b) => b.fecha.seconds - a.fecha.seconds);
-                
                 if(tickets.length === 0) list.innerHTML = "<div style='color:#666;text-align:center;'>Aún no tienes reportes.</div>";
-
                 tickets.forEach(d => {
                     const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
                     const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
@@ -457,35 +465,25 @@
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
 
-        // --- ESCENA PRINCIPAL (HOME) ---
+        // --- ESCENA PRINCIPAL (HOME 3D) ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
-        // SOLO CARGAR SERENITO EN EL HOME (NO EDIFICIOS)
+        // SOLO SERENITO EN HOME (ROTADO 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
-            serenitoMesh = m[0]; 
-            serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
-            serenitoMesh.position.y = 0; // SUELO
-            serenitoMesh.rotationQuaternion = null; 
-            cam.lockedTarget = serenitoMesh;
-            
-            // LOOP DE CAMINATA INFINITA (HOME)
-            scene.registerBeforeRender(() => {
-                if(isWalking && serenitoMesh && walkTargetPos) {
-                    serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(0.5));
-                    // Si se aleja mucho, vuelve al inicio
-                    if (BABYLON.Vector3.Distance(serenitoMesh.position, walkStartPos) > 300) {
-                        serenitoMesh.position = walkStartPos.clone();
-                    }
-                }
-            });
+            let s = m[0]; 
+            s.scaling = new BABYLON.Vector3(12,12,-12); 
+            s.position.y = -25;
+            // FIX: ROTACIÓN 180 GRADOS (MIRAR AL FRENTE)
+            s.rotation = new BABYLON.Vector3(0, Math.PI, 0); 
+            cam.lockedTarget = s;
         });
         engine.runRenderLoop(() => scene.render());
 
-        // --- PASEO 3D (MODAL CON TODO) ---
+        // --- PASEO 3D (TANK MODE & EDIFICIOS CORREGIDOS) ---
         let tourEngine;
         function abrirTourReal() {
             document.getElementById('modal-tour-3d').style.display = 'block';
@@ -496,7 +494,9 @@
                 ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 
                 const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
-                tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
+                tCam.attachControl(tc, true); 
+                tCam.upperBetaLimit = Math.PI / 2.2;
+                
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
                 
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
@@ -504,14 +504,14 @@
                 gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
                 ground.material = gm;
 
-                // CARGAR EDIFICIOS (SOLO AQUÍ)
+                // EDIFICIOS LEVANTADOS (Y=18)
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ 
-                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
+                    m[0].scaling = new BABYLON.Vector3(40,40,40); 
                     m[0].position.x = 100; 
-                    m[0].position.y = 0; 
+                    m[0].position.y = 18; // FIX ALTURA
                 });
 
-                // CARGAR SERENITO (TANK MODE)
+                // SERENITO TANK
                 let tSerenito = null;
                 let tTarget = null;
                 let tWalking = false;
@@ -533,13 +533,13 @@
                     });
                 });
                 
-                // CLICK -> TANK MOVE
+                // CLICK -> TANK MOVE (ROTATION FIX)
                 ts.onPointerDown = (evt, pick) => { 
                     if(pick.hit && pick.pickedMesh === ground && tSerenito) {
                         tTarget = pick.pickedPoint;
                         tTarget.y = 0;
                         tSerenito.lookAt(tTarget);
-                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // CORRECCIÓN 180 GRADOS
+                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // 180 DEG FIX
                         tWalking = true;
                     } 
                 };
