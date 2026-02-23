@@ -54,7 +54,7 @@
             #sidebar-wrapper { display: contents; } 
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
-            #stage-area { order: 3; height: 55vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
+            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
             #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
@@ -250,6 +250,8 @@
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
+        
+        // ICONO 2D con contenedor rotatorio
         let sIcon = L.divIcon({ 
             html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
                     <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
@@ -259,6 +261,7 @@
             iconSize: [50, 80], 
             iconAnchor: [25, 80] 
         });
+        
         const ticketIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png',
             iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
@@ -329,6 +332,9 @@
             }
         });
 
+        // ----------------------------------------------------
+        // LÓGICA DE RUTA Y ANIMACIÓN DE CAMINATA 2D (MARCADOR)
+        // ----------------------------------------------------
         function getBearing(lat1, lng1, lat2, lng2) {
             const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
             const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
@@ -367,10 +373,22 @@
             destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
+            // 1. ROTACIÓN TANQUE (MAPA 2D)
             const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
             const iconBody = document.getElementById('serenito-body');
-            if(iconBody) iconBody.style.transform = `rotate(${angle + 180}deg)`;
+            // IMPORTANTE: REFRESCAR EL SELECTOR
+            if(iconBody) {
+                // Ajuste: 0 deg = Norte. Sprite = Sur (Frente). Corrección 180.
+                iconBody.style.transform = `rotate(${angle + 180}deg)`;
+            } else {
+                // INTENTO DE RECUPERACIÓN SI LEAFLET LO BORRÓ
+                setTimeout(() => {
+                    const retryBody = document.getElementById('serenito-body');
+                    if(retryBody) retryBody.style.transform = `rotate(${angle + 180}deg)`;
+                }, 100);
+            }
 
+            // 2. ANIMACIÓN (LOOP)
             let steps = 100;
             let currentStep = 0;
             const deltaLat = (endPoint[0] - startPoint[0]) / steps;
@@ -378,7 +396,7 @@
 
             routeInterval = setInterval(() => {
                 currentStep++;
-                if (currentStep > steps) currentStep = 0; 
+                if (currentStep > steps) currentStep = 0; // LOOP
                 const newLat = startPoint[0] + (deltaLat * currentStep);
                 const newLng = startPoint[1] + (deltaLng * currentStep);
                 serenitoMarker.setLatLng([newLat, newLng]);
@@ -393,7 +411,7 @@
             map.flyTo(LS, 17); 
             serenitoMarker.setLatLng(LS);
             const iconBody = document.getElementById('serenito-body');
-            if(iconBody) iconBody.style.transform = 'rotate(0deg)'; 
+            if(iconBody) iconBody.style.transform = 'rotate(0deg)'; // Reset frente
             document.getElementById('route-output').innerHTML=""; 
         }
 
@@ -506,13 +524,11 @@
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
                 
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
-                const gm = new BABYLON.StandardMaterial("gm", ts); 
-                gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
-                ground.material = gm;
+                const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
 
-                // EDIFICIOS LEVANTADOS (Y=35)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = 100; m[0].position.y = 35; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = -100; m[0].position.y = 35; });
+                // EDIFICIOS NIVEL SUELO (Y=0)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = 100; m[0].position.y = 0; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = -100; m[0].position.y = 0; });
 
                 let tSerenito = null; let tTarget = null; let tWalking = false;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ 
