@@ -22,7 +22,7 @@
         
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
 
-        /* --- LAYOUT ESCRITORIO (3 COLUMNAS FIJAS) --- */
+        /* --- LAYOUT ESCRITORIO --- */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout {
@@ -47,13 +47,11 @@
             #mobile-footer { display: none; }
         }
 
-        /* --- LAYOUT MÓVIL (VERTICAL + ORDEN) --- */
+        /* --- LAYOUT MÓVIL --- */
         @media (max-width: 1023px) {
             body { overflow-y: auto; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            
             #sidebar-wrapper { display: contents; } 
-
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
             #stage-area { order: 3; height: 55vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
@@ -117,6 +115,12 @@
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
+        
+        /* CLASE PARA ROTAR EL MARCADOR (TANK MODE) */
+        .rotatable-marker {
+            transition: transform 0.1s linear;
+            transform-origin: center bottom; /* Pivote en los pies */
+        }
     </style>
 </head>
 <body onload="initApp()">
@@ -189,12 +193,10 @@
             </div>
             
             <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
-            
             <div style="margin-bottom:15px;">
                 <label style="font-size:11px; color:#aaa;">Ubicación (Mueve el mapa):</label>
                 <input type="text" id="r-dir" class="f-input" style="color:var(--serena-gold); font-weight:bold; border-color:var(--serena-gold);" readonly placeholder="Geolocalizando...">
             </div>
-
             <input type="tel" id="r-phone" class="f-input" placeholder="Teléfono (+56 9...)" value="+56 9 ">
             <input type="text" id="r-asunto" class="f-input" placeholder="Asunto (Ej: Bache, Basura)">
             <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
@@ -250,12 +252,21 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // GLOBALES
         let serenitoMesh = null;
         let routePolyline = null;
         let destMarker = null;
-        let routeInterval = null; // CONTROLADOR DE ANIMACIÓN RUTA 2D
-        let sIcon = L.divIcon({ html: `<div style="position:relative; width:50px; height:80px;"><img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));"></div>`, className: 'custom-serenito', iconSize: [50, 80], iconAnchor: [25, 80] });
+        let routeInterval = null;
+        
+        // ICONO SERENITO con Clase Rotable
+        let sIcon = L.divIcon({ 
+            html: `<div id="serenito-icon-inner" style="position:relative; width:50px; height:80px; transition: transform 0.5s;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));">
+                   </div>`, 
+            className: 'custom-serenito', 
+            iconSize: [50, 80], 
+            iconAnchor: [25, 80] 
+        });
         
         const ticketIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png',
@@ -302,9 +313,7 @@
 
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
         map.on('moveend', () => {
-            // Si hay ruta animada, no mover el marcador por drag del mapa
-            if (routeInterval) return;
-
+            if (routeInterval) return; // No interferir con animación
             const c = map.getCenter(); serenitoMarker.setLatLng(c);
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
@@ -321,14 +330,21 @@
                         const calle = d.address.road || d.address.pedestrian || "Calle sin nombre";
                         const num = d.address.house_number ? `#${d.address.house_number}` : "(Indique N°)";
                         document.getElementById('r-dir').value = `${calle} ${num}`;
-                    } else document.getElementById('r-dir').value = "Ubicación detectada (Complementar)";
+                    } else document.getElementById('r-dir').value = "Ubicación detectada";
                 }).catch(e => document.getElementById('r-dir').value = "Ubicación en mapa");
             }
         });
 
-        // =======================================================
+        // ----------------------------------------------------
         // LÓGICA DE RUTA Y ANIMACIÓN DE CAMINATA 2D (MARCADOR)
-        // =======================================================
+        // ----------------------------------------------------
+        function getBearing(lat1, lng1, lat2, lng2) {
+            const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
+            const brng = Math.atan2(y, x) * 180 / Math.PI;
+            return (brng + 360) % 360;
+        }
+
         function calcDirect(lat, lon, name) {
             map.invalidateSize();
             if(routeInterval) clearInterval(routeInterval);
@@ -336,7 +352,9 @@
             const startPoint = LS;
             const endPoint = [lat, lon];
 
-            const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
+            // 1. Calcular Datos
+            const R=6371; 
+            const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
             
@@ -356,14 +374,25 @@
             if(routePolyline) map.removeLayer(routePolyline);
             if(destMarker) map.removeLayer(destMarker);
 
-            // DIBUJAR LÍNEA ROJA
             routePolyline = L.polyline([startPoint, endPoint], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
-            // TICKET VERDE EN DESTINO
             destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
-            
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // ANIMACIÓN LOOP DE MARCADOR
+            // 2. CALCULAR GIRO Y ROTAR EL DIV DEL ICONO
+            const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
+            
+            // Acceder al elemento DOM del icono y rotarlo
+            const iconDiv = document.querySelector('.custom-serenito div');
+            if(iconDiv) {
+                // Leaflet rotation fix: 0deg is usually North. We adjust for our sprite.
+                // Our sprite faces Front. So if angle is 180 (South), he should face front (0 rotation).
+                // If angle is 0 (North), he should face back.
+                // Simplified Tank Mode: Just rotate the div.
+                // Note: transform takes radians or deg.
+                iconDiv.style.transform = `rotate(${angle}deg)`;
+            }
+
+            // 3. ANIMAR EL MARCADOR (LOOP)
             let steps = 100;
             let currentStep = 0;
             const deltaLat = (endPoint[0] - startPoint[0]) / steps;
@@ -372,18 +401,23 @@
             routeInterval = setInterval(() => {
                 currentStep++;
                 if (currentStep > steps) {
-                    currentStep = 0; // REINICIAR LOOP (TELEPORT AL INICIO)
+                    currentStep = 0; // Reiniciar en el origen
                 }
-                const nextLat = startPoint[0] + (deltaLat * currentStep);
-                const nextLng = startPoint[1] + (deltaLng * currentStep);
-                serenitoMarker.setLatLng([nextLat, nextLng]);
-            }, 50); // Velocidad de caminata en mapa
+                const newLat = startPoint[0] + (deltaLat * currentStep);
+                const newLng = startPoint[1] + (deltaLng * currentStep);
+                serenitoMarker.setLatLng([newLat, newLng]);
+            }, 50);
         }
 
         function resetRoute(){ 
             if(routeInterval) clearInterval(routeInterval); routeInterval = null;
             if(routePolyline) map.removeLayer(routePolyline); 
             if(destMarker) map.removeLayer(destMarker);
+            
+            // Resetear rotación
+            const iconDiv = document.querySelector('.custom-serenito div');
+            if(iconDiv) iconDiv.style.transform = `rotate(0deg)`;
+
             document.getElementById('btn-reset-route').style.display='none'; 
             map.flyTo(LS, 17); 
             serenitoMarker.setLatLng(LS);
@@ -472,18 +506,17 @@
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
-        // SOLO SERENITO EN HOME (ROTADO 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
-            let s = m[0]; 
-            s.scaling = new BABYLON.Vector3(12,12,-12); 
-            s.position.y = -25;
-            // FIX: ROTACIÓN 180 GRADOS (MIRAR AL FRENTE)
-            s.rotation = new BABYLON.Vector3(0, Math.PI, 0); 
-            cam.lockedTarget = s;
+            serenitoMesh = m[0]; 
+            serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
+            serenitoMesh.position.y = -25;
+            // FIX: ROTACIÓN 180 GRADOS PARA QUE MIRE DE FRENTE EN HOME
+            serenitoMesh.rotation = new BABYLON.Vector3(0, Math.PI, 0); 
+            cam.lockedTarget = serenitoMesh;
         });
         engine.runRenderLoop(() => scene.render());
 
-        // --- PASEO 3D (TANK MODE & EDIFICIOS CORREGIDOS) ---
+        // --- PASEO 3D (MODAL) ---
         let tourEngine;
         function abrirTourReal() {
             document.getElementById('modal-tour-3d').style.display = 'block';
@@ -494,9 +527,7 @@
                 ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 
                 const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
-                tCam.attachControl(tc, true); 
-                tCam.upperBetaLimit = Math.PI / 2.2;
-                
+                tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
                 
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
@@ -504,14 +535,14 @@
                 gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
                 ground.material = gm;
 
-                // EDIFICIOS LEVANTADOS (Y=18)
+                // EDIFICIOS A NIVEL SUELO (Y=0) - NO FLOTAN
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ 
-                    m[0].scaling = new BABYLON.Vector3(40,40,40); 
+                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
                     m[0].position.x = 100; 
-                    m[0].position.y = 18; // FIX ALTURA
+                    m[0].position.y = 0; // FIX SUELO
                 });
 
-                // SERENITO TANK
+                // SERENITO (TANK MODE)
                 let tSerenito = null;
                 let tTarget = null;
                 let tWalking = false;
@@ -519,7 +550,7 @@
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ 
                     tSerenito = m[0]; 
                     tSerenito.scaling = new BABYLON.Vector3(10,10,-10); 
-                    tSerenito.position.y = 0; 
+                    tSerenito.position.y = 0; // SUELO
                     tSerenito.rotationQuaternion = null; 
                     tCam.lockedTarget = tSerenito; 
 
@@ -533,13 +564,13 @@
                     });
                 });
                 
-                // CLICK -> TANK MOVE (ROTATION FIX)
+                // CLICK -> GIRAR Y CAMINAR
                 ts.onPointerDown = (evt, pick) => { 
                     if(pick.hit && pick.pickedMesh === ground && tSerenito) {
                         tTarget = pick.pickedPoint;
                         tTarget.y = 0;
                         tSerenito.lookAt(tTarget);
-                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // 180 DEG FIX
+                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // 180 GRADOS PARA CORREGIR ESPALDA
                         tWalking = true;
                     } 
                 };
