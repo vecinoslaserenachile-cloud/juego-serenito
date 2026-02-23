@@ -25,43 +25,36 @@
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* COLUMNA 1: RDMLS */
+        /* COLUMNA 1 */
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
-        .escudo-img { width: 140px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 50px; margin: 0; line-height: 0.9; text-align: center; }
-        .clock { font-family: 'Oswald'; font-size: 30px; text-align: center; color: var(--serena-gold); margin: 10px 0; }
-        
+        .escudo-img { width: 130px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 45px; margin: 0; line-height: 0.9; text-align: center; }
+        .clock { font-family: 'Oswald'; font-size: 28px; text-align: center; color: var(--serena-gold); margin: 5px 0; }
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; }
-        .chip-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
-        .chip { background: #222; padding: 5px 10px; font-size: 10px; border-radius: 20px; cursor: pointer; border: 1px solid #444; color: #ccc; transition: 0.3s; }
-        .chip:hover { border-color: var(--serena-gold); color: white; }
+        .trans-row { display: flex; justify-content: space-between; padding: 6px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 4px; }
 
-        /* COLUMNA CENTRAL MAPA */
+        /* COLUMNA 2 */
         #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-
-        /* COLUMNA DERECHA CRM Y REPORTES */
+        
+        /* COLUMNA 3 */
         #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
+        .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        /* CRM */
         .crm-box { margin-top: 20px; background: #000; padding: 15px; border-radius: 10px; border: 1px solid #333; }
-        .ticket-card { background: #1a1a1a; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #b71c1c; font-size: 11px; }
-        .ticket-card.respondido { border-left-color: #00e676; }
-        .ticket-resp { background: #000; padding: 8px; border-radius: 4px; margin-top: 8px; color: #00e676; font-style: italic; }
+        .history-list { max-height: 200px; overflow-y: auto; margin-top: 10px; }
+        .ticket-card { background: #111; padding: 10px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 8px; font-size: 11px; }
 
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; }
-
-        /* BOTÓN CHAT */
+        /* CHAT BOTÓN */
         #chat-ia-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 5px 15px 5px 5px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.5); }
-        .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; }
 
-        #chat-ia-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; }
-
-        /* LUPA */
+        /* IMÁGENES LUPA */
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
         #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
-        #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
     </style>
 </head>
 <body onload="crearFavicon()">
@@ -71,66 +64,63 @@
             <img src="escudo.png" class="escudo-img">
             <h1 class="rdmls-sigla">RDMLS</h1>
             <div class="clock" id="clock">00:00:00</div>
-            <div style="text-align:center;"><button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button></div>
+            <div style="text-align:center;"><button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:55px; height:55px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button></div>
 
             <div class="route-box">
-                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">PLANIFICADOR 2026</div>
-                <input type="text" id="city-input" class="f-input" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde viajamos hoy?">
+                <div style="font-size:10px; color:var(--serena-gold); font-weight:bold; margin-bottom:8px;">PLANIFICADOR DE RUTAS</div>
+                <input type="text" id="city-input" class="f-input" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde viajamos?">
                 <div id="route-output"></div>
-                <div class="chip-container">
-                    <div class="chip" onclick="calcDirectReal(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
-                    <div class="chip" onclick="calcDirectReal(-30.2292, -71.0851, 'Andacollo')">Andacollo</div>
-                    <div class="chip" onclick="calcDirectReal(-33.4489, -70.6693, 'Santiago')">Santiago</div>
-                    <div class="chip" onclick="calcDirectReal(-36.8201, -73.0444, 'Concepción')">Concepción</div>
-                    <div class="chip" onclick="calcDirectReal(-12.0464, -77.0428, 'Lima')">Lima</div>
-                    <div class="chip" onclick="calcDirectReal(-34.6037, -58.3816, 'B. Aires')">B. Aires</div>
-                </div>
             </div>
             <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cabina RDMLS: La voz de La Serena.')">
-            <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Buses Eléctricos: Transporte del futuro.')">
+            <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Electromovilidad: Buses Eléctricos 2026.')">
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO 3D</button>
+            <button style="position:absolute; bottom:20px; left:20px; z-index:20; background:var(--serena-gold); padding:10px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;" onclick="abrirTourTanque()">PASEO HISTÓRICO 3D</button>
         </div>
 
         <div id="form-panel">
-            <div id="user-header" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
-                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
+            <div id="user-header" style="margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #333;">
+                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Login Vecino</button>
             </div>
             
-            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">NUEVO REPORTE</h4>
-            <input type="text" id="r-dir" class="f-input" readonly placeholder="Mueve el mapa para georeferenciar...">
-            <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe la situación..."></textarea>
-            <input type="file" id="r-foto" accept="image/*" capture="environment" style="font-size:11px; color:white; margin-bottom:10px; width:100%;">
-            <button id="btn-env-rep" onclick="enviarAlBackoffice()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
             
-            <div id="crm-history" class="crm-box" style="display:none;">
-                <h5 style="color:var(--serena-gold); margin:0 0 10px 0; font-size:11px; border-bottom:1px solid #333; padding-bottom:5px;">HISTORIAL CRM VECINAL</h5>
-                <div id="history-list"></div>
+            <input type="text" id="r-dir" class="f-input" placeholder="Dirección (Georef automática)...">
+            <input type="text" id="r-subject" class="f-input" placeholder="Asunto del requerimiento...">
+            <textarea id="r-desc" class="f-input" rows="3" placeholder="Descripción de lo que está pasando..."></textarea>
+            <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono de contacto...">
+            <input type="text" id="r-name" class="f-input" placeholder="Nombre y Apellido">
+            
+            <div style="margin-bottom:10px;">
+                <label style="font-size:10px; color:#888;">EVIDENCIA (FOTO/VIDEO/CÁMARA):</label>
+                <input type="file" id="r-foto" accept="image/*,video/*" capture="environment" style="font-size:11px; color:white; margin-top:5px; width:100%;">
+            </div>
+            
+            <button id="btn-env-rep" onclick="enviarReporteCRM()" class="btn-red">INGRESAR REQUERIMIENTO</button>
+
+            <div id="crm-box" class="crm-box" style="display:none;">
+                <div style="font-size:11px; color:var(--serena-gold); font-weight:bold;">MIS GESTIONES ANTERIORES</div>
+                <div id="history-list" class="history-list"></div>
             </div>
 
-            <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Patrimonio de la humanidad.')">
-            <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Arquitectura Neocolonial: Nuestra identidad.')">
-            <img src="comic-aves.jpg" class="graphic-filler" onclick="lupa(this.src, 'Humedales del Elqui: Santuario de aves.')">
+            <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Capital de la Astronomía.')">
+            <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Plan Serena: Identidad Neocolonial.')">
         </div>
     </div>
 
     <div id="chat-ia-trigger" onclick="toggleIAHub()">
-        <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="45" style="background:white; border-radius:50%; padding:2px;">
+        <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="40" style="background:white; border-radius:50%; padding:2px;">
         <span class="chat-text">Serenito ¡Ahí!</span>
     </div>
-
-    <div id="chat-ia-frame">
-        <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid gold;"><b style="color:white; font-size:14px;">SERENITO IA 2026</b><i class="fas fa-times" onclick="toggleIAHub()" style="color:white; cursor:pointer;"></i></div>
-        <iframe src="ia.html" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
+    <div id="chat-ia-frame" style="display:none; position:fixed; bottom:100px; right:25px; width:350px; height:500px; background:#1a1a1a; border-radius:15px; border:2px solid var(--serena-gold); z-index:16000; overflow:hidden;">
+        <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center;"><b style="color:white; font-size:12px;">SERENITO IA</b><i class="fas fa-times" onclick="toggleIAHub()" style="color:white; cursor:pointer;"></i></div>
+        <iframe src="ia.html" style="width:100%; height:calc(100% - 35px); border:none;"></iframe>
     </div>
 
-    <div id="modal-lupa" onclick="this.style.display='none'"><img id="img-f-zoom" src="" style="max-height:70%; border:4px solid white; border-radius:10px;"><div id="lupa-caption" style="margin-top:15px; color:gold; font-family:'Oswald'; font-size:18px;"></div></div>
-
-    <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER AL PORTAL</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
+    <div id="modal-lupa" onclick="this.style.display='none'"><img id="img-zoom" src="" style="max-height:75%; border:4px solid white; border-radius:10px;"><p id="lupa-desc" style="color:gold; font-family:'Oswald'; margin-top:20px; text-align:center;"></p></div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
@@ -140,83 +130,41 @@
             const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#b71c1c'; ctx.fillRect(0, 0, 64, 64);
-            ctx.fillStyle = 'white'; ctx.font = 'bold 20px Oswald'; ctx.textAlign = 'center'; ctx.fillText('RDMLS', 32, 40);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 18px Oswald'; ctx.textAlign = 'center'; ctx.fillText('RDMLS', 32, 40);
             document.getElementById('dynamic-favicon').href = canvas.toDataURL('image/png');
         }
 
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
-        let user = null, routeLine = null, destMarker = null, serenitoMarker = null;
+        let user = null, serenitoMarker = null;
 
         const LS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // SERENITO GEORREFERENCIADOR
-        const sIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/3660/3660358.png', iconSize: [45, 45], iconAnchor: [22, 22] });
+        // SERENITO + ÍCONO DE UBICACIÓN (PIN)
+        const sIcon = L.divIcon({
+            html: `<div style="position:relative;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:45px; position:absolute; bottom:20px; left:-22px; z-index:1001;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:-15px; left:-15px; z-index:1000;">
+                   </div>`,
+            className: 'custom-serenito-marker'
+        });
         serenitoMarker = L.marker(LS, {icon: sIcon, zIndexOffset: 1000}).addTo(map);
 
+        // GEOREF AUTOMÁTICA AL MOVER MAPA
         map.on('move', () => {
             const c = map.getCenter();
             serenitoMarker.setLatLng(c);
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
-                if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
+                if(d.address) {
+                    const calle = d.address.road || "";
+                    const num = d.address.house_number || "";
+                    document.getElementById('r-dir').value = `${calle} ${num}`.trim();
+                }
             });
         });
-
-        // DISTANCIAS CON BANDERA META
-        const metaIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1169/1169542.png', iconSize: [40, 40], iconAnchor: [20, 40] });
-        function calcDirectReal(lat, lon, name) {
-            const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3;
-            document.getElementById('route-output').innerHTML = `
-                <div style="font-size:12px; font-weight:bold; color:gold; margin-top:5px;">Hacia ${name} (${dist.toFixed(0)}km)</div>
-                <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)}h</span> <i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)}h</span> <i class="fas fa-walking"></i> <span>${(dist/5).toFixed(1)}h</span></div>
-                <button onclick="limpiarRuta()" style="width:100%; background:#333; color:white; border:none; margin-top:5px; cursor:pointer; font-size:10px;">CERRAR RUTA</button>
-            `;
-            if(routeLine) map.removeLayer(routeLine); if(destMarker) map.removeLayer(destMarker);
-            routeLine = L.polyline([LS, [lat,lon]], {color:'red', weight:4, dashArray:'10,10'}).addTo(map);
-            destMarker = L.marker([lat,lon], {icon: metaIcon}).addTo(map);
-            map.fitBounds(routeLine.getBounds(), {padding:[50,50]});
-        }
-        function limpiarRuta() { if(routeLine) map.removeLayer(routeLine); if(destMarker) map.removeLayer(destMarker); document.getElementById('route-output').innerHTML = ""; map.flyTo(LS, 16); }
-
-        // MOTOR 3D ESCENARIO
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
-        const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
-        new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { m[0].scaling = new BABYLON.Vector3(12,12,-12); cam.lockedTarget = m[0]; });
-        engine.runRenderLoop(() => scene.render());
-
-        // TOUR 3D TIPO TANQUE
-        let tourEngine, tSerenito, targetPos;
-        function abrirTourReal() {
-            document.getElementById('modal-tour-3d').style.display = 'block';
-            if(!tourEngine) {
-                const tc = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(tc, true);
-                const ts = new BABYLON.Scene(tourEngine); ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
-                tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
-                new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
-                const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
-                const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling=new BABYLON.Vector3(40,40,40); m[0].position.x=100; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ tSerenito=m[0]; tSerenito.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSerenito; });
-                ts.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === ground) targetPos = pick.pickedPoint; };
-                ts.onBeforeRenderObservable.add(() => {
-                    if(tSerenito && targetPos) {
-                        let dir = targetPos.subtract(tSerenito.position); dir.y = 0;
-                        if(dir.length() > 1) { dir.normalize(); tSerenito.position.addInPlace(dir.scale(0.8)); tSerenito.lookAt(targetPos); tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); }
-                        else targetPos = null;
-                    }
-                });
-                tourEngine.runRenderLoop(() => ts.render());
-            }
-        }
 
         // LOGIN Y CRM
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
@@ -224,7 +172,8 @@
             if(u){ 
                 user=u; 
                 document.getElementById('user-header').innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><img src="${u.photoURL}" style="width:30px;border-radius:50%;border:2px solid gold;"><b>${u.displayName}</b></div>`;
-                document.getElementById('crm-history').style.display = 'block';
+                document.getElementById('r-name').value = u.displayName;
+                document.getElementById('crm-box').style.display = 'block';
                 cargarCRM(u.uid);
             } 
         });
@@ -234,29 +183,42 @@
                 const list = document.getElementById('history-list'); list.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    list.innerHTML += `<div class="ticket-card ${d.respuesta ? 'respondido' : ''}">
-                        <b>${d.fecha.toDate().toLocaleDateString()}</b> | ${d.mensaje.substring(0,30)}...
-                        <span style="float:right; color:gold;">${d.estado || 'Recibido'}</span>
-                        ${d.respuesta ? `<div class="ticket-resp"><b>Muni:</b> ${d.respuesta}</div>` : ''}
+                    list.innerHTML += `<div class="ticket-card">
+                        <b style="color:gold;">${d.fecha.toDate().toLocaleDateString()}</b> | ${d.asunto || 'Requerimiento'}
+                        <p style="margin:5px 0;">${d.mensaje.substring(0,50)}...</p>
+                        <span style="font-size:9px; color:#00e676;">${d.estado || 'Recibido'}</span>
                     </div>`;
                 });
             });
         }
 
-        async function enviarAlBackoffice() {
-            if(!user) return alert("Inicia sesión primero.");
+        async function enviarReporteCRM() {
+            if(!user) return alert("Por favor, inicia sesión con Google.");
+            const btn = document.getElementById('btn-env-rep'); btn.disabled = true;
             const file = document.getElementById('r-foto').files[0];
             let base64 = null;
             if(file) { base64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); }); }
-            await db.collection("tickets_ia").add({ userId: user.uid, nombre: user.displayName, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
-            alert("🌟 ¡MUCHAS GRACIAS! Reporte georreferenciado enviado.");
+            
+            await db.collection("tickets_ia").add({ 
+                userId: user.uid, 
+                nombre: document.getElementById('r-name').value, 
+                email: user.email,
+                telefono: document.getElementById('r-phone').value,
+                asunto: document.getElementById('r-subject').value,
+                mensaje: document.getElementById('r-desc').value, 
+                direccion: document.getElementById('r-dir').value, 
+                foto: base64, 
+                fecha: new Date(), 
+                estado: "Pendiente" 
+            });
+            alert("🌟 ¡MUCHAS GRACIAS! Tu requerimiento ha sido ingresado al sistema.");
+            btn.disabled = false;
         }
 
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
-        function lupa(s, t) { document.getElementById('img-f-zoom').src=s; document.getElementById('lupa-caption').innerText=t; document.getElementById('modal-lupa').style.display='flex'; }
         function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
+        function lupa(s, t) { document.getElementById('img-zoom').src=s; document.getElementById('lupa-desc').innerText=t; document.getElementById('modal-lupa').style.display='flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
-        window.addEventListener("resize", () => { if(tourEngine) tourEngine.resize(); });
     </script>
 </body>
 </html>
