@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>La Serena 2026 | Centro de Gestión Vecinal</title>
+    <title>Radio Digital Municipal La Serena</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png">
     
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" type="image/png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #111; }
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; }
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
         @media (min-width: 1024px) {
@@ -25,31 +25,38 @@
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* COLUMNA 1 */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; }
+        /* COLUMNA 1: RDMLS */
+        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
         .escudo-img { width: 140px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .clock { font-family: 'Oswald'; font-size: 30px; text-align: center; color: var(--serena-gold); }
-        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 50px; margin: 0; line-height: 0.9; text-align: center; }
+        .clock { font-family: 'Oswald'; font-size: 30px; text-align: center; color: var(--serena-gold); margin: 10px 0; }
         
-        /* COLUMNA 2 */
+        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
+        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; border-bottom: 1px solid #444; }
+        .chip { background: #444; padding: 5px 10px; font-size: 10px; border-radius: 15px; cursor: pointer; display: inline-block; margin: 2px; border: 1px solid transparent; }
+        .chip:hover { border-color: var(--serena-gold); }
+
+        /* COLUMNA 2: MAPA */
         #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
-        
-        /* COLUMNA 3 */
-        #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        /* COLUMNA 3: GESTIÓN */
+        #form-panel { background: #111; padding: 20px; border-left: 1px solid #333; }
+        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-red:disabled { background: #444; cursor: not-allowed; }
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; }
-        #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
-
-        /* GADGET CHAT */
-        #chat-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; }
-        #chat-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.8); }
-
-        /* LUPA */
+        
+        /* MODALES */
         #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
         #lupa-caption { margin-top: 20px; max-width: 800px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 20px; }
+        #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
+
+        /* CHAT GADGET */
+        #chat-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; }
+        #chat-ia-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -57,74 +64,88 @@
     <div id="main-layout">
         <div id="sidebar">
             <img src="escudo.png" class="escudo-img">
-            <h1 style="font-family:'Oswald'; text-align:center; margin:0;">RDMLS</h1>
+            <h1 class="rdmls-sigla">RDMLS</h1>
             <div class="clock" id="clock">00:00:00</div>
             <div style="text-align:center;"><button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button></div>
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">PLANIFICADOR 2026</div>
-                <input type="text" id="city-input" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444; border-radius:5px;" onkeypress="if(event.key==='Enter')buscarRuta()" placeholder="¿A dónde vamos?">
+                <input type="text" id="city-input" class="f-input" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde vamos?">
                 <div id="route-output"></div>
+                <div style="margin-top:10px;">
+                    <div class="chip" onclick="calcDirectReal(-33.4489, -70.6693, 'Santiago')">Santiago</div>
+                    <div class="chip" onclick="calcDirectReal(-36.8201, -73.0444, 'Concepción')">Concepción</div>
+                    <div class="chip" onclick="calcDirectReal(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
+                    <div class="chip" onclick="calcDirectReal(-29.9533, -71.3395, 'Coquimbo')">Coquimbo</div>
+                </div>
             </div>
-            
-            <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cabina RDMLS: Transmisión 24/7 para toda la comuna.')">
+            <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS: Conectando a La Serena las 24 horas.')">
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button style="position:absolute; bottom:20px; left:20px; z-index:20; background:var(--serena-gold); padding:10px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;" onclick="alert('Iniciando Paseo...')">PASEO HISTÓRICO</button>
+            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
         </div>
 
         <div id="form-panel">
-            <div id="user-zone" style="margin-bottom:15px;"><button onclick="login()" style="width:100%; background:#4285f4; border:none; color:white; padding:10px; border-radius:5px; cursor:pointer;">Google Login</button></div>
-            <h4 style="color:var(--serena-gold);">CENTRAL DE REQUERIMIENTOS</h4>
-            <input type="text" id="r-dir" class="f-input" readonly placeholder="Detectando dirección...">
+            <div id="user-zone" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
+            </div>
+            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
+            <input type="text" id="r-dir" class="f-input" readonly placeholder="Mueve el mapa para georeferenciar...">
             <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
-            <input type="file" id="r-foto" accept="image/*" capture="environment" style="margin-bottom:10px; font-size:11px;">
-            <button id="btn-env-rep" onclick="enviarAlBackoffice()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
-            <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte recibido.</div>
-            
-            <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Capital Mundial de la Astronomía.')">
+            <input type="file" id="r-foto" accept="image/*" capture="environment" style="font-size:11px; color:white; margin-bottom:10px;">
+            <button id="btn-env-rep" onclick="enviarGestion()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+            <div id="success-feedback" style="display:none; background:#1b5e20; color:white; padding:10px; border-radius:8px; margin-top:10px; text-align:center;">✅ Reporte enviado con éxito</div>
+
+            <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Capital mundial de la astronomía.')">
+            <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Arquitectura Neocolonial: Identidad única del Plan Serena.')">
         </div>
     </div>
 
-    <div id="chat-trigger" onclick="toggleIA()"><div style="background:white; border-radius:50%; padding:8px; border:4px solid var(--serena-gold);"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="55"></div></div>
-    <div id="chat-frame">
-        <div style="background:var(--serena-red); padding:12px; display:flex; justify-content:space-between; border-bottom:1px solid gold;"><b>SERENITO IA</b><i class="fas fa-times" onclick="toggleIA()" style="cursor:pointer;"></i></div>
+    <div id="chat-trigger" onclick="toggleIAHub()"><div style="background:white; border-radius:50%; padding:8px; border:4px solid var(--serena-gold);"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="55"></div></div>
+    <div id="chat-ia-frame">
+        <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid gold;">
+            <b style="font-family:'Oswald'; color:white; font-size:14px;">SERENITO IA</b>
+            <i class="fas fa-times" onclick="toggleIAHub()" style="color:white; cursor:pointer;"></i>
+        </div>
         <iframe src="ia.html" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
     </div>
 
     <div id="modal-lupa" onclick="this.style.display='none'"><img id="img-zoom" src="" style="max-height:70%; border:4px solid white;"><div id="lupa-caption"></div></div>
+    <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
+
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
-        let user = null; let routeLine = null;
+        let user = null, routeLine = null;
 
         const LS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
 
-        // GEOFENCING: LIMITAR A LA SERENA
+        // GEOFENCING LA SERENA
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
         map.on('moveend', () => {
             const c = map.getCenter();
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
             if(!esValido) {
-                document.getElementById('r-dir').value = "FUERA DE JURISDICCIÓN";
-                btn.disabled = true; btn.style.background = "#555";
+                document.getElementById('r-dir').value = "FUERA DE LÍMITES COMUNALES";
+                btn.disabled = true; btn.innerText = "FUERA DE JURISDICCIÓN";
             } else {
-                btn.disabled = false; btn.style.background = "var(--serena-red)";
+                btn.disabled = false; btn.innerText = "ENVIAR A MUNICIPALIDAD";
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
                     if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
                 });
             }
         });
 
+        // DISTANCIAS CON ICONOS (INCLUYE A PIE)
         function calcDirectReal(lat, lon, name) {
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
@@ -133,14 +154,16 @@
                 <div style="font-size:12px; font-weight:bold; color:gold;">${name} (${dist.toFixed(0)}km)</div>
                 <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)}h</span></div>
                 <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)}h</span></div>
+                <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)}h</span></div>
                 <div class="trans-row"><i class="fas fa-walking"></i> <span style="color:orange;">${(dist/5).toFixed(1)}h</span></div>
-                <button onclick="limpiarRuta()" style="width:100%; background:#333; color:white; border:none; margin-top:5px; cursor:pointer;">Cerrar</button>
+                <button onclick="document.getElementById('route-output').innerHTML=''; map.flyTo(LS,16);" style="width:100%; background:#333; color:white; border:none; margin-top:5px; cursor:pointer;">Cerrar</button>
             `;
             if(routeLine) map.removeLayer(routeLine);
-            routeLine = L.polyline([LS, [lat,lon]], {color:'red', weight:3}).addTo(map);
+            routeLine = L.polyline([LS, [lat,lon]], {color:'red', weight:3, dashArray:'5,5'}).addTo(map);
             map.fitBounds(routeLine.getBounds());
         }
 
+        // MOTOR 3D ESCENARIO
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
@@ -149,13 +172,39 @@
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { m[0].scaling = new BABYLON.Vector3(12,12,-12); cam.lockedTarget = m[0]; });
         engine.runRenderLoop(() => scene.render());
 
+        // PASEO HISTORICO TIPO TANQUE
+        let tourEngine, tSerenito, targetPos;
+        function abrirTourReal() {
+            document.getElementById('modal-tour-3d').style.display = 'block';
+            if(!tourEngine) {
+                const tc = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(tc, true);
+                const ts = new BABYLON.Scene(tourEngine); ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+                const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
+                tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
+                new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
+                const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
+                const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling=new BABYLON.Vector3(40,40,40); m[0].position.x=100; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ tSerenito=m[0]; tSerenito.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSerenito; });
+                ts.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === ground) targetPos = pick.pickedPoint; };
+                ts.onBeforeRenderObservable.add(() => {
+                    if(tSerenito && targetPos) {
+                        let dir = targetPos.subtract(tSerenito.position); dir.y = 0;
+                        if(dir.length() > 1) { dir.normalize(); tSerenito.position.addInPlace(dir.scale(0.6)); tSerenito.lookAt(targetPos); tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); }
+                        else targetPos = null;
+                    }
+                });
+                tourEngine.runRenderLoop(() => ts.render());
+            }
+        }
+
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
-        function toggleIA() { const f=document.getElementById('chat-frame'); f.style.display=(f.style.display==='none'?'block':'none'); }
+        function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
         function lupa(s, t) { document.getElementById('img-zoom').src=s; document.getElementById('lupa-caption').innerText=t; document.getElementById('modal-lupa').style.display='flex'; }
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => { if(u){ user=u; document.getElementById('user-zone').innerHTML=`<b>${u.displayName}</b>`; } });
         
-        async function enviarAlBackoffice() {
+        async function enviarGestion() {
             if(!user) return alert("Inicia sesión.");
             const file = document.getElementById('r-foto').files[0];
             let base64 = null;
