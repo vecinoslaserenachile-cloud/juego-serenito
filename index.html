@@ -30,7 +30,7 @@
                 grid-template-columns: 360px 1fr 360px;
                 grid-template-rows: 100%;
             }
-            /* Columna Izquierda Unificada (Wrapper) */
+            
             #sidebar-wrapper {
                 background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
                 padding: 20px;
@@ -40,6 +40,7 @@
             }
             #sidebar-header, #sidebar-tools { background: transparent; padding: 0; box-shadow: none; border: none; }
             #sidebar-tools { margin-top: 20px; } 
+
             #stage-area { height: 100%; position: relative; }
             #form-panel { 
                 background: var(--panel); padding: 20px; 
@@ -49,16 +50,26 @@
             #mobile-footer { display: none; }
         }
 
-        /* --- LAYOUT MÓVIL (VERTICAL) --- */
+        /* --- LAYOUT MÓVIL (VERTICAL + ORDEN) --- */
         @media (max-width: 1023px) {
             body { overflow-y: auto; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            #sidebar-wrapper { display: contents; } /* Desempaquetar */
+            
+            #sidebar-wrapper { display: contents; } 
 
+            /* 1. IDENTIDAD */
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
-            #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; } /* Planificador ARRIBA */
+            
+            /* 2. PLANIFICADOR (SOBRE EL MAPA) */
+            #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
+            
+            /* 3. MAPA */
             #stage-area { order: 3; height: 55vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
+            
+            /* 4. REQUERIMIENTOS */
             #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
+            
+            /* 5. FOOTER */
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
@@ -231,6 +242,19 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
+        // GLOBALES PARA LOOP CAMINATA
+        let serenitoMesh = null;
+        let isWalking = false;
+        let walkStartPos = null;
+        let walkTargetPos = null;
+        let walkSpeed = 0.5;
+        let ticketIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png', // TICKET VERDE
+            iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
+        });
+        let routePolyline = null;
+        let destMarker = null;
+
         function initApp() {
             crearFavicon();
             const r = document.getElementById('radio');
@@ -251,7 +275,7 @@
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
-        let user = null, routeLine = null, destMarker = null, serenitoMarker = null;
+        let user = null, serenitoMarker = null;
 
         const LS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
@@ -284,16 +308,16 @@
         });
 
         const metaIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1169/1169542.png', iconSize: [40, 40], iconAnchor: [20, 40] });
+        
         function calcDirect(lat, lon, name) {
+            // 1. DIBUJAR RUTA EN MAPA
+            map.invalidateSize();
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
             const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35;
             
-            const tAuto=(dist/60).toFixed(1);
-            const tBus=(dist/40).toFixed(1);
-            const tBici=(dist/15).toFixed(1);
-            const tPie=(dist/5).toFixed(1);
-            const tAvion=(dist/800).toFixed(1);
+            const tAuto=(dist/60).toFixed(1); const tBus=(dist/40).toFixed(1);
+            const tBici=(dist/15).toFixed(1); const tPie=(dist/5).toFixed(1); const tAvion=(dist/800).toFixed(1);
 
             document.getElementById('route-output').innerHTML = `
                 <div style="text-align:center; color:white; font-weight:bold; margin-bottom:5px;">Hacia: ${name} (${dist.toFixed(0)} km)</div>
@@ -304,11 +328,40 @@
                 <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-plane trans-icon"></i> Avión</div> <span>${tAvion} h</span></div>
             `;
             document.getElementById('btn-reset-route').style.display='block';
+            
             if(routePolyline) map.removeLayer(routePolyline);
+            if(destMarker) map.removeLayer(destMarker);
+
             routePolyline = L.polyline([LS, [lat,lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
+            destMarker = L.marker([lat,lon], {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
+
+            // 2. ACTIVAR CAMINATA INFINITA EN 3D
+            if(serenitoMesh) {
+                // Calcular vector dirección (aprox)
+                let dX = (lon - LS[1]) * 1000; // Escala arbitraria para visualización
+                let dZ = (lat - LS[0]) * 1000;
+                
+                walkStartPos = new BABYLON.Vector3(0, 0, 0); // Inicio siempre centro
+                walkTargetPos = new BABYLON.Vector3(dX, 0, dZ);
+                
+                // Rotar Serenito hacia el destino
+                serenitoMesh.lookAt(walkTargetPos);
+                serenitoMesh.position = walkStartPos.clone(); // Resetear posición
+                isWalking = true;
+            }
         }
-        function resetRoute(){ if(routePolyline)map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS, 17); document.getElementById('route-output').innerHTML=""; }
+
+        function resetRoute(){ 
+            if(routePolyline) map.removeLayer(routePolyline); 
+            if(destMarker) map.removeLayer(destMarker);
+            document.getElementById('btn-reset-route').style.display='none'; 
+            map.flyTo(LS, 17); 
+            document.getElementById('route-output').innerHTML=""; 
+            isWalking = false; 
+            if(serenitoMesh) serenitoMesh.position = new BABYLON.Vector3(0,0,0);
+        }
+
         function buscarYCalcular(){
             const q = document.getElementById('city-input').value; if(!q)return;
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
@@ -354,7 +407,9 @@
                 const tickets = [];
                 snap.forEach(doc => tickets.push(doc.data()));
                 tickets.sort((a,b) => b.fecha.seconds - a.fecha.seconds);
+                
                 if(tickets.length === 0) list.innerHTML = "<div style='color:#666;text-align:center;'>Aún no tienes reportes.</div>";
+
                 tickets.forEach(d => {
                     const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
                     const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
@@ -393,10 +448,30 @@
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { m[0].scaling = new BABYLON.Vector3(12,12,-12); cam.lockedTarget = m[0]; });
+        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
+            serenitoMesh = m[0]; 
+            serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
+            cam.lockedTarget = serenitoMesh;
+            
+            // LOGICA DE CAMINATA EN LOOP
+            scene.registerBeforeRender(() => {
+                if(isWalking && serenitoMesh && walkTargetPos) {
+                    // Mover hacia adelante
+                    serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(0.5));
+                    
+                    // Calcular distancia al inicio
+                    let dist = BABYLON.Vector3.Distance(serenitoMesh.position, walkStartPos);
+                    
+                    // Si se aleja mucho (simula llegar), resetear
+                    if (dist > 200) {
+                        serenitoMesh.position = walkStartPos.clone();
+                    }
+                }
+            });
+        });
         engine.runRenderLoop(() => scene.render());
 
-        let tourEngine, tSerenito, targetPos;
+        let tourEngine;
         function abrirTourReal() {
             document.getElementById('modal-tour-3d').style.display = 'block';
             if(!tourEngine) {
@@ -408,14 +483,8 @@
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
                 const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling=new BABYLON.Vector3(40,40,40); m[0].position.x=100; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ tSerenito=m[0]; tSerenito.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSerenito; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ let tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSer; });
                 ts.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === ground) targetPos = pick.pickedPoint; };
-                ts.onBeforeRenderObservable.add(() => {
-                    if(tSerenito && targetPos) {
-                        let dir = targetPos.subtract(tSerenito.position); dir.y = 0;
-                        if(dir.length() > 1) { dir.normalize(); tSerenito.position.addInPlace(dir.scale(0.8)); tSerenito.lookAt(targetPos); tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); } else targetPos = null;
-                    }
-                });
                 tourEngine.runRenderLoop(() => ts.render());
             }
         }
