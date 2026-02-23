@@ -21,55 +21,56 @@
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
         @media (min-width: 1024px) {
-            #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 360px; }
+            #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; }
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* COLUMNA 1: SIDEBAR */
+        /* COLUMNA 1 */
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
         .escudo-img { width: 130px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 45px; margin: 0; line-height: 0.9; text-align: center; }
         .clock { font-family: 'Oswald'; font-size: 28px; text-align: center; color: var(--serena-gold); margin: 5px 0; }
         
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 6px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 4px; border-bottom: 1px solid #444; }
+        .trans-row { display: flex; justify-content: space-between; padding: 6px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 4px; }
         .chip-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
         .chip { background: #222; padding: 5px 10px; font-size: 10px; border-radius: 20px; cursor: pointer; border: 1px solid #444; color: #ccc; transition: 0.3s; }
-        .chip:hover { border-color: var(--serena-gold); color: white; background: #333; }
+        .chip:hover { border-color: var(--serena-gold); color: white; }
 
-        /* COLUMNA 2: MAPA CENTRAL */
+        /* COLUMNA 2 */
         #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        /* COLUMNA 3: GESTIÓN Y CRM */
+        /* COLUMNA 3 */
         #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
         .f-input { width: 100%; padding: 10px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 13px; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
 
-        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 300px; overflow-y: auto; }
+        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 250px; overflow-y: auto; }
         .ticket-card { background: #1a1a1a; padding: 10px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 8px; font-size: 11px; }
         .ticket-card.respondido { border-left-color: #00e676; }
         .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
+        .resp-text { margin-top: 5px; color: #00e676; font-style: italic; border-top: 1px solid #222; padding-top: 5px; }
 
-        /* IMÁGENES */
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
         .graphic-filler:hover { border-color: var(--serena-gold); transform: scale(1.02); }
         .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; line-height: 1.2; }
 
-        /* CHAT GADGET */
+        /* CHAT GADGET ROJO */
         #chat-ia-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); transition: 0.3s; }
         #chat-ia-trigger:hover { transform: scale(1.05); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
         #chat-ia-frame { display: none; position: fixed; bottom: 100px; right: 25px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
 
-        /* MODALES */
         #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
         #lupa-caption { margin-top: 20px; max-width: 800px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 20px; }
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; }
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
+        
+        #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
     </style>
 </head>
 <body onload="crearFavicon()">
@@ -118,22 +119,23 @@
             
             <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
             
-            <input type="text" id="r-dir" class="f-input" readonly placeholder="Mueve el mapa para geolocalizar...">
+            <input type="text" id="r-dir" class="f-input" readonly placeholder="Mueve a Serenito para georeferenciar...">
             <input type="text" id="r-subject" class="f-input" placeholder="Asunto (Ej: Bache, Luminaria)...">
             <input type="text" id="r-name" class="f-input" placeholder="Tu Nombre y Apellido">
             <input type="tel" id="r-phone" class="f-input" placeholder="Tu Teléfono">
             <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe brevemente lo que pasa..."></textarea>
             
             <div style="margin-bottom:10px;">
-                <label style="font-size:10px; color:#888;">ADJUNTAR EVIDENCIA (FOTO/VIDEO):</label>
+                <label style="font-size:10px; color:#888;">EVIDENCIA (FOTO/VIDEO):</label>
                 <input type="file" id="r-foto" accept="image/*,video/*" capture="environment" style="font-size:11px; color:white; margin-top:5px; width:100%;">
             </div>
             
             <button id="btn-env-rep" onclick="enviarReporteCRM()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+            <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte georreferenciado con éxito.</div>
 
             <div id="crm-box" class="crm-box" style="display:none;">
                 <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">HISTORIAL DE REPORTES</div>
-                <div id="history-list"></div>
+                <div id="history-list" class="history-list"></div>
             </div>
 
             <div style="margin-top:20px;">
@@ -158,12 +160,12 @@
     </div>
 
     <div id="modal-lupa" onclick="this.style.display='none'"><span class="close-lupa">&times;</span><img id="img-f-zoom" src="" style="max-height:75%; border:4px solid white; border-radius:10px;"><div id="lupa-caption"></div></div>
-    <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
+    <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER AL PORTAL</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // GENERAR FAVICON ROJO
+        // FAVICON ROJO RDMLS
         function crearFavicon() {
             const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
             const ctx = canvas.getContext('2d');
@@ -184,16 +186,16 @@
         // SERENITO MARKER CON PIN DE UBICACIÓN
         const sIcon = L.divIcon({
             html: `<div style="position:relative; width:50px; height:80px;">
-                    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
                     <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));">
                    </div>`,
             className: 'custom-serenito', iconSize: [50, 80], iconAnchor: [25, 80]
         });
         serenitoMarker = L.marker(LS, {icon: sIcon, zIndexOffset: 1000}).addTo(map);
 
-        // GEOFENCING Y DIRECCIÓN AUTOMÁTICA
+        // GEOFENCING Y DIRECCIÓN EXACTA AUTOMÁTICA
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
-        map.on('move', () => {
+        map.on('moveend', () => {
             const c = map.getCenter();
             serenitoMarker.setLatLng(c);
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
@@ -201,14 +203,18 @@
             
             if(!esValido) {
                 document.getElementById('r-dir').value = "FUERA DE JURISDICCIÓN COMUNAL";
+                document.getElementById('r-dir').style.color = "red";
                 btn.disabled = true; btn.style.background = "#444";
             } else {
                 btn.disabled = false; btn.style.background = "var(--serena-red)";
+                document.getElementById('r-dir').style.color = "white";
+                document.getElementById('r-dir').value = "Cargando dirección exacta...";
+                
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
                     if(d.address) {
                         const calle = d.address.road || "Calle sin nombre";
                         const num = d.address.house_number || "S/N";
-                        document.getElementById('r-dir').value = `${calle} #${num}, La Serena`;
+                        document.getElementById('r-dir').value = `${calle} #${num}`;
                     }
                 });
             }
@@ -225,7 +231,7 @@
                 <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)}h</span> <i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)}h</span></div>
                 <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)}h</span> <i class="fas fa-bicycle"></i> <span>${(dist/18).toFixed(1)}h</span></div>
                 <div class="trans-row"><i class="fas fa-walking"></i> <span style="color:orange;">${(dist/5).toFixed(1)}h</span></div>
-                <button onclick="limpiarRuta()" style="width:100%; background:#333; color:white; border:none; margin-top:5px; cursor:pointer; padding:5px;">CERRAR RESULTADOS</button>
+                <button onclick="limpiarRuta()" style="width:100%; background:#333; color:white; border:none; margin-top:5px; cursor:pointer; font-size:10px; padding:5px;">CERRAR</button>
             `;
             if(routeLine) map.removeLayer(routeLine); if(destMarker) map.removeLayer(destMarker);
             routeLine = L.polyline([LS, [lat,lon]], {color:'red', weight:4, dashArray:'10,10'}).addTo(map);
@@ -234,7 +240,7 @@
         }
         function limpiarRuta() { if(routeLine) map.removeLayer(routeLine); if(destMarker) map.removeLayer(destMarker); document.getElementById('route-output').innerHTML = ""; map.flyTo(LS, 16); }
 
-        // MOTOR 3D Y PASEO
+        // MOTOR 3D ESCENARIO
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
@@ -267,7 +273,7 @@
             }
         }
 
-        // LOGIN Y CRM
+        // LOGIN Y CRM COMPLETO
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
         auth.onAuthStateChanged(u => { 
             if(u){ 
@@ -288,7 +294,7 @@
                         <span style="color:gold;">${d.fecha.toDate().toLocaleDateString()}</span> | <b>${d.asunto || 'Requerimiento'}</b>
                         <p style="margin:5px 0;">${d.mensaje.substring(0,40)}...</p>
                         <span class="status-pill">${d.estado || 'Recibido'}</span>
-                        ${d.respuesta ? `<div class="ticket-resp"><b>Respuesta:</b> ${d.respuesta}</div>` : ''}
+                        ${d.respuesta ? `<div class="ticket-resp"><b>Muni:</b> ${d.respuesta}</div>` : ''}
                     </div>`;
                 });
             });
@@ -308,12 +314,12 @@
                 direccion: document.getElementById('r-dir').value, 
                 foto: base64, fecha: new Date(), estado: "Pendiente" 
             });
-            alert("🌟 ¡GRACIAS! Reporte georreferenciado correctamente.");
-            btn.disabled = false;
+            document.getElementById('success-feedback').style.display = 'block';
+            setTimeout(() => { document.getElementById('success-feedback').style.display='none'; btn.disabled=false; }, 5000);
         }
 
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
-        function toggleIAHub() { const f=document.getElementById('chat-ia-frame'); f.style.display=(f.style.display==='none'?'block':'none'); }
+        function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
         function lupa(s, t) { document.getElementById('img-f-zoom').src=s; document.getElementById('lupa-caption').innerText=t; document.getElementById('modal-lupa').style.display='flex'; }
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
         window.addEventListener("resize", () => { engine.resize(); if(tourEngine) tourEngine.resize(); });
