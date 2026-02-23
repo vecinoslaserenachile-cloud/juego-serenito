@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RDMLS | La Serena 2026</title>
+    <title>RDMLS | Radio Digital Municipal La Serena</title>
     
     <link rel="icon" id="dynamic-favicon" type="image/png">
     
@@ -21,7 +21,7 @@
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0f0f0f; --panel: #111; }
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
-        /* LAYOUT PRINCIPAL */
+        /* LAYOUT */
         @media (min-width: 1024px) {
             body { overflow: hidden; } 
             #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 360px; grid-template-rows: 100%; }
@@ -33,10 +33,12 @@
         @media (max-width: 1023px) {
             body { overflow-y: auto; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            #sidebar-header { padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; }
-            #stage-area { height: 50vh !important; margin: 0; border-top: 2px solid gold; border-bottom: 2px solid gold; }
-            #form-panel { padding: 20px; background: var(--panel); padding-bottom: 80px; }
-            #mobile-footer { display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
+            #sidebar-wrapper { display: contents; } 
+            #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
+            #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
+            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); margin: 0; }
+            #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; margin-top: 0; }
+            #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
         /* ESTILOS COMUNES */
@@ -95,7 +97,12 @@
                         <input type="text" id="city-input" style="flex:1; padding:10px; border-radius:4px; border:1px solid #555; background:#222; color:white;" placeholder="¿A dónde vamos hoy?">
                         <button onclick="buscarYCalcular()" style="background:var(--serena-gold); color:black; border:none; padding:0 15px; border-radius:4px; cursor:pointer; font-weight:bold;"><i class="fas fa-search"></i></button>
                     </div>
-                    <div id="route-output" style="margin-top:10px;"></div>
+                    <div class="chip-container">
+                        <div class="chip" onclick="calcDirect(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
+                        <div class="chip" onclick="calcDirect(-30.2292, -71.0851, 'Andacollo')">Andacollo</div>
+                        <div class="chip" onclick="calcDirect(-29.9533, -71.3395, 'Coquimbo')">Coquimbo</div>
+                    </div>
+                    <div class="route-list" id="route-output"></div>
                     <button id="btn-reset-route" style="width:100%; background:#ff3d00; color:white; border:none; padding:8px; border-radius:5px; margin-top:10px; cursor:pointer; font-size:12px; font-weight:bold; display:none;" onclick="resetRoute()">CERRAR RUTA</button>
                 </div>
 
@@ -124,13 +131,14 @@
             <div id="crm-box" class="crm-box" style="display:none;">
                 <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">HISTORIAL DE REPORTES</div>
                 <div id="history-list">
-                    <div style="color:#666; font-size:12px; font-style:italic;">Cargando tus incidencias...</div>
+                    <div style="color:#666; font-size:12px; font-style:italic;">Conectando...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="modal-camara">
+        <div class="close-lupa" onclick="cerrarCamara()">&times;</div>
         <div id="camera-wrapper">
             <video id="cam-video" autoplay playsinline></video>
             <img id="cam-overlay" src="serenito.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3660/3660358.png'"> 
@@ -138,7 +146,7 @@
         <div class="cabina-controls">
             <div class="control-row">FONDO
                 <select onchange="cambiarFondoCabina(this.value)">
-                    <option value="">Cámara Real</option>
+                    <option value="">Fondo Real</option>
                     <option value="faro.jpg">Faro Monumental</option>
                     <option value="plaza.jpg">Plaza de Armas</option>
                     <option value="recova.jpg">La Recova</option>
@@ -156,7 +164,10 @@
         <canvas id="foto-canvas" style="display:none;"></canvas>
     </div>
 
-    <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
+    <div id="modal-tour-3d" style="display:none; position:fixed; inset:0; background:black; z-index:20000;">
+        <button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button>
+        <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
+    </div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
@@ -168,7 +179,7 @@
         const radio = document.getElementById('radio');
         let routePolyline, destMarker, videoStream, tourEngine;
 
-        // AUTH FIREBASE
+        // AUTH FIREBASE (SETUP BASE)
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
@@ -187,25 +198,33 @@
 
         // --- TRAYECTOS CON ICONOS ---
         function calcDirect(lat, lon, name) {
-            const dist = (L.latLng(LS).distanceTo([lat, lon]) / 1000) * 1.35;
+            map.invalidateSize();
+            const startPoint = LS; const endPoint = [lat, lon];
+            
+            // Distancia aproximada
+            const dist = (L.latLng(LS).distanceTo([lat, lon]) / 1000) * 1.35; 
+
+            // RENDERIZADO DE TABLA DE RESULTADOS
             document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center; color:gold; font-weight:bold; margin:10px 0;">Hacia: ${name} (${dist.toFixed(0)} km)</div>
-                <div class="trans-row"><i class="fas fa-car trans-icon"></i> Auto <span>${(dist/70).toFixed(1)} h</span></div>
-                <div class="trans-row"><i class="fas fa-bus trans-icon"></i> Bus <span>${(dist/45).toFixed(1)} h</span></div>
-                <div class="trans-row"><i class="fas fa-bicycle trans-icon"></i> Bici <span>${(dist/16).toFixed(1)} h</span></div>
-                <div class="trans-row"><i class="fas fa-walking trans-icon"></i> A Pie <span>${(dist/5).toFixed(1)} h</span></div>
-                <div class="trans-row"><i class="fas fa-plane trans-icon"></i> Avión <span>${(dist/800).toFixed(1)} h</span></div>
+                <div style="text-align:center; color:white; font-weight:bold; margin-bottom:5px;">Hacia: ${name} (${dist.toFixed(0)} km)</div>
+                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-car trans-icon"></i> Auto</div> <span>${(dist/70).toFixed(1)} h</span></div>
+                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-bus trans-icon"></i> Bus</div> <span>${(dist/45).toFixed(1)} h</span></div>
+                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-bicycle trans-icon"></i> Bici</div> <span>${(dist/16).toFixed(1)} h</span></div>
+                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-walking trans-icon"></i> A Pie</div> <span>${(dist/5).toFixed(1)} h</span></div>
+                <div class="trans-row"><div style="display:flex;align-items:center;"><i class="fas fa-plane trans-icon"></i> Avión</div> <span>${(dist/800).toFixed(1)} h</span></div>
             `;
             document.getElementById('btn-reset-route').style.display='block';
+            
+            // Trazado en mapa
             if(routePolyline) map.removeLayer(routePolyline);
-            routePolyline = L.polyline([LS, [lat, lon]], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
+            routePolyline = L.polyline([startPoint, endPoint], {color:'#b71c1c', weight:4, dashArray:'10,10'}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
         }
 
         function resetRoute() { if(routePolyline) map.removeLayer(routePolyline); document.getElementById('btn-reset-route').style.display='none'; document.getElementById('route-output').innerHTML=""; map.flyTo(LS, 16); }
         function buscarYCalcular(){ const q = document.getElementById('city-input').value; if(!q)return; fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`).then(r=>r.json()).then(d=>{ if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]); }); }
 
-        // --- HISTORIAL INCIDENCIAS ---
+        // --- HISTORIAL INCIDENCIAS (FIXED: SIEMPRE MUESTRA ALGO) ---
         auth.onAuthStateChanged(u => { 
             if(u){ 
                 document.getElementById('user-info').innerHTML=`<b>${u.displayName}</b> <button onclick="auth.signOut()" style="background:red; color:white; border:none; padding:2px 5px; font-size:10px;">Salir</button>`;
@@ -219,10 +238,22 @@
             }
         });
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        
         function cargarCRM(uid) {
             db.collection("tickets_ia").where("userId", "==", uid).onSnapshot(snap => {
                 const h = document.getElementById('history-list'); h.innerHTML = "";
-                if(snap.empty) { h.innerHTML = "<div style='color:#888; font-size:12px;'>No tienes incidencias registradas.</div>"; return; }
+                
+                // --- FIX: SI ESTÁ VACÍO, MOSTRAR EJEMPLO PARA LA DEMO ---
+                if(snap.empty) { 
+                    h.innerHTML = `
+                        <div class="ticket-card" style="opacity:0.7;">
+                            <span class="status-pill">Ejemplo</span><b>Bienvenido Vecino</b><br>
+                            <small>Aquí verás tus reportes...</small>
+                        </div>`;
+                    return; 
+                }
+                // --------------------------------------------------------
+
                 snap.forEach(doc => {
                     let d = doc.data();
                     h.innerHTML += `<div class="ticket-card ${d.respuesta ? 'respondido' : ''}">
