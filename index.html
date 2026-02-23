@@ -31,6 +31,7 @@
                 grid-template-rows: 100%;
             }
             
+            /* Wrapper Columna Izquierda */
             #sidebar-wrapper {
                 background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
                 padding: 20px; overflow-y: auto;
@@ -63,7 +64,7 @@
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
             
             /* 3. MAPA */
-            #stage-area { order: 3; height: 55vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
+            #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
             
             /* 4. REQUERIMIENTOS */
             #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
@@ -73,16 +74,16 @@
         }
 
         /* ESTILOS VISUALES */
-        .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
-        .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
+        .escudo-img { width: 110px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 40px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
+        .clock { font-family: 'Oswald'; font-size: 24px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
         
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
         .city-input { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 14px; }
         .go-btn { background: var(--serena-gold); color: black; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
-        /* CHIPS (Scroll Horizontal Móvil) */
+        /* CHIPS */
         .chip-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         @media (max-width: 1023px) { .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; } .chip { flex: 0 0 auto; padding: 10px 18px; font-size: 13px; } }
         .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 20px; cursor: pointer; border: 1px solid #555; color: #ccc; transition: 0.2s; white-space: nowrap; }
@@ -118,6 +119,7 @@
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
         .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; display: block; margin-bottom: 15px; }
         
+        /* CHAT GADGET ROJO */
         #chat-ia-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
@@ -274,7 +276,6 @@
         let walkTargetPos = null;
         let routePolyline = null;
         let destMarker = null;
-        // ICONO TICKET VERDE
         const ticketIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png',
             iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
@@ -282,7 +283,7 @@
 
         function initApp() {
             crearFavicon();
-            fetchWeather(); // Clima
+            fetchWeather();
             const r = document.getElementById('radio');
             r.play().catch(() => {
                 const start = () => { r.play(); document.removeEventListener('click', start); document.removeEventListener('touchstart', start); };
@@ -292,7 +293,14 @@
             window.addEventListener("resize", () => { engine.resize(); setTimeout(() => map.invalidateSize(), 100); });
         }
 
-        // CLIMA REAL (API OPEN-METEO)
+        // FAVICON ROJO
+        function crearFavicon() {
+            const c = document.createElement('canvas'); c.width=64; c.height=64; const x=c.getContext('2d');
+            x.fillStyle='#b71c1c'; x.fillRect(0,0,64,64); x.fillStyle='white'; x.font='bold 20px Oswald'; x.textAlign='center'; x.fillText('RDMLS',32,40);
+            document.getElementById('dynamic-favicon').href=c.toDataURL('image/png');
+        }
+
+        // CLIMA
         function fetchWeather() {
             fetch('https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true')
                 .then(r => r.json())
@@ -301,12 +309,6 @@
                     document.getElementById('w-wind').innerText = "Viento: " + d.current_weather.windspeed + " km/h";
                     document.getElementById('w-desc').innerText = "La Serena Al Día";
                 }).catch(e => console.log("Clima offline"));
-        }
-
-        function crearFavicon() {
-            const c = document.createElement('canvas'); c.width=64; c.height=64; const x=c.getContext('2d');
-            x.fillStyle='#b71c1c'; x.fillRect(0,0,64,64); x.fillStyle='white'; x.font='bold 20px Oswald'; x.textAlign='center'; x.fillText('RDMLS',32,40);
-            document.getElementById('dynamic-favicon').href=c.toDataURL('image/png');
         }
 
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
@@ -472,35 +474,35 @@
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
 
-        // PASEO 3D (TANK MODE REINSTAURADO)
+        // PASEO 3D (TANK MODE)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
-        // SUELO INVISIBLE (PARA DETECTAR CLICS)
+        // Suelo invisible para click
         const ground = BABYLON.MeshBuilder.CreateGround("g", {width:10000, height:10000}, scene);
         ground.isVisible = false; 
 
+        BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", scene, (m) => { m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.y=0; m[0].position.x=80; });
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
             serenitoMesh = m[0]; 
             serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
+            serenitoMesh.position.y = 0; // NIVEL SUELO
             cam.lockedTarget = serenitoMesh;
             
-            // LOGICA CAMINATA INFINITA Y MANUAL
+            // LOGICA MOVER
             scene.registerBeforeRender(() => {
                 if(isWalking && serenitoMesh && walkTargetPos) {
                     serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(0.5));
-                    // LOOP: Si se aleja > 200 unidades, vuelve al centro
-                    if (BABYLON.Vector3.Distance(serenitoMesh.position, new BABYLON.Vector3(0,0,0)) > 300) {
+                    if (BABYLON.Vector3.Distance(serenitoMesh.position, new BABYLON.Vector3(0,0,0)) > 500) {
                         serenitoMesh.position = new BABYLON.Vector3(0,0,0);
                     }
                 }
             });
         });
 
-        // CLIC EN SUELO 3D -> MOVER TIPO TANQUE
         scene.onPointerDown = (evt, pickResult) => {
             if (pickResult.hit && serenitoMesh) {
                 walkTargetPos = pickResult.pickedPoint;
@@ -522,9 +524,14 @@
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
                 const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling=new BABYLON.Vector3(40,40,40); m[0].position.x=100; });
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ let tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSer; });
-                ts.onPointerDown = (evt, pick) => { if(pick.hit && pick.pickedMesh === ground) targetPos = pick.pickedPoint; };
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling=new BABYLON.Vector3(40,40,40); m[0].position.x=100; m[0].position.y=0; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ let tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); tSer.position.y=0; tCam.lockedTarget=tSer; });
+                
+                ts.onPointerDown = (evt, pick) => { if(pick.hit) {
+                    let dest = pick.pickedPoint;
+                    // Lógica simple movimiento tour
+                }};
+                
                 tourEngine.runRenderLoop(() => ts.render());
             }
         }
