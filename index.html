@@ -113,7 +113,8 @@
         #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 80px; height: 60vh; } }
 
-        #modal-lupa, #modal-camara { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
+        /* MODALES */
+        #modal-lupa, #modal-camara, #modal-admin-full { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
         #img-f-zoom { width: auto; max-width: 95%; max-height: 80vh; border: 2px solid white; border-radius: 5px; transition: transform 0.3s ease; cursor: zoom-in; }
         #img-f-zoom.zoomed { transform: scale(2.5); cursor: zoom-out; }
         #lupa-caption { margin-top: 15px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 18px; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; }
@@ -123,17 +124,21 @@
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
         
         /* CABINA FOTOS */
-        #camera-wrapper { position: relative; width: 100%; max-width: 400px; border: 2px solid gold; border-radius: 10px; overflow: hidden; }
+        #camera-wrapper { position: relative; width: 100%; max-width: 400px; border: 2px solid gold; border-radius: 10px; overflow: hidden; background: #000; }
         #cam-video { width: 100%; display: block; }
-        #cam-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; }
+        #cam-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; z-index: 10; }
         
         .rotatable-icon { transition: transform 0.1s linear; transform-origin: center center; }
+
+        /* ADMIN FULL SCREEN */
+        #modal-admin-full { background: #111; overflow-y: auto; display: none; align-items: start; justify-content: start; padding: 0; }
+        .admin-panel-container { width: 100%; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid gold; padding-bottom: 20px; margin-bottom: 20px; }
     </style>
 </head>
 <body onload="initApp()">
 
     <div id="main-layout">
-        
         <div id="sidebar-wrapper">
             <div id="sidebar-header">
                 <img src="escudo.png" class="escudo-img">
@@ -201,9 +206,6 @@
             <div class="user-header">
                 <button id="btn-login-vecino" onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
                 <div id="user-info" style="margin-top:10px; display:none; align-items:center; gap:10px;"></div>
-                <div style="text-align:center; margin-top:10px;">
-                    <span onclick="loginFuncionario()" style="color:#666; font-size:10px; text-decoration:underline; cursor:pointer;">Acceso Funcionarios</span>
-                </div>
             </div>
             
             <div id="panel-vecino">
@@ -230,12 +232,6 @@
                 </div>
             </div>
 
-            <div id="panel-funcionario" style="display:none;">
-                <h4 style="color:#00e676; margin:0 0 10px 0; border-bottom:1px solid #00e676; padding-bottom:5px;">GESTIÓN MUNICIPAL</h4>
-                <button onclick="logoutFuncionario()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:4px; font-size:10px; cursor:pointer; margin-bottom:10px;">Cerrar Sesión Admin</button>
-                <div id="admin-ticket-list" class="crm-box" style="max-height:600px;">Cargando tickets...</div>
-            </div>
-
             <div id="extra-imgs" style="margin-top:20px;">
                 <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena')">
                 <span class="img-desc">Astronomía: Ventana al universo.</span>
@@ -245,7 +241,10 @@
         </div>
 
         <div id="mobile-footer">
-            <img src="escudo.png" class="escudo-img" style="width:70px; opacity:0.8;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <img src="escudo.png" style="width:50px; opacity:0.8;">
+                <i class="fas fa-lock" onclick="loginFuncionario()" style="color:#333; cursor:pointer;"></i>
+            </div>
             <h1 class="rdmls-sigla" style="font-size:30px; opacity:0.8;">RDMLS</h1>
             <div style="font-size:12px; color:#666; margin-top:10px;">La Serena 2026 ©</div>
         </div>
@@ -279,6 +278,18 @@
         <canvas id="foto-canvas" style="display:none;"></canvas>
     </div>
 
+    <div id="modal-admin-full">
+        <div class="admin-panel-container">
+            <div class="admin-header">
+                <h2 style="color:gold; font-family:'Oswald'; margin:0;">PANEL DE CONTROL MUNICIPAL</h2>
+                <button onclick="logoutFuncionario()" style="background:#b71c1c; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">CERRAR SESIÓN</button>
+            </div>
+            <div id="admin-ticket-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:15px;">
+                Cargando...
+            </div>
+        </div>
+    </div>
+
     <div id="modal-tour-3d"><button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER</button><canvas id="tour-canvas" style="width:100%; height:100%;"></canvas></div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
@@ -289,7 +300,6 @@
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
-        let isAdmin = false;
         
         let sIcon = L.divIcon({ 
             html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
@@ -369,7 +379,7 @@
             }
         });
 
-        // --- MAPA LOGICA ---
+        // MAPA LOGIC
         function getBearing(lat1, lng1, lat2, lng2) {
             const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
             const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1);
@@ -445,7 +455,8 @@
                 .then(r=>r.json()).then(d=>{ if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]); });
         }
 
-        function compressImage(file, quality=0.7, maxWidth=800) { // OPTIMIZADO PARA MÓVIL
+        // COMPRESION ROBUSTA PARA MÓVIL
+        function compressImage(file, quality=0.7, maxWidth=600) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = event => {
@@ -458,14 +469,14 @@
                         const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', quality));
                     };
+                    img.onerror = reject;
                 };
-                reader.onerror = error => reject(error);
+                reader.onerror = reject;
             });
         }
 
         function toggleRadio() {
-            const r = document.getElementById('radio');
-            const btn = document.getElementById('play-icon');
+            const r = document.getElementById('radio'); const btn = document.getElementById('play-icon');
             if (r.paused) { r.play(); btn.className = "fas fa-pause"; } 
             else { r.pause(); btn.className = "fas fa-play"; }
         }
@@ -476,7 +487,7 @@
                 user=u; 
                 document.getElementById('user-info').style.display = 'flex';
                 document.getElementById('user-info').innerHTML=`<img src="${u.photoURL}" class="avatar"> <div style="font-size:12px;"><b>${u.displayName}</b></div>`;
-                document.querySelector('.user-header button').style.display = 'none';
+                document.getElementById('btn-login-vecino').style.display = 'none';
                 document.getElementById('crm-box').style.display = 'block';
                 cargarCRM(u.uid);
             } 
@@ -486,31 +497,24 @@
         function loginFuncionario() {
             const pwd = prompt("Ingrese Contraseña de Funcionario:");
             if (pwd === "admin2026") {
-                isAdmin = true;
-                document.getElementById('panel-vecino').style.display = 'none';
-                document.getElementById('panel-funcionario').style.display = 'block';
-                document.getElementById('extra-imgs').style.display = 'none';
+                document.getElementById('modal-admin-full').style.display = 'flex';
                 cargarCRMAdmin();
             } else { alert("Contraseña incorrecta"); }
         }
         function logoutFuncionario() {
-            isAdmin = false;
-            document.getElementById('panel-vecino').style.display = 'block';
-            document.getElementById('panel-funcionario').style.display = 'none';
-            document.getElementById('extra-imgs').style.display = 'block';
+            document.getElementById('modal-admin-full').style.display = 'none';
         }
         
         function cargarCRMAdmin() {
             db.collection("tickets_ia").orderBy("fecha", "desc").onSnapshot(snap => {
                 const list = document.getElementById('admin-ticket-list'); list.innerHTML = "";
                 snap.forEach(doc => {
-                    let d = doc.data();
-                    let id = doc.id;
+                    let d = doc.data(); let id = doc.id;
                     const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
                     const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
                     
                     list.innerHTML += `
-                        <div class="ticket-card ${d.respuesta ? 'respondido' : ''}">
+                        <div class="ticket-card ${d.respuesta ? 'respondido' : ''}" style="background:#222; margin-bottom:10px; padding:10px; border-radius:5px;">
                             <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;"><span>${fecha}</span> <span>${d.nombre || 'Anon'}</span></div>
                             <div style="color:white;font-weight:bold;">${d.asunto || 'Sin Asunto'}</div>
                             <div style="color:#ddd; margin:5px 0;">${d.mensaje}</div>
@@ -532,36 +536,29 @@
             alert("Respuesta enviada.");
         }
 
-        // --- VECINO CRM ---
-        function cargarCRM(uid) {
-            db.collection("tickets_ia").where("userId", "==", uid).onSnapshot(snap => {
-                const list = document.getElementById('history-list'); list.innerHTML = "";
-                const tickets = []; snap.forEach(doc => tickets.push(doc.data()));
-                tickets.sort((a,b) => b.fecha.seconds - a.fecha.seconds);
-                if(tickets.length === 0) list.innerHTML = "<div style='color:#666;text-align:center;'>Aún no tienes reportes.</div>";
-                tickets.forEach(d => {
-                    const fecha = new Date(d.fecha.seconds * 1000).toLocaleString();
-                    const fotoHtml = d.foto ? `<img src="${d.foto}" class="ticket-img-thumb" onclick="lupa(this.src, 'Evidencia Adjunta')">` : '';
-                    list.innerHTML += `<div class="ticket-card ${d.respuesta ? 'respondido' : ''}"><div style="display:flex;justify-content:space-between;margin-bottom:5px;color:#888;font-size:10px;"><span>${fecha}</span><span class="status-pill">${d.estado || 'Recibido'}</span></div><div style="color:#eee;margin-bottom:8px;line-height:1.4;"><b style="color:white;display:block;">${d.asunto || 'Sin asunto'}</b>${d.mensaje}</div>${fotoHtml}${d.respuesta ? `<div class="ticket-resp"><i class="fas fa-reply"></i> <b>Respuesta:</b><br>${d.respuesta}</div>` : ''}</div>`;
-                });
-            });
-        }
-
+        // --- VECINO CRM (ENVÍO ROBUSTO) ---
         async function enviarReporteCRM() {
             if(!user) return alert("Por favor, inicia sesión con Google.");
             const btn = document.getElementById('btn-env-rep'); btn.disabled = true; btn.innerText = "ENVIANDO...";
+            
+            let base64 = null;
             try {
-                const file = document.getElementById('r-foto').files[0];
-                let base64 = null;
-                if(file) { 
-                    try { base64 = await compressImage(file); } 
-                    catch(e) { alert("Error al procesar la imagen."); btn.disabled=false; return; }
+                const fileInput = document.getElementById('r-foto');
+                if(fileInput.files.length > 0) { 
+                    base64 = await compressImage(fileInput.files[0]); 
                 }
-                await db.collection("tickets_ia").add({ userId: user.uid, nombre: document.getElementById('r-name').value, telefono: document.getElementById('r-phone').value, asunto: document.getElementById('r-asunto').value, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
+            } catch(e) { console.log("Error foto movil", e); } // Silencioso si falla foto
+
+            try {
+                await db.collection("tickets_ia").add({ userId: user.uid, nombre: "Vecino", telefono: document.getElementById('r-phone').value, asunto: document.getElementById('r-asunto').value, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
                 document.getElementById('success-feedback').style.display = 'block';
                 document.getElementById('r-desc').value = ""; document.getElementById('r-foto').value = "";
                 setTimeout(() => { document.getElementById('success-feedback').style.display='none'; btn.disabled=false; btn.innerText="ENVIAR A MUNICIPALIDAD"; }, 5000);
-            } catch (error) { console.error(error); alert("Error al enviar."); btn.disabled = false; btn.innerText = "ENVIAR A MUNICIPALIDAD"; }
+            } catch (error) { 
+                console.error(error); 
+                alert("Error de red. Intente nuevamente."); 
+                btn.disabled = false; btn.innerText = "ENVIAR A MUNICIPALIDAD"; 
+            }
         }
 
         function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
@@ -571,7 +568,9 @@
             document.getElementById('lupa-caption').innerText = t; document.getElementById('modal-lupa').style.display = 'flex'; 
         }
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
-        function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
+        function closeLupa(e) { 
+            if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; 
+        }
 
         // --- CABINA FOTOS ---
         let videoStream = null;
@@ -579,9 +578,9 @@
             document.getElementById('modal-camara').style.display = 'flex';
             const video = document.getElementById('cam-video');
             try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = videoStream;
-            } catch (err) { alert("No se pudo acceder a la cámara. Verifique permisos HTTPS."); cerrarCamara(); }
+            } catch (err) { alert("Cámara no disponible."); cerrarCamara(); }
         }
         function cerrarCamara() {
             document.getElementById('modal-camara').style.display = 'none';
@@ -598,8 +597,7 @@
             ctx.drawImage(v, 0, 0, c.width, c.height);
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-            const oW = 150 * (c.width / 400); 
-            const oH = 240 * (c.height / 300); 
+            const oW = 150 * (c.width / 400); const oH = 240 * (c.height / 300); 
             ctx.drawImage(overlay, c.width - oW - 20, c.height - oH, oW, oH);
 
             const link = document.createElement('a');
