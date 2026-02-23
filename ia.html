@@ -2,272 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio Digital Municipal La Serena</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-
     <style>
-        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #161616; }
-        body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
-
-        /* LAYOUT MAESTRO */
-        @media (min-width: 1024px) {
-            #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; }
-            #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
-        }
-        @media (max-width: 1023px) {
-            body, html { overflow-y: auto; }
-            #main-layout { display: flex; flex-direction: column; width: 100%; }
-            #stage-area { width: 100%; height: 500px !important; position: relative; }
-        }
-
-        /* SIDEBAR RDMLS */
-        #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
-        .escudo-img { width: 160px; margin: 0 auto 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); display: block;}
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 54px; margin: 0; line-height: 0.9; text-align: center;}
-        
-        .weather-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        
-        /* PLANIFICADOR */
-        .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); margin-top: 10px; }
-        .city-input { width: 100%; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; margin-bottom: 10px; font-size: 12px; }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; border-bottom: 1px solid #444; }
-
-        /* MAPA Y 3D */
-        #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
-        #map { width: 100%; height: 100%; z-index: 1; }
-        #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; outline: none; }
-        .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-
-        /* FORM PANEL DERECHA */
-        #form-panel { background: #111; padding: 25px; border-left: 1px solid #333; }
-        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
-        .btn-green { width: 100%; background: #2e7d32; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* LUPA Y GALERÍA */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
-        .graphic-filler:hover { transform: scale(1.02); border-color: var(--serena-gold); }
-        .modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; align-items: center; justify-content: center; }
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; }
-
-        /* GADGET IA FLOTANTE */
-        #ia-gadget { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; }
-        .ia-sphere { background: white; border-radius: 50%; padding: 8px; border: 4px solid var(--serena-gold); box-shadow: 0 0 25px rgba(255,215,0,0.6); animation: pulse-ia 2s infinite; }
-        @keyframes pulse-ia { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        #ia-frame-container { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.8); }
+        body { margin: 0; font-family: sans-serif; background: #111; color: white; display: flex; flex-direction: column; height: 100vh; }
+        #chat { flex: 1; overflow-y: auto; padding: 15px; }
+        .msg { padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; }
+        .serenito { background: #222; border-left: 3px solid gold; }
+        .form-box { background: #000; padding: 10px; border: 1px solid gold; margin-top: 5px; }
+        input, textarea { width: 100%; margin-bottom: 5px; background: #222; color: white; border: 1px solid #444; padding: 5px; box-sizing: border-box; }
+        button { width: 100%; background: #b71c1c; color: white; border: none; padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div id="main-layout">
-        <div id="sidebar">
-            <div class="radio-header">
-                <img src="escudo.png" class="escudo-img">
-                <h1 class="rdmls-sigla">RDMLS</h1>
-                <h2 style="font-family:'Oswald'; font-size:12px; color:var(--serena-gold); text-align:center;">RADIO DIGITAL MUNICIPAL</h2>
-                <div style="font-size:28px; font-family:'Oswald'; margin:15px 0; text-align:center; color:white;" id="clock">00:00:00</div>
-                <div style="text-align:center;">
-                    <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer; font-size:24px;"><i class="fas fa-play" id="play-icon"></i></button>
-                </div>
-            </div>
-            
-            <div class="weather-box">
-                 <div style="font-size:10px; color:var(--serena-gold); font-weight:bold;">CLIMA EN VIVO</div>
-                 <div style="font-size:26px; font-weight:bold;"><i class="fas fa-sun"></i> <span id="w-temp">--</span>°C</div>
-            </div>
-
-            <div class="route-box">
-                <div style="font-size:11px; color:var(--serena-gold); margin-bottom:10px; font-weight:bold;">PLANIFICADOR 2026</div>
-                <input type="text" id="city-input" class="city-input" onkeypress="if(event.key==='Enter')buscarYCalcular()" placeholder="¿A dónde viajamos hoy?">
-                <div id="route-output"></div>
-                <button id="btn-reset-route" class="btn-red" onclick="resetRoute()" style="display:none; width:100%; margin-top:8px; padding:8px; font-size:10px;">CERRAR RUTA</button>
-            </div>
-            
-            <img src="relleno-radio.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-            <img src="serenito-bus.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-        </div>
-
-        <div id="stage-area">
-            <div id="map"></div>
-            <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-100%); width:45px; z-index:20; pointer-events:none; filter: drop-shadow(0 5px 5px black);">
-            <canvas id="renderCanvas"></canvas>
-            
-            <button class="btn-tour" onclick="abrirPaseo3D()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
-        </div>
-
-        <div id="form-panel">
-            <div id="user-header-box" style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #333;">
-                <button onclick="loginGoogle()" id="btn-login" style="background:#4285F4; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; width:100%; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
-            </div>
-
-            <div id="step-1">
-                <h4 style="color:var(--serena-gold); margin-top:0;">📍 PASO 1: UBICACIÓN</h4>
-                <input type="text" id="r-dir" class="f-input" placeholder="Detectando dirección...">
-                <div style="font-size:10px; color:gold; text-align:right;" id="gps-status">GPS: --</div>
-                <button onclick="irAStep2()" class="btn-green" style="margin-top:10px;">CONFIRMAR LUGAR</button>
-            </div>
-
-            <div id="step-2" style="display:none;">
-                <h4 style="color:var(--serena-gold); margin-top:0;">📝 PASO 2: REPORTE</h4>
-                <textarea id="r-desc" class="f-input" rows="4" placeholder="Cuéntanos el problema para el Backoffice..."></textarea>
-                <button id="btn-enviar-final" onclick="enviarReporte()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
-                <p onclick="irAStep1()" style="text-align:center; color:#888; font-size:11px; margin-top:15px; cursor:pointer; text-decoration:underline;">Volver al paso anterior</p>
-            </div>
-
-            <img src="comic-cielo.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-            <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-            <img src="comic-aves.jpg" class="graphic-filler" onclick="abrirLupa(this.src)">
-        </div>
-    </div>
-
-    <div id="ia-gadget" onclick="toggleIAHub()">
-        <div class="ia-sphere">
-            <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="60">
-        </div>
-    </div>
-
-    <div id="ia-frame-container">
-        <div style="background:var(--serena-red); padding:12px; display:flex; justify-content:space-between; align-items:center;">
-            <b style="font-family:'Oswald'; letter-spacing:1px; font-size:14px;">SERENITO IA 2026</b>
-            <i class="fas fa-times" onclick="toggleIAHub()" style="cursor:pointer;"></i>
-        </div>
-        <iframe src="ia.html" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
-    </div>
-
-    <div id="modal-lupa" class="modal-lupa" onclick="this.style.display='none'">
-        <div class="close-lupa">&times;</div>
-        <img id="img-lupa-full" src="">
-    </div>
-
-    <div id="modal-tour-3d" class="modal-lupa">
-        <div class="close-lupa" onclick="document.getElementById('modal-tour-3d').style.display='none'">&times;</div>
-        <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
-    </div>
-
-    <audio id="radio-stream" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
+    <div id="chat"><div class="msg serenito">¡Hola! Soy Serenito IA. ¿En qué trámite municipal te ayudo hoy?</div></div>
+    <div style="padding:10px; display:flex; gap:5px;"><input type="text" id="in" onkeypress="if(event.key==='Enter')hablar()" placeholder="Escribe..."><button onclick="hablar()" style="width:40px;">></button></div>
 
     <script>
-        // 1. INICIO FIREBASE
-        const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
-        firebase.initializeApp(fbCfg);
-        const db = firebase.firestore(); const auth = firebase.auth();
-        let user = null;
+        const fb = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
+        firebase.initializeApp(fb);
+        const db = firebase.firestore();
 
-        // 2. MAPA LEAFLET
-        const LS = [-29.9027, -71.2520];
-        const map = L.map('map', {zoomControl:false}).setView(LS, 16);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
-        let routeLine = null;
+        const BRAIN = [
+            { keys: ["patente", "permiso", "pagar"], resp: "Puedo ayudarte con tu trámite. Completa estos datos para el Back-office:", hasForm: true }
+        ];
 
-        map.on('moveend', () => {
-            const c = map.getCenter();
-            document.getElementById('gps-status').innerText = `GPS: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`).then(r=>r.json()).then(d=>{
-                if(d.address) document.getElementById('r-dir').value = (d.address.road || "") + " " + (d.address.house_number || "");
-            });
-        });
-
-        // 3. LOGICA DE RUTAS (FÓRMULA HAVERSINE)
-        function calcDirect(lat, lon, name) {
-            const R=6371; 
-            const dLat=(lat-LS[0])*Math.PI/180; 
-            const dLon=(lon-LS[1])*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.3; // Factor de curvatura vial
-
-            document.getElementById('route-output').innerHTML = `
-                <div style="text-align:center;font-weight:bold;margin:10px 0; color:var(--serena-gold);">${name} (${dist.toFixed(1)} km)</div>
-                <div class="trans-row"><i class="fas fa-plane"></i> <span style="color:#29b6f6;">${(dist/800).toFixed(1)} h</span> Vuelo</div>
-                <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)} h</span> Auto</div>
-                <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)} h</span> Bus</div>
-                <div class="trans-row" style="border:1px solid #00e676;"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${(dist/18).toFixed(1)} h</span> Bici</div>
-            `;
-            document.getElementById('btn-reset-route').style.display='block';
-            if(routeLine) map.removeLayer(routeLine);
-            routeLine = L.polyline([LS, [lat,lon]], {color:'var(--serena-red)', weight:4, dashArray:'10,10'}).addTo(map);
-            map.fitBounds(routeLine.getBounds(), {padding:[50,50]});
-        }
-        function resetRoute(){ if(routeLine)map.removeLayer(routeLine); document.getElementById('btn-reset-route').style.display='none'; map.flyTo(LS, 17); document.getElementById('route-output').innerHTML=""; }
-        function buscarYCalcular(){
-            const q = document.getElementById('city-input').value; if(!q)return;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`).then(r=>r.json()).then(d=>{
-                if(d.length) calcDirect(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name.split(',')[0]);
-            });
+        function hablar() {
+            const i = document.getElementById('in'); const txt = i.value.toLowerCase();
+            const box = document.getElementById('chat');
+            box.innerHTML += `<div class="msg" style="background:#005c4b; align-self:flex-end;">${i.value}</div>`;
+            
+            let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
+            let res = match ? match.resp : "He recibido tu consulta. Para una respuesta oficial, ingresa tus datos aquí:";
+            let html = `<div class="msg serenito">${res}`;
+            html += `<div class="form-box"><input id="f-n" placeholder="Nombre"><textarea id="f-m" placeholder="Detalle"></textarea><button onclick="enviarTicket()">ENVIAR TICKET</button></div></div>`;
+            box.innerHTML += html;
+            i.value = ""; box.scrollTop = box.scrollHeight;
         }
 
-        // 4. MOTOR 3D PRINCIPAL (ESCENARIO)
-        const canvas = document.getElementById("renderCanvas");
-        const engine = new BABYLON.Engine(canvas, true);
-        const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color4(0,0,0,0);
-        const camera = new BABYLON.ArcRotateCamera("cam", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
-        new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
-        BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => {
-            let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); camera.lockedTarget = s;
-            scene.registerBeforeRender(()=> s.rotation.y = Math.PI);
-        });
-        engine.runRenderLoop(() => scene.render());
-
-        // 5. PASEO 3D (BLOQUEO DE PISO)
-        let tourEngine;
-        function abrirPaseo3D() {
-            document.getElementById('modal-tour-3d').style.display = 'flex';
-            if(!tourEngine) {
-                const c = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(c, true);
-                const s = new BABYLON.Scene(tourEngine); s.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                const cam = new BABYLON.ArcRotateCamera("c", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), s);
-                cam.attachControl(c, true); cam.upperBetaLimit = Math.PI / 2.2; // NO VER EL VACIO
-                new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), s);
-                const g = BABYLON.MeshBuilder.CreateGround("g", {width:1000, height:1000}, s);
-                const mat = new BABYLON.StandardMaterial("m", s); mat.diffuseTexture = new BABYLON.Texture("mapa.jpg", s); g.material = mat; 
-                let tSer, dest;
-                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", s, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); cam.lockedTarget=tSer; });
-                s.onPointerDown = (e, p) => { if (p.hit && p.pickedMesh === g) dest = p.pickedPoint; };
-                s.onBeforeRenderObservable.add(()=>{
-                    if(tSer && dest) {
-                        let diff = dest.subtract(tSer.position); diff.y = 0;
-                        if(diff.length() > 1) {
-                            let dir = diff.normalize(); tSer.position.addInPlace(dir.scale(0.5));
-                            tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
-                        } else dest = null;
-                    }
-                });
-                tourEngine.runRenderLoop(() => s.render());
-            }
+        async function enviarTicket() {
+            const n = document.getElementById('f-n').value, m = document.getElementById('f-m').value;
+            await db.collection("tickets_ia").add({ nombre: n, mensaje: m, fecha: new Date(), estado: "Pendiente" });
+            alert("¡Ticket enviado al Back-office!");
         }
-
-        // 6. FUNCIONES DE INTERFAZ
-        function toggleRadio() { const p = document.getElementById('radio-stream'); const i = document.getElementById('play-icon'); if(p.paused){p.play(); i.className="fas fa-pause";}else{p.pause(); i.className="fas fa-play";} }
-        function abrirLupa(src) { document.getElementById('img-lupa-full').src = src; document.getElementById('modal-lupa').style.display = 'flex'; }
-        function toggleIAHub() { const f = document.getElementById('ia-frame-container'); f.style.display = (f.style.display==='none'||f.style.display==='')?'block':'none'; }
-        function irAStep2() { document.getElementById('step-1').style.display='none'; document.getElementById('step-2').style.display='block'; }
-        function irAStep1() { document.getElementById('step-1').style.display='block'; document.getElementById('step-2').style.display='none'; }
-        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-        async function w(){ try{ let d=await(await fetch("https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true")).json(); document.getElementById('w-temp').innerText=d.current_weather.temperature; }catch(e){} } w();
-
-        // 7. GESTIÓN BACKOFFICE
-        function loginGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-        auth.onAuthStateChanged(u => { if(u){ user=u; document.getElementById('user-header-box').innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><img src="${u.photoURL}" style="width:35px;border-radius:50%;border:2px solid gold;"><b>${u.displayName}</b></div>`; } });
-        async function enviarReporte() {
-            if(!user) return alert("Por favor, inicia sesión con Google.");
-            const btn = document.getElementById('btn-enviar-final'); btn.innerText = "ENVIANDO..."; btn.disabled = true;
-            await db.collection("tickets_ia").add({ nombre: user.displayName, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, fecha: new Date(), estado: "Pendiente", tipo: "Reporte Vecinal" });
-            document.getElementById('step-2').style.display='none';
-            alert("¡Reporte enviado al Backoffice municipal!");
-            btn.innerText = "ENVIAR A MUNICIPALIDAD"; btn.disabled = false; irAStep1();
-        }
-
-        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); if(tourEngine) tourEngine.resize(); });
     </script>
 </body>
 </html>
