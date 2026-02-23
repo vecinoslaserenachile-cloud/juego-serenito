@@ -19,116 +19,93 @@
     <style>
         :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #111; }
         
-        /* BASE (MÓVIL POR DEFECTO) */
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; }
         
-        /* En móvil permitimos scroll vertical fluido */
+        /* MÓVIL: Scroll vertical permitido */
         body { overflow-y: auto; overflow-x: hidden; }
 
-        /* LAYOUT FLEX PARA MÓVIL (Orden Solicitado) */
+        /* LAYOUT FLEX MÓVIL */
         #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
 
-        /* ORDEN MÓVIL: 1. Header -> 2. Mapa -> 3. Formulario -> 4. Herramientas */
+        /* ORDEN MÓVIL: Header -> Mapa -> Form -> Herramientas */
         #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 50; }
-        #stage-area     { order: 2; height: 50vh; width: 100%; position: relative; z-index: 10; border-bottom: 2px solid var(--serena-gold); }
+        #stage-area     { order: 2; height: 50vh; width: 100%; position: relative; z-index: 10; border-bottom: 4px solid var(--serena-gold); }
         #form-panel     { order: 3; padding: 20px; background: var(--panel); }
-        #sidebar-tools  { order: 4; padding: 20px; background: #1a1a1a; padding-bottom: 80px; } /* Espacio final */
+        #sidebar-tools  { order: 4; padding: 20px; background: #1a1a1a; padding-bottom: 40px; } 
 
-        /* ESCRITORIO (BLINDADO - NO TOCAR) */
+        /* FOOTER MÓVIL (Clonado) */
+        #mobile-footer-clone { display: block; order: 5; text-align: center; padding: 30px 20px 80px 20px; background: #0f0f0f; border-top: 1px solid #333; }
+
+        /* ESCRITORIO (Blindado) */
         @media (min-width: 1024px) {
-            body, html { overflow: hidden; } /* Fijo en PC */
+            body, html { overflow: hidden; } 
             #main-layout {
                 display: grid;
                 grid-template-columns: 360px 1fr 360px;
                 grid-template-rows: auto 1fr;
-                grid-template-areas: 
-                    "header map form"
-                    "tools  map form";
+                grid-template-areas: "header map form" "tools map form";
                 height: 100vh;
             }
             #sidebar-header { grid-area: header; order: unset; }
             #sidebar-tools  { grid-area: tools; order: unset; overflow-y: auto; background: linear-gradient(180deg, #8e0000 0%, #5f0000 100%); }
             #stage-area     { grid-area: map; order: unset; height: 100%; border: none; }
             #form-panel     { grid-area: form; order: unset; height: 100%; overflow-y: auto; padding-bottom: 20px; }
+            #mobile-footer-clone { display: none; } /* Ocultar footer en PC */
             
-            /* Scrollbars finos PC */
             #sidebar-tools, #form-panel { scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
         }
 
-        /* --- COMPONENTES --- */
-        
-        /* HEADER IDENTIDAD */
+        /* --- ESTILOS COMPONENTES --- */
         .escudo-img { width: 90px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 35px; margin: 5px 0 0 0; line-height: 1; }
         .clock { font-family: 'Oswald'; font-size: 22px; color: var(--serena-gold); margin-bottom: 5px; }
         
-        /* MAPA Y 3D */
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        /* FORMULARIOS */
         .f-input { width: 100%; padding: 12px; margin-bottom: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; }
         .btn-red:disabled { background: #444; cursor: not-allowed; }
         
-        /* CRM */
-        .crm-box { margin-top: 20px; background: #0a0a0a; padding: 15px; border-radius: 10px; border: 1px solid #333; max-height: 300px; overflow-y: auto; }
-        .ticket-card { background: #161616; padding: 12px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 10px; font-size: 12px; }
-        .ticket-card.respondido { border-left-color: #00e676; }
-        .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
-        .ticket-resp { background: #0d2b15; padding: 8px; border-radius: 4px; margin-top: 8px; color: #69f0ae; font-style: italic; border: 1px dashed #2e7d32; }
-
-        /* HERRAMIENTAS Y CHIPS (Scroll horizontal en móvil) */
+        /* PLANIFICADOR MEJORADO (Más ancho) */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .chip-container { 
-            margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; 
-        }
-        /* Ajuste chips móvil: Scroll horizontal para "variar alternativas" */
+        .chip-container { margin-top: 15px; display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        /* Scroll horizontal en móvil para chips */
         @media (max-width: 1023px) {
-            .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; }
-            .chip { flex: 0 0 auto; } /* No encoger */
+            .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+            .chip { flex: 0 0 auto; padding: 10px 18px; font-size: 13px; } /* Más grandes y cómodos */
         }
-        .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 20px; cursor: pointer; border: 1px solid #555; color: #ddd; transition: 0.3s; }
+        
+        .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 25px; cursor: pointer; border: 1px solid #555; color: #ddd; transition: 0.3s; white-space: nowrap; }
         .chip:hover { border-color: var(--serena-gold); color: white; background: #444; }
 
-        /* IMÁGENES Y LUPA */
-        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; object-fit: cover; }
-        .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
-
+        .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
+        
         /* CHAT GADGET */
         #chat-ia-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; }
         #chat-ia-frame { display: none; position: fixed; bottom: 90px; right: 20px; width: 360px; height: 520px; background: #1a1a1a; border-radius: 15px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         @media (max-width: 1023px) { #chat-ia-frame { width: 90%; right: 5%; bottom: 80px; height: 60vh; } }
 
-        /* MODAL LUPA (ZOOM MÓVIL) */
-        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; overflow: hidden; }
-        
-        /* Imagen en móvil: Ancho completo, scroll si es larga */
-        #img-f-zoom { 
-            width: auto; max-width: 95%; max-height: 80vh; 
-            border: 2px solid white; border-radius: 5px; 
-            transition: transform 0.3s ease; /* Para el zoom */
-            cursor: zoom-in;
-        }
-        /* Clase para activar zoom al tocar */
+        /* MODALES */
+        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 10px; }
+        #img-f-zoom { width: auto; max-width: 95%; max-height: 80vh; border: 2px solid white; border-radius: 5px; transition: transform 0.3s ease; cursor: zoom-in; }
         #img-f-zoom.zoomed { transform: scale(2.5); cursor: zoom-out; }
-
-        @media (max-width: 1023px) {
-            #img-f-zoom { width: 100%; height: auto; max-height: unset; object-fit: contain; } /* Full width móvil */
-            #modal-lupa { overflow-y: auto; display: block; padding-top: 50px; } /* Permitir scroll nativo */
-            .close-lupa { position: fixed; top: 20px; right: 20px; z-index: 31000; }
-        }
-
-        #lupa-caption { margin-top: 10px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 18px; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; }
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        @media (max-width: 1023px) { #img-f-zoom { width: 100%; height: auto; max-height: unset; object-fit: contain; } } /* Ancho total móvil */
         
+        #lupa-caption { margin-top: 15px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 18px; padding: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; }
+        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
+        
+        /* CRM */
+        .ticket-card { background: #161616; padding: 12px; border-radius: 6px; border-left: 3px solid #b71c1c; margin-bottom: 10px; font-size: 12px; }
+        .ticket-card.respondido { border-left-color: #00e676; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
     </style>
 </head>
-<body onload="crearFavicon()">
+<body onload="initApp()">
 
     <div id="main-layout">
         
@@ -152,7 +129,6 @@
                     <div class="chip" onclick="calcDirectReal(-30.2905, -71.4939, 'Tongoy')">Tongoy</div>
                     <div class="chip" onclick="calcDirectReal(-30.1963, -71.4172, 'Guanaqueros')">Guanaqueros</div>
                     <div class="chip" onclick="calcDirectReal(-30.0356, -70.5202, 'Paihuano')">Paihuano</div>
-                    <div class="chip" onclick="calcDirectReal(-30.6936, -70.9575, 'Monte Patria')">M. Patria</div>
                     <div class="chip" onclick="calcDirectReal(-33.4489, -70.6693, 'Santiago')">Santiago</div>
                     <div class="chip" onclick="calcDirectReal(-36.8201, -73.0444, 'Concepción')">Concepción</div>
                     <div class="chip" onclick="calcDirectReal(-12.0464, -77.0428, 'Lima')">Lima</div>
@@ -161,16 +137,14 @@
             </div>
             <div style="margin-top:20px;">
                 <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS: Conectando a la región.')">
-                <p class="img-desc">Cabina RDMLS: La voz local.</p>
                 <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Buses Eléctricos 2026: Transporte sustentable.')">
-                <p class="img-desc">Electromovilidad: Futuro verde.</p>
             </div>
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO 3D</button>
+            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO 3D</button>
         </div>
 
         <div id="form-panel">
@@ -194,17 +168,21 @@
             <button id="btn-env-rep" onclick="enviarReporteCRM()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
             <div id="success-feedback">🌟 ¡MUCHAS GRACIAS! Reporte enviado.</div>
 
-            <div id="crm-box" class="crm-box" style="display:none;">
+            <div id="crm-box" class="crm-box" style="margin-top:20px; background:#0a0a0a; padding:15px; border-radius:10px; border:1px solid #333; display:none;">
                 <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:5px;">HISTORIAL DE REPORTES</div>
                 <div id="history-list"></div>
             </div>
 
             <div style="margin-top:20px;">
                 <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Capital Mundial de la Astronomía.')">
-                <p class="img-desc">Astronomía: Ventana al universo.</p>
                 <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Plan Serena: Identidad neocolonial.')">
-                <p class="img-desc">Patrimonio: Historia viva.</p>
             </div>
+        </div>
+
+        <div id="mobile-footer-clone">
+            <img src="escudo.png" class="escudo-img" style="width:70px; opacity:0.8;">
+            <h1 class="rdmls-sigla" style="font-size:30px; opacity:0.8;">RDMLS</h1>
+            <div style="font-size:12px; color:#666; margin-top:10px;">La Serena 2026 ©</div>
         </div>
     </div>
 
@@ -231,6 +209,17 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
+        function initApp() {
+            crearFavicon();
+            // AUTOPLAY HACK: Intenta reproducir, si falla espera click
+            const r = document.getElementById('radio');
+            r.play().catch(() => {
+                console.log("Autoplay bloqueado. Esperando interacción.");
+                const startAudio = () => { r.play(); document.removeEventListener('click', startAudio); };
+                document.addEventListener('click', startAudio);
+            });
+        }
+
         function crearFavicon() {
             const c = document.createElement('canvas'); c.width=64; c.height=64; const x=c.getContext('2d');
             x.fillStyle='#b71c1c'; x.fillRect(0,0,64,64); x.fillStyle='white'; x.font='bold 20px Oswald'; x.textAlign='center'; x.fillText('RDMLS',32,40);
@@ -366,13 +355,9 @@
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
         function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
         
-        // LUPA MEJORADA (Zoom)
         function lupa(s, t) { 
-            const img = document.getElementById('img-f-zoom');
-            img.src = s; 
-            img.classList.remove('zoomed'); // Reset zoom
-            document.getElementById('lupa-caption').innerText = t; 
-            document.getElementById('modal-lupa').style.display = 'flex'; 
+            const img = document.getElementById('img-f-zoom'); img.src = s; img.classList.remove('zoomed'); 
+            document.getElementById('lupa-caption').innerText = t; document.getElementById('modal-lupa').style.display = 'flex'; 
         }
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
