@@ -115,6 +115,9 @@
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
+        
+        /* Contenedor del ícono para rotación */
+        .rotatable-icon { transition: transform 0.1s linear; transform-origin: center center; }
     </style>
 </head>
 <body onload="initApp()">
@@ -246,21 +249,30 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // GLOBALES
         let serenitoMesh = null;
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
         
-        // ICONO 2D con contenedor rotatorio
+        // ICONO SERENITO STANDBY
         let sIcon = L.divIcon({ 
-            html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
+            html: `<div id="serenito-body" style="position:relative; width:50px; height:80px;">
                     <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
                     <img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" style="width:50px; position:absolute; bottom:15px; left:0; z-index:2; filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));">
                    </div>`, 
             className: 'custom-serenito', 
             iconSize: [50, 80], 
             iconAnchor: [25, 80] 
+        });
+
+        // ICONO AUTO ROJO (PARA EL TRAYECTO)
+        let carIcon = L.divIcon({
+            html: `<div id="car-body" style="position:relative; width:40px; height:40px; transition: transform 0.1s linear;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3097/3097180.png" style="width:40px; filter: drop-shadow(0 0 5px black);">
+                   </div>`,
+            className: 'custom-car',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
         });
         
         const ticketIcon = L.icon({
@@ -309,11 +321,7 @@
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
         map.on('moveend', () => {
             if (routeInterval) return; 
-            
             const c = map.getCenter(); serenitoMarker.setLatLng(c);
-            const iconBody = document.getElementById('serenito-body');
-            if(iconBody) iconBody.style.transform = 'rotate(0deg)';
-
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
             if(!esValido) {
@@ -335,7 +343,7 @@
         });
 
         // ----------------------------------------------------
-        // LÓGICA DE RUTA 2D CON GIRO REAL
+        // LÓGICA DE RUTA 2D CON AUTO GIRATORIO
         // ----------------------------------------------------
         function getBearing(lat1, lng1, lat2, lng2) {
             const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
@@ -375,23 +383,13 @@
             destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // 1. ROTACIÓN TANQUE (MAPA 2D)
-            const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
-            const iconBody = document.getElementById('serenito-body');
-            
-            // INTENTO DIRECTO
-            if(iconBody) {
-                // Ajuste: 0 deg = Norte. Sprite = Sur (Frente). Corrección 180.
-                iconBody.style.transform = `rotate(${angle + 180}deg)`;
-            } else {
-                // INTENTO DIFERIDO (POR SI LEAFLET REDIBUJA)
-                setTimeout(() => {
-                    const ib = document.getElementById('serenito-body');
-                    if(ib) ib.style.transform = `rotate(${angle + 180}deg)`;
-                }, 100);
-            }
+            // 1. CAMBIO A AUTO
+            serenitoMarker.setIcon(carIcon);
 
-            // 2. ANIMACIÓN (LOOP)
+            // 2. CALCULAR RUMBO
+            const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
+            
+            // 3. ANIMAR (LOOP)
             let steps = 100;
             let currentStep = 0;
             const deltaLat = (endPoint[0] - startPoint[0]) / steps;
@@ -404,9 +402,9 @@
                 const newLng = startPoint[1] + (deltaLng * currentStep);
                 serenitoMarker.setLatLng([newLat, newLng]);
                 
-                // REFORZAR ROTACIÓN EN CADA PASO (POR SI LEAFLET RESETEA)
-                const ib = document.getElementById('serenito-body');
-                if(ib) ib.style.transform = `rotate(${angle + 180}deg)`;
+                // ROTAR AUTO EN CADA FRAME
+                const carBody = document.getElementById('car-body');
+                if(carBody) carBody.style.transform = `rotate(${angle}deg)`; // Autos apuntan al norte por defecto, angle es directo
                 
             }, 50);
         }
@@ -417,9 +415,11 @@
             if(destMarker) map.removeLayer(destMarker);
             document.getElementById('btn-reset-route').style.display='none'; 
             map.flyTo(LS, 17); 
+            
+            // VOLVER A SERENITO
+            serenitoMarker.setIcon(sIcon);
             serenitoMarker.setLatLng(LS);
-            const iconBody = document.getElementById('serenito-body');
-            if(iconBody) iconBody.style.transform = 'rotate(0deg)'; 
+            
             document.getElementById('route-output').innerHTML=""; 
         }
 
@@ -511,7 +511,6 @@
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
-        // SOLO SERENITO EN HOME (ROTADO 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
             let s = m[0]; 
             s.scaling = new BABYLON.Vector3(12,12,-12); 
@@ -540,7 +539,7 @@
                 gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
                 ground.material = gm;
 
-                // EDIFICIOS A NIVEL SUELO (Y=16) - EQUILIBRIO PERFECTO
+                // EDIFICIOS NIVELADOS (Y=16)
                 BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ 
                     m[0].scaling = new BABYLON.Vector3(35,35,35); 
                     m[0].position.x = 100; 
@@ -552,11 +551,7 @@
                     m[0].position.y = 16; 
                 });
 
-                // SERENITO TANK
-                let tSerenito = null;
-                let tTarget = null;
-                let tWalking = false;
-
+                let tSerenito = null; let tTarget = null; let tWalking = false;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ 
                     tSerenito = m[0]; 
                     tSerenito.scaling = new BABYLON.Vector3(10,10,-10); 
@@ -580,7 +575,7 @@
                         tTarget = pick.pickedPoint;
                         tTarget.y = 0;
                         tSerenito.lookAt(tTarget);
-                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // 180 GRADOS PARA CORREGIR ESPALDA
+                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); 
                         tWalking = true;
                     } 
                 };
