@@ -18,9 +18,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; }
+        :root { --serena-red: #b71c1c; --serena-gold: #ffd700; --dark: #0a0a0a; --panel: #111; }
         body, html { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--dark); color: white; width: 100%; height: 100%; overflow: hidden; }
 
+        /* LAYOUT 3 COLUMNAS */
         @media (min-width: 1024px) {
             #main-layout { display: grid; width: 100vw; height: 100vh; grid-template-columns: 360px 1fr 340px; }
             #sidebar, #form-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222; }
@@ -30,29 +31,45 @@
         #sidebar { background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,0.6); }
         .escudo-img { width: 140px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
         .rdmls-sigla { font-family: 'Oswald'; font-size: 50px; margin: 0; line-height: 0.9; text-align: center; }
+        .clock { font-family: 'Oswald'; font-size: 30px; text-align: center; color: var(--serena-gold); margin: 10px 0; }
         
+        /* PLANIFICADOR */
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
-        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; }
+        .trans-row { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 11px; margin-top: 5px; border-bottom: 1px solid #444; }
+        .chip-container { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .chip { background: #222; padding: 5px 10px; font-size: 10px; border-radius: 20px; cursor: pointer; border: 1px solid #444; color: #ccc; }
+        .chip:hover { border-color: var(--serena-gold); color: white; }
 
-        /* COLUMNA DERECHA */
-        #form-panel { background: #111; padding: 20px; border-left: 1px solid #333; }
-        .img-container { position: relative; margin-top: 15px; }
-        .graphic-filler { width: 100%; border-radius: 8px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; display: block; }
-        .graphic-filler:hover { border-color: var(--serena-gold); transform: scale(1.02); }
-        .img-caption { font-size: 11px; color: #aaa; margin-top: 5px; font-style: italic; line-height: 1.3; }
-
-        /* MODALES */
-        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
-        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
-        #lupa-text { margin-top: 20px; max-width: 800px; text-align: center; font-size: 18px; color: var(--serena-gold); font-family: 'Oswald'; }
-
-        /* ESTILOS BLINDADOS (DISTANCIAS Y TOUR) */
+        /* COLUMNA CENTRAL */
         #stage-area { position: relative; flex-grow: 1; background: #222; overflow: hidden; }
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 12px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        /* COLUMNA DERECHA */
+        #form-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; }
+        .f-input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; box-sizing: border-box; }
+        .btn-red { width: 100%; background: var(--serena-red); color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* IMÁGENES Y LUPA */
+        .img-item { margin-top: 15px; }
+        .graphic-filler { width: 100%; border-radius: 8px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
+        .graphic-filler:hover { border-color: var(--serena-gold); transform: scale(1.02); }
+        .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; }
+
+        /* MODALES */
+        #modal-lupa { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 30000; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+        .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        #lupa-caption { margin-top: 20px; max-width: 800px; text-align: center; color: var(--serena-gold); font-family: 'Oswald'; font-size: 20px; }
+
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
-        .btn-close-route { width: 100%; background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 5px; margin-top: 10px; cursor: pointer; }
+        
+        /* CHAT GADGET */
+        #chat-ia-trigger { position: fixed; bottom: 30px; right: 25px; z-index: 15000; cursor: pointer; }
+        .chat-sphere { background: white; border-radius: 50%; padding: 8px; border: 4px solid var(--serena-gold); box-shadow: 0 0 25px rgba(255,215,0,0.6); }
+        #chat-ia-frame { display: none; position: fixed; bottom: 110px; right: 25px; width: 360px; height: 550px; background: #1a1a1a; border-radius: 20px; border: 2px solid var(--serena-gold); z-index: 15000; overflow: hidden; }
+
+        #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
     </style>
 </head>
 <body>
@@ -61,7 +78,7 @@
         <div id="sidebar">
             <img src="escudo.png" class="escudo-img">
             <h1 class="rdmls-sigla">RDMLS</h1>
-            <div style="font-family:'Oswald'; font-size:30px; text-align:center; color:var(--serena-gold);" id="clock">00:00:00</div>
+            <div class="clock" id="clock">00:00:00</div>
             
             <div style="text-align:center;">
                 <button onclick="toggleRadio()" style="background:white; color:var(--serena-red); border:none; width:60px; height:60px; border-radius:50%; cursor:pointer;"><i class="fas fa-play" id="play-icon"></i></button>
@@ -69,70 +86,98 @@
 
             <div class="route-box">
                 <div style="font-size:11px; color:var(--serena-gold); font-weight:bold; margin-bottom:10px;">PLANIFICADOR 2026</div>
-                <input type="text" id="city-input" style="width:100%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:5px;" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde vamos?">
+                <input type="text" id="city-input" class="f-input" onkeypress="if(event.key==='Enter')buscarRutaReal()" placeholder="¿A dónde vamos?">
                 <div id="route-output"></div>
+                <div class="chip-container">
+                    <div class="chip" onclick="calcDirectReal(-33.4489, -70.6693, 'Santiago')">Santiago</div>
+                    <div class="chip" onclick="calcDirectReal(-36.8201, -73.0444, 'Concepción')">Concepción</div>
+                    <div class="chip" onclick="calcDirectReal(-30.0330, -70.7081, 'Vicuña')">Vicuña</div>
+                    <div class="chip" onclick="calcDirectReal(-29.9533, -71.3395, 'Coquimbo')">Coquimbo</div>
+                    <div class="chip" onclick="calcDirectReal(-30.2292, -71.0851, 'Andacollo')">Andacollo</div>
+                    <div class="chip" onclick="calcDirectReal(-30.6011, -71.1990, 'Ovalle')">Ovalle</div>
+                    <div class="chip" onclick="calcDirectReal(-29.2519, -71.4646, 'Pta. Choros')">Punta de Choros</div>
+                </div>
             </div>
 
-            <div class="img-container">
-                <img src="relleno-radio.jpg" class="graphic-filler" onclick="abrirLupaConTexto(this.src, 'Nuestra Radio Digital Municipal transmite cultura, noticias y compañía a todos los rincones de la comuna las 24 horas del día.')">
-                <p class="img-caption">Estudios RDMLS: Conectando a la comunidad.</p>
+            <div class="img-item">
+                <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS: Transmisión en vivo de nuestra Radio Digital Municipal, conectando a toda la comunidad.')">
+                <p class="img-desc">Cabina RDMLS: Voz e identidad local.</p>
             </div>
-            
-            <div class="img-container">
-                <img src="serenito-bus.jpg" class="graphic-filler" onclick="abrirLupaConTexto(this.src, 'La nueva flota de buses eléctricos representa el compromiso de La Serena con la electromovilidad y un transporte público digno y sustentable.')">
-                <p class="img-caption">Electromovilidad: El futuro del transporte papayero.</p>
+            <div class="img-item">
+                <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Buses Eléctricos 2026: La Serena lidera la electromovilidad en regiones con transporte moderno y sustentable.')">
+                <p class="img-desc">Recorridos E01/E02: Transporte del futuro.</p>
             </div>
         </div>
 
         <div id="stage-area">
             <div id="map"></div>
             <canvas id="renderCanvas"></canvas>
-            <button class="btn-tour" onclick="abrirPaseoReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
+            <button class="btn-tour" onclick="abrirTourReal()"><i class="fas fa-street-view"></i> PASEO HISTÓRICO</button>
         </div>
 
         <div id="form-panel">
-            <div id="user-zone" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+            <div id="user-header" style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
                 <button onclick="login()" style="width:100%; background:#4285f4; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;"><i class="fab fa-google"></i> Acceso Vecino</button>
             </div>
-
-            <div class="img-container">
-                <img src="comic-cielo.jpg" class="graphic-filler" onclick="abrirLupaConTexto(this.src, 'La Serena es la puerta de entrada a los cielos más limpios del mundo. Nuestra identidad está escrita en las estrellas.')">
-                <p class="img-caption">Capital de la Astronomía: Mirando al universo.</p>
+            <h4 style="color:var(--serena-gold); margin:0 0 10px 0;">CENTRAL DE REQUERIMIENTOS</h4>
+            <input type="text" id="r-dir" class="f-input" placeholder="Dirección del reporte...">
+            <textarea id="r-desc" class="f-input" rows="3" placeholder="Describe el problema..."></textarea>
+            
+            <div style="margin-bottom:10px;">
+                <label style="font-size:10px; color:#888;">ADJUNTAR FOTO/CÁMARA:</label>
+                <input type="file" id="r-foto" accept="image/*" capture="environment" style="font-size:11px; color:white; margin-top:5px; width:100%;">
             </div>
+            
+            <button id="btn-env-rep" onclick="enviarGestion()" class="btn-red">ENVIAR A MUNICIPALIDAD</button>
+            <div id="success-feedback">🌟 ¡MUCHAS GRACIAS!<br>Reporte recibido en el Back-office.</div>
 
-            <div class="img-container">
-                <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="abrirLupaConTexto(this.src, 'El Plan Serena transformó nuestra arquitectura, protegiendo el estilo neocolonial que nos hace únicos en todo Chile.')">
-                <p class="img-caption">Arquitectura Única: Resguardando nuestra historia.</p>
+            <div class="img-item">
+                <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena: Somos la capital mundial de la astronomía, un patrimonio que protegemos de la contaminación lumínica.')">
+                <p class="img-desc">Astronomía: Nuestra ventana al universo.</p>
             </div>
-
-            <div class="img-container">
-                <img src="comic-aves.jpg" class="graphic-filler" onclick="abrirLupaConTexto(this.src, 'Los humedales del Río Elqui son un santuario de biodiversidad que debemos proteger para las futuras generaciones.')">
-                <p class="img-caption">Naturaleza Viva: Protección de nuestros humedales.</p>
+            <div class="img-item">
+                <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Plan Serena: Conservamos el estilo neocolonial único que define nuestro casco histórico desde 1948.')">
+                <p class="img-desc">Patrimonio: Historia en cada fachada.</p>
+            </div>
+            <div class="img-item">
+                <img src="comic-aves.jpg" class="graphic-filler" onclick="lupa(this.src, 'Biodiversidad del Elqui: El humedal es hogar de especies migratorias y un ecosistema vital para nuestra región.')">
+                <p class="img-desc">Humedal: Naturaleza y conservación.</p>
             </div>
         </div>
+    </div>
+
+    <div id="chat-ia-trigger" onclick="toggleIAHub()">
+        <div class="chat-sphere"><img src="https://cdn-icons-png.flaticon.com/512/3660/3660358.png" width="55"></div>
+    </div>
+    <div id="chat-ia-frame">
+        <div style="background:var(--serena-red); padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid gold;">
+            <b style="font-family:'Oswald'; color:white; font-size:14px;">SERENITO IA 2026</b>
+            <i class="fas fa-times" onclick="toggleIAHub()" style="color:white; cursor:pointer;"></i>
+        </div>
+        <iframe src="ia.html" style="width:100%; height:calc(100% - 40px); border:none;"></iframe>
     </div>
 
     <div id="modal-lupa" onclick="this.style.display='none'">
         <div class="close-lupa">&times;</div>
-        <img id="img-full-zoom" src="" style="max-height:70%; border:4px solid white; border-radius:10px;">
-        <div id="lupa-text"></div>
+        <img id="img-f-zoom" src="" style="max-height:70%; border:4px solid white; border-radius:10px;">
+        <div id="lupa-caption"></div>
     </div>
 
     <div id="modal-tour-3d">
-        <button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 20px; border-radius:30px; cursor:pointer;" onclick="document.getElementById('modal-tour-3d').style.display='none'">CERRAR PASEO</button>
+        <button style="position:absolute; top:20px; right:20px; z-index:21000; background:var(--serena-red); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('modal-tour-3d').style.display='none'">VOLVER AL PORTAL</button>
         <canvas id="tour-canvas" style="width:100%; height:100%;"></canvas>
     </div>
 
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // FIREBASE Y CORE
+        // CORE FIREBASE
         const fbCfg = { apiKey: "AIzaSyCDUhik-oYwJ-yBkBYAohw6DJct5FQ78w4", authDomain: "laserena-d1263.firebaseapp.com", projectId: "laserena-d1263", storageBucket: "laserena-d1263.firebasestorage.app", messagingSenderId: "283725387947", appId: "1:283725387947:web:898aa22c80c2fadbe8bfee" };
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore(); const auth = firebase.auth();
-        let routeLine = null;
+        let user = null, routeLine = null;
 
-        // MAPA Y 3D (BLINDADOS)
+        // MAPA Y 3D IDLE (BLINDADOS)
         const LS = [-29.9027, -71.2520];
         const map = L.map('map', {zoomControl:false}).setView(LS, 16);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
@@ -158,24 +203,67 @@
                 <div class="trans-row"><i class="fas fa-plane"></i> <span>${(dist/800).toFixed(1)} h</span> Avión</div>
                 <div class="trans-row"><i class="fas fa-car"></i> <span>${(dist/95).toFixed(1)} h</span> Auto</div>
                 <div class="trans-row"><i class="fas fa-bus"></i> <span>${(dist/75).toFixed(1)} h</span> Bus</div>
-                <button class="btn-close-route" onclick="limpiarRuta()">CERRAR RESULTADOS</button>
+                <div class="trans-row"><i class="fas fa-bicycle"></i> <span style="color:#00e676;">${(dist/18).toFixed(1)} h</span> Bici</div>
+                <button onclick="limpiarRuta()" style="width:100%; background:#333; color:white; border:none; padding:8px; margin-top:10px; border-radius:5px; cursor:pointer;">CERRAR RESULTADOS</button>
             `;
             if(routeLine) map.removeLayer(routeLine);
             routeLine = L.polyline([LS, [lat,lon]], {color:'var(--serena-red)', weight:4, dashArray:'10,10'}).addTo(map);
-            map.fitBounds(routeLine.getBounds());
+            map.fitBounds(routeLine.getBounds(), {padding:[50,50]});
         }
         function limpiarRuta() { if(routeLine) map.removeLayer(routeLine); document.getElementById('route-output').innerHTML = ""; map.flyTo(LS, 16); }
 
-        // FUNCIONES DE INTERFAZ Y LUPA
-        function abrirLupaConTexto(src, texto) {
-            document.getElementById('img-full-zoom').src = src;
-            document.getElementById('lupa-text').innerText = texto;
-            document.getElementById('modal-lupa').style.display = 'flex';
+        // PASEO HISTÓRICO (BLINDADO)
+        let tourEngine;
+        function abrirTourReal() {
+            document.getElementById('modal-tour-3d').style.display = 'block';
+            if(!tourEngine) {
+                const tc = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(tc, true);
+                const ts = new BABYLON.Scene(tourEngine); ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
+                const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
+                tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
+                new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
+                const g = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
+                const tm = new BABYLON.StandardMaterial("tm", ts); tm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); g.material = tm;
+                let tSer, dest;
+                BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ tSer=m[0]; tSer.scaling=new BABYLON.Vector3(10,10,-10); tCam.lockedTarget=tSer; });
+                ts.onPointerDown = (e, p) => { if (p.hit && p.pickedMesh === g) dest = p.pickedPoint; };
+                ts.onBeforeRenderObservable.add(()=>{
+                    if(tSer && dest) {
+                        let diff = dest.subtract(tSer.position); diff.y = 0;
+                        if(diff.length() > 1) {
+                            let dir = diff.normalize(); tSer.position.addInPlace(dir.scale(0.6));
+                            tSer.lookAt(dest); tSer.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL);
+                        } else dest = null;
+                    }
+                });
+                tourEngine.runRenderLoop(() => ts.render());
+            }
         }
 
+        // FUNCIONES DE INTERFAZ
+        function lupa(src, txt) { 
+            document.getElementById('img-f-zoom').src = src; 
+            document.getElementById('lupa-caption').innerText = txt;
+            document.getElementById('modal-lupa').style.display = 'flex'; 
+        }
         function toggleRadio() { const r=document.getElementById('radio'); r.paused?r.play():r.pause(); }
+        function toggleIAHub() { const f = document.getElementById('chat-ia-frame'); f.style.display = (f.style.display==='none'?'block':'none'); }
+        function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        auth.onAuthStateChanged(u => { if(u){ user=u; document.getElementById('user-header').innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><img src="${u.photoURL}" style="width:30px;border-radius:50%;border:2px solid gold;"><b>${u.displayName}</b></div>`; } });
+        
+        async function enviarGestion() {
+            if(!user) return alert("Inicia sesión primero.");
+            const btn = document.getElementById('btn-env-rep'); btn.disabled = true;
+            const file = document.getElementById('r-foto').files[0];
+            let base64 = null;
+            if(file) { base64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(file); }); }
+            await db.collection("tickets_ia").add({ nombre: user.displayName, mensaje: document.getElementById('r-desc').value, direccion: document.getElementById('r-dir').value, foto: base64, fecha: new Date(), estado: "Pendiente" });
+            document.getElementById('success-feedback').style.display = 'block';
+            setTimeout(() => { document.getElementById('success-feedback').style.display='none'; btn.disabled=false; }, 5000);
+        }
+
         setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
-        window.addEventListener("resize", () => engine.resize());
+        window.addEventListener("resize", () => { engine.resize(); map.invalidateSize(); if(tourEngine) tourEngine.resize(); });
     </script>
 </body>
 </html>
