@@ -6,21 +6,21 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body { margin: 0; font-family: sans-serif; background: #111; color: white; display: flex; flex-direction: column; height: 100vh; }
-        #chat { flex: 1; overflow-y: auto; padding: 15px; }
-        .msg { padding: 10px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; line-height: 1.4; border: 1px solid transparent; }
+        #chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px; border-radius: 12px; max-width: 85%; font-size: 13px; line-height: 1.4; }
         .serenito { background: #222; border-left: 4px solid #ffd700; align-self: flex-start; }
         .vecino { background: #005c4b; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 2px; }
         .form-ticket { background: #000; padding: 12px; border: 1px solid gold; border-radius: 8px; margin-top: 10px; }
         input, textarea { width: 100%; margin-bottom: 5px; background: #222; color: white; border: 1px solid #444; padding: 10px; box-sizing: border-box; border-radius: 4px; }
         button { width: 100%; background: #b71c1c; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .success-box { border-left: 4px solid #00e676; background: rgba(0, 230, 118, 0.1); padding: 10px; margin-top: 10px; color: #00e676; font-weight: bold; }
+        .success-box { border-left: 4px solid #00e676; background: rgba(0, 230, 118, 0.1); padding: 10px; margin-top: 10px; color: #00e676; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
-    <div id="chat"><div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Estoy entrenado con los manuales de Rentas, Fiscalización y Eventos 2026. ¿Qué necesitas gestionar hoy?</div></div>
+    <div id="chat"><div class="msg serenito">🌟 ¡Hola! Soy **Serenito IA**. Hoy es 22 de febrero de 2026. Estoy entrenado con los manuales de Patentes e Inspecciones. ¿En qué te ayudo?</div></div>
     <div style="padding:10px; background:#1a1a1a; display:flex; gap:5px; border-top: 1px solid #333;">
         <input type="text" id="in" placeholder="Escribe y presiona Enter..." onkeypress="if(event.key==='Enter')hablar()">
-        <button onclick="hablar()" style="width:50px;">></button>
+        <button onclick="hablar()" style="width:50px; background:#b71c1c; color:white; border:none; border-radius:5px; cursor:pointer;">></button>
     </div>
 
     <script>
@@ -28,12 +28,12 @@
         firebase.initializeApp(fbCfg);
         const db = firebase.firestore();
 
-        // ENTRENAMIENTO EXTRAÍDO DE LOS MANUALES PDF
+        // CEREBRO ENTRENADO CON TUS DOCUMENTOS
         const BRAIN = [
-            { keys: ["patente", "industrial", "comercial", "negocio"], resp: "🏢 **Trámite de Patente:** Según el manual de Rentas, necesitas acreditar domicilio, iniciación ante el SII y verificar zonificación. ¿Quieres que abra un ticket para que el equipo de Patentes revise tu caso?", hasForm: true, type: "Patentes" },
-            { keys: ["denuncia", "ruidos", "ilegal", "inspector"], resp: "⚖️ **Fiscalización:** Las denuncias se ingresan por Oficina de Partes y se asigna un inspector municipal. Completa este ticket para derivarlo a la Unidad de Inspección:", hasForm: true, type: "Fiscalización" },
-            { keys: ["permiso", "pagar", "vehiculo"], resp: "🚗 **Permiso 2026:** Atendemos de 09:00 a 14:00 en puntos como ex CCU y Outlet Peñuelas. ¿Necesitas ayuda técnica con tu pago?", hasForm: true, type: "Tránsito" },
-            { keys: ["bus", "electrico", "pago"], resp: "🚌 **Aviso:** Los buses eléctricos E01/E02 ya no aceptan efectivo. Solo pago digital." }
+            { keys: ["patente", "industrial", "negocio", "comercial"], resp: "🏢 **Trámite de Patente:** Según el manual municipal, necesitas RUT, acreditación de domicilio y zonificación aprobada. ¿Quieres que abra un ticket para Rentas?", hasForm: true, type: "Patentes" },
+            { keys: ["denuncia", "ruidos", "inspector", "ilegal"], resp: "⚖️ **Fiscalización:** Las denuncias van a la Oficina de Partes y se asigna un inspector. Completa el ticket para derivarlo a Inspección:", hasForm: true, type: "Fiscalización" },
+            { keys: ["permiso", "pagar", "circulacion"], resp: "🚗 **Permiso 2026:** Atendemos de 09:00 a 14:00 en puntos como CCU y Outlet Peñuelas. ¿Necesitas ayuda técnica?" },
+            { keys: ["bus", "electrico", "pago"], resp: "🚌 **Aviso:** Los buses E01 y E02 no aceptan efectivo. Solo pago digital." }
         ];
 
         function hablar() {
@@ -43,10 +43,10 @@
             
             setTimeout(() => {
                 let match = BRAIN.find(k => k.keys.some(key => txt.includes(key)));
-                let res = match ? match.resp : "Entiendo tu consulta. Para darte una solución oficial con base en nuestros manuales, completemos este ticket para el funcionario municipal:";
+                let res = match ? match.resp : "Entiendo tu consulta. Para darte una solución oficial basada en nuestros manuales, completemos este ticket:";
                 let html = `<div class="msg serenito">${res}`;
                 if(match?.hasForm || !match) {
-                    html += `<div class="form-ticket"><input id="f-n" placeholder="Nombre"><textarea id="f-m" placeholder="Detalle de tu solicitud..."></textarea><button onclick="ticket('${match?.type || 'General'}')">ENVIAR A BACK-OFFICE</button></div>`;
+                    html += `<div class="form-ticket"><input id="f-n" placeholder="Tu Nombre"><textarea id="f-m" placeholder="Detalle de tu solicitud..."></textarea><button onclick="ticket('${match?.type || 'General'}')">ENVIAR A BACK-OFFICE</button></div>`;
                 }
                 html += `</div>`;
                 box.innerHTML += html;
@@ -57,10 +57,10 @@
 
         async function ticket(tipo) {
             const n = document.getElementById('f-n').value, m = document.getElementById('f-m').value;
-            if(!m) return alert("Por favor, escribe el detalle.");
+            if(!m) return alert("Escribe el detalle.");
             await db.collection("tickets_ia").add({ nombre: n, mensaje: m, tipo: tipo, fecha: new Date(), estado: "Pendiente" });
             const box = document.getElementById('chat');
-            box.innerHTML += `<div class="success-box">✅ ¡MUCHAS GRACIAS! Tu solicitud ha sido ingresada. Un funcionario revisará el manual de procedimientos y te contactará.</div>`;
+            box.innerHTML += `<div class="success-box">🌟 ¡MUCHAS GRACIAS! Tu solicitud ha sido ingresada con éxito. Un funcionario municipal revisará tu caso pronto.</div>`;
             box.scrollTop = box.scrollHeight;
         }
     </script>
