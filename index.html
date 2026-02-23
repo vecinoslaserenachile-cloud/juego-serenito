@@ -51,29 +51,18 @@
         @media (max-width: 1023px) {
             body { overflow-y: auto; overflow-x: hidden; }
             #main-layout { display: flex; flex-direction: column; width: 100%; min-height: 100vh; }
-            
             #sidebar-wrapper { display: contents; } 
-
-            /* 1. IDENTIDAD */
             #sidebar-header { order: 1; padding: 15px; background: linear-gradient(180deg, #b71c1c 0%, #8e0000 100%); text-align: center; z-index: 50; }
-            
-            /* 2. PLANIFICADOR (SOBRE EL MAPA) */
             #sidebar-tools { order: 2; padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
-            
-            /* 3. MAPA */
             #stage-area { order: 3; height: 50vh !important; width: 100%; position: relative; z-index: 10; border-top: 2px solid var(--serena-gold); border-bottom: 2px solid var(--serena-gold); }
-            
-            /* 4. REQUERIMIENTOS */
             #form-panel { order: 4; padding: 20px; background: var(--panel); padding-bottom: 80px; }
-            
-            /* 5. FOOTER */
             #mobile-footer { order: 5; display: block; padding: 30px; text-align: center; background: #0f0f0f; border-top: 1px solid #333; }
         }
 
         /* ESTILOS VISUALES */
         .escudo-img { width: 120px; margin: 0 auto; display: block; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); }
-        .rdmls-sigla { font-family: 'Oswald'; font-size: 40px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
-        .clock { font-family: 'Oswald'; font-size: 24px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
+        .rdmls-sigla { font-family: 'Oswald'; font-size: 42px; margin: 5px 0 0 0; line-height: 1; text-align: center; text-shadow: 2px 2px 0 #000; }
+        .clock { font-family: 'Oswald'; font-size: 26px; color: var(--serena-gold); margin-bottom: 10px; text-align: center; }
         
         .route-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border-left: 4px solid var(--serena-gold); }
         .search-row { display: flex; gap: 5px; margin-bottom: 10px; }
@@ -108,7 +97,7 @@
         .ticket-card.respondido { border-left-color: #00e676; }
         .status-pill { float: right; font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #333; color: gold; }
         .ticket-resp { background: #0d2b15; padding: 8px; border-radius: 4px; margin-top: 8px; color: #69f0ae; font-style: italic; border: 1px dashed #2e7d32; }
-        .ticket-img-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid #444; cursor: zoom-in; display: block; }
+        .ticket-img-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid #444; cursor: zoom-in; }
 
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
         .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; display: block; margin-bottom: 15px; }
@@ -126,15 +115,11 @@
         .close-lupa { position: absolute; top: 30px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: var(--serena-red); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
         #modal-tour-3d { display: none; position: fixed; inset: 0; background: black; z-index: 20000; }
         #success-feedback { display: none; background: #1b5e20; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 10px; font-weight: bold; border: 2px solid #00e676; }
-        
-        /* Contenedor del ícono para rotación */
-        .rotatable-icon { transition: transform 0.1s linear; transform-origin: center center; }
     </style>
 </head>
 <body onload="initApp()">
 
     <div id="main-layout">
-        
         <div id="sidebar-wrapper">
             <div id="sidebar-header">
                 <img src="escudo.png" class="escudo-img">
@@ -260,12 +245,13 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
+        // GLOBALES
         let serenitoMesh = null;
         let routePolyline = null;
         let destMarker = null;
         let routeInterval = null;
         
-        // ICONO SERENITO CON DIV INTERNO ROTABLE PARA MODO TANQUE 2D
+        // ICONO 2D con contenedor rotatorio
         let sIcon = L.divIcon({ 
             html: `<div id="serenito-body" style="position:relative; width:50px; height:80px; transition: transform 0.1s linear;">
                     <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" style="width:30px; position:absolute; bottom:0; left:10px; z-index:1; filter: drop-shadow(0 0 5px gold);">
@@ -321,12 +307,9 @@
 
         const LIMITES = { latMin: -30.07, latMax: -29.70, lngMin: -71.40, lngMax: -71.10 };
         map.on('moveend', () => {
-            if(routeInterval) return; // Si hay animación, no actualizar por drag
+            if (routeInterval) return; 
+            
             const c = map.getCenter(); serenitoMarker.setLatLng(c);
-            // Si no hay ruta, rotación 0 (frente)
-            const iconBody = document.getElementById('serenito-body');
-            if(iconBody) iconBody.style.transform = 'rotate(0deg)';
-
             const esValido = (c.lat >= LIMITES.latMin && c.lat <= LIMITES.latMax && c.lng >= LIMITES.lngMin && c.lng <= LIMITES.lngMax);
             const btn = document.getElementById('btn-env-rep');
             if(!esValido) {
@@ -348,7 +331,7 @@
         });
 
         // ----------------------------------------------------
-        // LÓGICA DE RUTA Y ANIMACIÓN DE CAMINATA 2D (MARCADOR)
+        // LÓGICA DE RUTA 2D CON GIRO REAL
         // ----------------------------------------------------
         function getBearing(lat1, lng1, lat2, lng2) {
             const y = Math.sin(lng2 - lng1) * Math.cos(lat2);
@@ -388,16 +371,15 @@
             destMarker = L.marker(endPoint, {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // CALCULAR GIRO (TANK MODE 2D)
+            // 1. ROTACIÓN TANQUE (MAPA 2D)
             const angle = getBearing(startPoint[0]*Math.PI/180, startPoint[1]*Math.PI/180, endPoint[0]*Math.PI/180, endPoint[1]*Math.PI/180);
             const iconBody = document.getElementById('serenito-body');
             if(iconBody) {
-                // Ajuste visual: Si el bearing es 0 (Norte), Serenito debe mostrar espalda. 
-                // Nuestro sprite es "Frente". Así que rotamos angle.
-                iconBody.style.transform = `rotate(${angle}deg)`; 
+                // Ajuste: 0 deg = Norte. Sprite = Sur (Frente). Corrección 180.
+                iconBody.style.transform = `rotate(${angle + 180}deg)`;
             }
 
-            // ANIMAR MARCADOR
+            // 2. ANIMACIÓN (LOOP)
             let steps = 100;
             let currentStep = 0;
             const deltaLat = (endPoint[0] - startPoint[0]) / steps;
@@ -405,9 +387,7 @@
 
             routeInterval = setInterval(() => {
                 currentStep++;
-                if (currentStep > steps) {
-                    currentStep = 0; // Reiniciar
-                }
+                if (currentStep > steps) currentStep = 0; // LOOP
                 const newLat = startPoint[0] + (deltaLat * currentStep);
                 const newLng = startPoint[1] + (deltaLng * currentStep);
                 serenitoMarker.setLatLng([newLat, newLng]);
@@ -450,17 +430,11 @@
             });
         }
 
-        // RADIO TOGGLE CON LOGICA REFORZADA
         function toggleRadio() {
             const r = document.getElementById('radio');
             const btn = document.getElementById('play-icon');
-            if (r.paused) {
-                r.play();
-                btn.className = "fas fa-pause";
-            } else {
-                r.pause();
-                btn.className = "fas fa-play";
-            }
+            if (r.paused) { r.play(); btn.className = "fas fa-pause"; } 
+            else { r.pause(); btn.className = "fas fa-play"; }
         }
 
         function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
@@ -513,82 +487,51 @@
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
 
-        // --- ESCENA PRINCIPAL (HOME 3D) ---
+        // --- PASEO 3D ---
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
         
-        // SOLO SERENITO EN HOME (ROTADO 180 GRADOS)
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
-            let s = m[0]; 
-            s.scaling = new BABYLON.Vector3(12,12,-12); 
-            s.position.y = -25;
-            s.rotation = new BABYLON.Vector3(0, Math.PI, 0); // FRENTE
+            let s = m[0]; s.scaling = new BABYLON.Vector3(12,12,-12); s.position.y = -25;
+            s.rotation = new BABYLON.Vector3(0, Math.PI, 0); 
             cam.lockedTarget = s;
         });
         engine.runRenderLoop(() => scene.render());
 
-        // --- PASEO 3D (MODAL CON TODO) ---
         let tourEngine;
         function abrirTourReal() {
             document.getElementById('modal-tour-3d').style.display = 'block';
             if(!tourEngine) {
-                const tc = document.getElementById('tour-canvas'); 
-                tourEngine = new BABYLON.Engine(tc, true);
-                const ts = new BABYLON.Scene(tourEngine); 
-                ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
-                
+                const tc = document.getElementById('tour-canvas'); tourEngine = new BABYLON.Engine(tc, true);
+                const ts = new BABYLON.Scene(tourEngine); ts.clearColor = new BABYLON.Color3(0.5, 0.7, 1.0);
                 const tCam = new BABYLON.ArcRotateCamera("tc", -Math.PI/2, Math.PI/3, 150, BABYLON.Vector3.Zero(), ts);
                 tCam.attachControl(tc, true); tCam.upperBetaLimit = Math.PI / 2.2;
                 new BABYLON.HemisphericLight("tl", new BABYLON.Vector3(0,1,0), ts);
-                
                 const ground = BABYLON.MeshBuilder.CreateGround("tg", {width:1000, height:1000}, ts);
-                const gm = new BABYLON.StandardMaterial("gm", ts); 
-                gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); 
-                ground.material = gm;
+                const gm = new BABYLON.StandardMaterial("gm", ts); gm.diffuseTexture = new BABYLON.Texture("mapa.jpg", ts); ground.material = gm;
 
-                // EDIFICIOS NIVEL SUELO (Y=0)
-                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ 
-                    m[0].scaling = new BABYLON.Vector3(35,35,35); 
-                    m[0].position.x = 100; 
-                    m[0].position.y = 0; 
-                });
+                // EDIFICIOS (AGREGADOS AMBOS)
+                BABYLON.SceneLoader.ImportMesh("", "./", "municipalidad.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = 100; m[0].position.y = 0; });
+                BABYLON.SceneLoader.ImportMesh("", "./", "intendencia.glb", ts, (m)=>{ m[0].scaling = new BABYLON.Vector3(35,35,35); m[0].position.x = -100; m[0].position.y = 0; });
 
-                // SERENITO TANK
-                let tSerenito = null;
-                let tTarget = null;
-                let tWalking = false;
-
+                let tSerenito = null; let tTarget = null; let tWalking = false;
                 BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", ts, (m)=>{ 
-                    tSerenito = m[0]; 
-                    tSerenito.scaling = new BABYLON.Vector3(10,10,-10); 
-                    tSerenito.position.y = 0; 
-                    tSerenito.rotationQuaternion = null; 
-                    tCam.lockedTarget = tSerenito; 
-
+                    tSerenito = m[0]; tSerenito.scaling = new BABYLON.Vector3(10,10,-10); tSerenito.position.y = 0; tSerenito.rotationQuaternion = null; tCam.lockedTarget = tSerenito; 
                     ts.registerBeforeRender(() => {
                         if(tWalking && tSerenito && tTarget) {
                             tSerenito.moveWithCollisions(tSerenito.forward.scale(0.5));
-                            if (BABYLON.Vector3.Distance(tSerenito.position, tTarget) < 2) {
-                                tWalking = false;
-                            }
+                            if (BABYLON.Vector3.Distance(tSerenito.position, tTarget) < 2) tWalking = false;
                         }
                     });
                 });
-                
-                // CLICK -> TANK MOVE
                 ts.onPointerDown = (evt, pick) => { 
                     if(pick.hit && pick.pickedMesh === ground && tSerenito) {
-                        tTarget = pick.pickedPoint;
-                        tTarget.y = 0;
-                        tSerenito.lookAt(tTarget);
-                        tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); // 180 GRADOS PARA CORREGIR ESPALDA
-                        tWalking = true;
+                        tTarget = pick.pickedPoint; tTarget.y = 0; tSerenito.lookAt(tTarget); tSerenito.rotate(BABYLON.Axis.Y, Math.PI, BABYLON.Space.LOCAL); tWalking = true;
                     } 
                 };
-                
                 tourEngine.runRenderLoop(() => ts.render());
             }
         }
