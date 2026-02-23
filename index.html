@@ -2,338 +2,184 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vecinos La Serena</title>
+    <title>Radio Digital Municipal La Serena - Vecinos RDMLS</title>
     <style>
-        /* ESTILOS BASE */
-        body { 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f6f8; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        /* TARJETA DE LOGIN (Central y limpia) */
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        h2 { color: #333; margin-bottom: 5px; font-size: 24px; }
-        p.subtitle { color: #888; margin-top: 0; margin-bottom: 30px; font-size: 14px; }
-
-        /* INPUTS Y BOTONES */
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box; /* Importante para padding */
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn-primary { background-color: #007bff; color: white; }
-        .btn-primary:hover { background-color: #0056b3; }
-
-        .btn-success { background-color: #28a745; color: white; }
-        .btn-danger { background-color: #dc3545; color: white; }
-
-        /* ENLACE "PIOLA" PARA FUNCIONARIOS */
-        .staff-toggle-link {
-            display: block;
-            margin-top: 25px;
-            font-size: 13px;
-            color: #aaa;
-            text-decoration: none;
-            cursor: pointer;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        .staff-toggle-link:hover { color: #007bff; }
-
-        /* UTILIDADES DE VISUALIZACIÓN */
-        .hidden { display: none !important; }
+        /* CSS DEL SITIO MARAVILLOSO RECAPITULADO */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f0f2f5; }
+        #contenedor-principal { max-width: 1200px; margin: 0 auto; background: white; min-height: 100vh; }
         
-        /* ESTILOS INTERNOS (DASHBOARD, ETC) */
-        #app-container { width: 100%; max-width: 500px; display: none; padding: 20px; }
-        .card-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .status-pill { float: right; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        /* LOGIN DISCRETO */
+        .login-box { padding: 40px; text-align: center; max-width: 400px; margin: 0 auto; }
+        .staff-access-piola { margin-top: 50px; font-size: 11px; color: #ccc; border-top: 1px solid #eee; padding-top: 15px; }
+        .staff-access-piola a { color: #bbb; text-decoration: none; cursor: pointer; }
+
+        /* PASEO 3D Y MOTOR TIPO TANQUE */
+        #motor-3d { width: 100%; height: 500px; background: #000; position: relative; }
+        .edificio { position: absolute; background: #888; border: 1px solid #555; }
         
-        /* CÁMARA FULL SCREEN */
-        #camera-view {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 1000; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        #serenito-overlay { position: absolute; bottom: 0; right: 0; width: 150px; pointer-events: none; }
-        .cam-controls { position: absolute; bottom: 30px; z-index: 1001; display: flex; gap: 20px; }
-        .btn-circle { width: 60px; height: 60px; border-radius: 50%; border: 4px solid white; background: rgba(255,255,255,0.2); cursor: pointer; }
+        /* CUADRO DE DISTANCIAS Y MAPA */
+        #cuadro-distancias { background: white; border: 2px solid #007bff; padding: 15px; border-radius: 10px; }
+        .btn-pastilla { display: inline-block; padding: 8px 15px; margin: 5px; background: #e1f5fe; border-radius: 20px; cursor: pointer; }
+
+        /* CÁMARA Y SELFIE */
+        #camara-full { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:1000; }
+        #video-preview { width: 100%; height: 100%; object-fit: cover; }
+        #serenito-sticker { position: absolute; bottom: 20px; right: 20px; width: 180px; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="login-card" id="login-view">
-        <h2 id="login-title">Vecinos La Serena</h2>
-        <p class="subtitle" id="login-subtitle">Plataforma de Gestión</p>
-
-        <div id="form-vecino">
-            <input type="text" id="rutUser" placeholder="Ingresa tu RUT (ej: 11111111-1)">
-            <button class="btn-primary" onclick="ingresarVecino()">Ingresar</button>
-            <p style="font-size: 11px; color: #ccc; margin-top: 10px;">* Prueba 11111111-1 para ver usuario BLOQUEADO</p>
-        </div>
-
-        <div id="form-staff" class="hidden">
-            <input type="text" id="staffUser" placeholder="Usuario Funcionario">
-            <input type="password" id="staffPass" placeholder="Contraseña">
-            <button class="btn-success" onclick="ingresarStaff()">Acceder al Sistema</button>
-            <button style="background:none; color:#888; font-weight:normal; font-size:13px; margin-top:10px; width:auto;" onclick="toggleLoginMode(false)">Cancelar / Volver</button>
-        </div>
-
-        <a class="staff-toggle-link" id="link-staff" onclick="toggleLoginMode(true)">
-            Gestión Municipal
-        </a>
-    </div>
-
-    <div id="app-container">
+<div id="contenedor-principal">
+    <div id="pantalla-login" class="login-box">
+        <h2>Vecinos La Serena</h2>
+        <input type="text" id="rutInput" placeholder="RUT (11111111-1)">
+        <button onclick="validarIngreso()" style="background:#007bff; color:white; width:100%; padding:10px;">Ingresar</button>
         
-        <div id="view-dashboard" class="hidden">
-            <h2>Hola, <span id="dash-name"></span></h2>
-            <button style="background:#ff9800; color:white; margin-bottom:20px;" onclick="abrirCamara()">📸 Selfie con Serenito</button>
-            
-            <h3>Mis Requerimientos</h3>
-            <div id="list-active-reqs"></div>
-            
-            <button class="btn-danger" style="margin-top:30px;" onclick="logout()">Cerrar Sesión</button>
-        </div>
-
-        <div id="view-blocked" class="hidden">
-            <div style="background:#fff3cd; color:#856404; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ffeeba;">
-                <strong>⚠️ Cuenta Restringida</strong><br>
-                <small>Estimado <span id="block-name"></span>, no puede ingresar nuevas solicitudes, pero aquí está su historial.</small>
+        <div class="staff-access-piola">
+            <a onclick="abrirAccesoStaff()">Gestión Municipal</a>
+            <div id="form-staff-oculto" style="display:none; margin-top:10px;">
+                <input type="text" id="userStaff" placeholder="Usuario" style="width:80px;">
+                <input type="password" id="passStaff" placeholder="Clave" style="width:80px;">
+                <button onclick="loginFuncionario()">Entrar</button>
             </div>
+        </div>
+    </div>
 
-            <h3>Historial de Solicitudes</h3>
-            <div id="list-history-reqs"></div>
+    <div id="pantalla-app" style="display:none;">
+        <header style="background:#007bff; color:white; padding:10px; display:flex; justify-content:space-between;">
+            <span>Radio Digital Municipal (RDMLS)</span>
+            <button onclick="salir()" style="background:red; color:white;">Salir</button>
+        </header>
 
-            <button class="btn-danger" style="margin-top:20px;" onclick="logout()">Salir</button>
+        <div id="aviso-bloqueo" style="display:none; background:#fff3cd; padding:15px; color:#856404; text-align:center;">
+            <strong>CUENTA RESTRINGIDA:</strong> Solo puedes consultar el historial y el Paseo 3D.
         </div>
 
-        <div id="view-staff" class="hidden">
-            <h2 style="color:#2c3e50;">Panel de Gestión</h2>
-            <p>Administración de Requerimientos</p>
-            
-            <div id="staff-list" style="margin-top:20px;">
-                <div class="card-item" style="border-left-color: green;">
-                    <strong>Rodrigo Godoy (Bloqueado)</strong><br>
-                    <small>Luminaria - Pendiente revisión</small>
-                    <button style="font-size:11px; width:auto; padding:5px; margin-top:5px; float:right;">Responder</button>
-                    <div style="clear:both;"></div>
-                </div>
+        <section id="paseo-historico">
+            <h3>Paseo 3D Histórico</h3>
+            <div id="motor-3d">
+                <div class="edificio" style="width:50px; height:100px; left:200px; bottom:0;"></div>
             </div>
+        </section>
 
-            <button class="btn-danger" style="margin-top:30px;" onclick="logout()">Cerrar Sistema</button>
-        </div>
+        <section id="cuadro-distancias">
+            <h3>Distancias desde La Serena</h3>
+            <div id="botones-ciudades">
+                <div class="btn-pastilla" onclick="verDistancia('Vicuña')">Vicuña</div>
+                <div class="btn-pastilla" onclick="verDistancia('Andacollo')">Andacollo</div>
+                <div class="btn-pastilla" onclick="verDistancia('Punta de Choros')">Punta de Choros</div>
+                <div class="btn-pastilla" onclick="verDistancia('Ovalle')">Ovalle</div>
+                <div class="btn-pastilla" onclick="verDistancia('Coquimbo')">Coquimbo</div>
+            </div>
+            <div id="resultado-distancia" style="margin-top:10px; font-weight:bold;"></div>
+            <button onclick="cerrarCuadro()" style="display:none;" id="btn-cerrar-dist">Cerrar Resultados</button> </section>
+
+        <button onclick="activarCamara()" style="width:100%; padding:20px; background:orange; font-weight:bold;">📸 SELFIE CON SERENITO</button>
+        
+        <section id="seccion-historial">
+            <h3>Historial de Requerimientos</h3>
+            <div id="lista-historial"></div>
+        </section>
+
+        <footer id="footer-stats" style="margin-top:20px; border-top:1px solid #ccc;">
+            <div id="clima">Cargando tiempo La Serena...</div>
+            <div id="chat-status">Chat: Conectado</div>
+        </footer >
     </div>
 
-    <div id="camera-view">
-        <video id="videoElement" autoplay playsinline></video>
-        <img src="serenito.png" id="serenito-overlay" alt="Serenito">
-        
-        <div class="cam-controls">
-            <button style="background:red; width:50px; height:50px; border-radius:50%; color:white; border:none;" onclick="cerrarCamara()">X</button>
-            <div class="btn-circle" onclick="tomarFoto()"></div>
-        </div>
-        <canvas id="canvasFoto" style="display:none;"></canvas>
+    <div id="pantalla-gestion" style="display:none; padding:20px;">
+        <h2>Panel de Gestión - Vecinos La Serena spa</h2>
+        <div id="requerimientos-pendientes">
+            </div>
     </div>
+</div>
 
-    <script>
-        // --- BASE DE DATOS LOCAL (SIMULADA) ---
-        const DB = {
-            users: [
-                { rut: "11111111-1", name: "Rodrigo Godoy", blocked: true, history: [
-                    { type: "Luminaria", date: "20-02-2026", status: "Resuelto" },
-                    { type: "Aseo", date: "22-02-2026", status: "Pendiente" }
-                ]},
-                { rut: "22222222-2", name: "Juan Pérez", blocked: false, history: [] }
-            ],
-            staff: [
-                { user: "admin", pass: "1234" }
-            ]
-        };
+<div id="camara-full">
+    <video id="video-preview" autoplay playsinline></video>
+    <img src="serenito.png" id="serenito-sticker" alt="Serenito">
+    <div style="position:absolute; bottom:30px; width:100%; text-align:center;">
+        <button onclick="capturarFoto()" style="width:70px; height:70px; border-radius:50%; border:5px solid white;"></button>
+        <button onclick="cerrarCamara()" style="background:red; color:white; margin-left:20px;">X</button>
+    </div>
+</div>
 
-        let currentUser = null;
-        let stream = null;
+<script>
+    // ESTADO DEL USUARIO
+    const usuarioSimulado = {
+        rut: "11111111-1",
+        nombre: "Rodrigo Godoy",
+        bloqueado: true, // Prueba para ver historial bloqueado
+        historial: [
+            { id: 501, tipo: "Luminaria", status: "Recibido" }
+        ]
+    };
 
-        // --- LÓGICA DE INTERFAZ (TOGGLE PIOLA) ---
-        
-        function toggleLoginMode(isStaffMode) {
-            const formVecino = document.getElementById('form-vecino');
-            const formStaff = document.getElementById('form-staff');
-            const link = document.getElementById('link-staff');
-            const title = document.getElementById('login-title');
-
-            if (isStaffMode) {
-                // Modo Funcionario
-                formVecino.classList.add('hidden');
-                link.classList.add('hidden'); // Ocultamos el link gatillador
-                formStaff.classList.remove('hidden');
-                title.innerText = "Acceso Funcionarios";
-            } else {
-                // Modo Vecino (Normal)
-                formStaff.classList.add('hidden');
-                formVecino.classList.remove('hidden');
-                link.classList.remove('hidden'); // Vuelve el link gatillador
-                title.innerText = "Vecinos La Serena";
-            }
-        }
-
-        function switchView(viewId) {
-            // Ocultar login y app container
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('app-container').style.display = 'block'; // Mostrar contenedor general
+    function validarIngreso() {
+        const input = document.getElementById('rutInput').value;
+        if(input === usuarioSimulado.rut) {
+            document.getElementById('pantalla-login').style.display = 'none';
+            document.getElementById('pantalla-app').style.display = 'block';
             
-            // Ocultar vistas internas
-            document.getElementById('view-dashboard').classList.add('hidden');
-            document.getElementById('view-blocked').classList.add('hidden');
-            document.getElementById('view-staff').classList.add('hidden');
-            
-            // Mostrar la deseada
-            document.getElementById(viewId).classList.remove('hidden');
-        }
-
-        // --- LOGIN LOGIC ---
-
-        function ingresarVecino() {
-            const rut = document.getElementById('rutUser').value;
-            const user = DB.users.find(u => u.rut === rut);
-
-            if (user) {
-                currentUser = user;
-                if (user.blocked) {
-                    document.getElementById('block-name').innerText = user.name;
-                    renderHistory('list-history-reqs');
-                    switchView('view-blocked');
-                } else {
-                    document.getElementById('dash-name').innerText = user.name;
-                    renderHistory('list-active-reqs');
-                    switchView('view-dashboard');
-                }
-            } else {
-                alert("Usuario no encontrado (Prueba 11111111-1)");
+            // PARCHE 2: SI ESTÁ BLOQUEADO, MOSTRAR AVISO PERO NO CERRAR LA APP
+            if(usuarioSimulado.bloqueado) {
+                document.getElementById('aviso-bloqueo').style.display = 'block';
+                // Deshabilitar funciones de envío de reporte
             }
+            cargarHistorial();
         }
+    }
 
-        function ingresarStaff() {
-            const u = document.getElementById('staffUser').value;
-            const p = document.getElementById('staffPass').value;
-            const staff = DB.staff.find(s => s.user === u && s.pass === p);
+    // ACCESO PIOLA FUNCIONARIO
+    function abrirAccesoStaff() {
+        document.getElementById('form-staff-oculto').style.display = 'block';
+    }
 
-            if (staff) {
-                switchView('view-staff');
-            } else {
-                alert("Error de credenciales (Prueba: admin / 1234)");
-            }
-        }
+    function loginFuncionario() {
+        // Lógica de acceso directo a gestión
+        document.getElementById('pantalla-login').style.display = 'none';
+        document.getElementById('pantalla-gestion').style.display = 'block';
+    }
 
-        function logout() {
-            currentUser = null;
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('login-view').classList.remove('hidden');
-            
-            // Limpiar campos
-            document.getElementById('rutUser').value = '';
-            document.getElementById('staffUser').value = '';
-            document.getElementById('staffPass').value = '';
-            
-            // Volver al modo vecino por defecto
-            toggleLoginMode(false);
-        }
+    // CUADRO DISTANCIAS
+    function verDistancia(ciudad) {
+        document.getElementById('resultado-distancia').innerText = "Distancia a " + ciudad + ": Calculando...";
+        document.getElementById('btn-cerrar-dist').style.display = 'inline-block';
+    }
+    
+    function cerrarCuadro() {
+        document.getElementById('resultado-distancia').innerText = "";
+        document.getElementById('btn-cerrar-dist').style.display = 'none';
+    }
 
-        // --- RENDERIZADO DE HISTORIAL ---
-        function renderHistory(elementId) {
-            const container = document.getElementById(elementId);
-            container.innerHTML = '';
-            const history = currentUser.history || [];
+    // SELFIE CON SERENITO (PARCHE)
+    async function activarCamara() {
+        const camara = document.getElementById('camara-full');
+        camara.style.display = 'block';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('video-preview').srcObject = stream;
+    }
 
-            if (history.length === 0) {
-                container.innerHTML = '<p style="color:#999; text-align:center;">Sin historial.</p>';
-                return;
-            }
+    function capturarFoto() {
+        alert("¡Foto con Serenito capturada! Se guardará en registros");
+        cerrarCamara();
+    }
 
-            history.forEach(item => {
-                let color = item.status === 'Resuelto' ? '#d4edda' : '#fff3cd';
-                container.innerHTML += `
-                    <div class="card-item" style="border-left-color: ${item.status === 'Resuelto' ? 'green' : 'orange'};">
-                        <strong>${item.type}</strong>
-                        <span class="status-pill" style="background:${color}">${item.status}</span>
-                        <br><small style="color:#666">${item.date}</small>
-                    </div>
-                `;
-            });
-        }
+    function cerrarCamara() {
+        document.getElementById('camara-full').style.display = 'none';
+        const stream = document.getElementById('video-preview').srcObject;
+        stream.getTracks().forEach(track => track.stop());
+    }
 
-        // --- CÁMARA & SELFIE ---
-        async function abrirCamara() {
-            document.getElementById('camera-view').style.display = 'flex';
-            const video = document.getElementById('videoElement');
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-                video.srcObject = stream;
-            } catch (e) {
-                alert("Error cámara: " + e);
-                cerrarCamara();
-            }
-        }
+    function cargarHistorial() {
+        const lista = document.getElementById('lista-historial');
+        usuarioSimulado.historial.forEach(h => {
+            lista.innerHTML += `<div>REQ #${h.id} - ${h.tipo} - <b>${h.status}</b></div>`;
+        });
+    }
 
-        function cerrarCamara() {
-            if (stream) stream.getTracks().forEach(t => t.stop());
-            document.getElementById('camera-view').style.display = 'none';
-        }
-
-        function tomarFoto() {
-            const video = document.getElementById('videoElement');
-            const canvas = document.getElementById('canvasFoto');
-            const img = document.getElementById('serenito-overlay');
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            // Foto
-            ctx.drawImage(video, 0, 0);
-            
-            // Overlay
-            const sW = canvas.width * 0.4; // 40% del ancho
-            const sH = (img.naturalHeight / img.naturalWidth) * sW;
-            ctx.drawImage(img, canvas.width - sW - 20, canvas.height - sH - 20, sW, sH);
-
-            alert("¡Foto Guardada! (Simulación)");
-            cerrarCamara();
-        }
-
-    </script>
+    function salir() {
+        location.reload(); // Salida perfecta
+    }
+</script>
 </body>
 </html>
