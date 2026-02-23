@@ -33,8 +33,7 @@
             
             #sidebar-wrapper {
                 background: linear-gradient(180deg, #b71c1c 0%, #5f0000 100%);
-                padding: 20px;
-                overflow-y: auto;
+                padding: 20px; overflow-y: auto;
                 scrollbar-width: thin; scrollbar-color: var(--serena-gold) #222;
                 box-shadow: 4px 0 20px rgba(0,0,0,0.6); z-index: 50;
             }
@@ -83,6 +82,7 @@
         .city-input { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 14px; }
         .go-btn { background: var(--serena-gold); color: black; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         
+        /* CHIPS (Scroll Horizontal Móvil) */
         .chip-container { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
         @media (max-width: 1023px) { .chip-container { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 10px; } .chip { flex: 0 0 auto; padding: 10px 18px; font-size: 13px; } }
         .chip { background: #333; padding: 6px 12px; font-size: 11px; border-radius: 20px; cursor: pointer; border: 1px solid #555; color: #ccc; transition: 0.2s; white-space: nowrap; }
@@ -92,6 +92,12 @@
         .trans-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.5); border-radius: 6px; font-size: 12px; border-bottom: 1px solid #444; }
         .trans-icon { width: 20px; text-align: center; color: var(--serena-gold); margin-right: 5px; }
 
+        /* WIDGET CLIMA */
+        .weather-card { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 15px; margin-top: 20px; border: 1px solid #444; display: flex; align-items: center; justify-content: space-between; }
+        .weather-temp { font-size: 32px; font-family: 'Oswald'; color: white; }
+        .weather-detail { font-size: 11px; color: #aaa; text-align: right; }
+
+        /* MAPA */
         #map { width: 100%; height: 100%; z-index: 1; }
         #renderCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         .btn-tour { position: absolute; bottom: 20px; left: 20px; z-index: 20; background: var(--serena-gold); color: black; font-weight: bold; padding: 10px 20px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
@@ -110,6 +116,7 @@
         .ticket-img-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; margin-top: 5px; border: 1px solid #444; cursor: zoom-in; }
 
         .graphic-filler { width: 100%; border-radius: 8px; margin-top: 15px; border: 2px solid #333; cursor: zoom-in; transition: 0.3s; }
+        .img-desc { font-size: 11px; color: #888; margin-top: 5px; font-style: italic; display: block; margin-bottom: 15px; }
         
         #chat-ia-trigger { position: fixed; bottom: 20px; right: 20px; z-index: 15000; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--serena-red); padding: 8px 20px 8px 8px; border-radius: 50px; border: 2px solid white; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
         .chat-text { color: white; font-family: 'Oswald'; font-weight: bold; font-size: 14px; text-transform: uppercase; }
@@ -162,9 +169,25 @@
                     <div class="route-list" id="route-output"></div>
                     <button id="btn-reset-route" style="width:100%; background:#ff3d00; color:white; border:none; padding:8px; border-radius:5px; margin-top:10px; cursor:pointer; font-size:12px; font-weight:bold; display:none;" onclick="resetRoute()">CERRAR RUTA</button>
                 </div>
+
+                <div class="weather-card">
+                    <div>
+                        <div style="font-size:10px; color:#aaa; text-transform:uppercase;">Clima La Serena</div>
+                        <div class="weather-temp" id="w-temp">--°</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div id="w-wind">Viento: -- km/h</div>
+                        <div id="w-desc">Actualizando...</div>
+                    </div>
+                    <i class="fas fa-sun" style="font-size:30px; color:gold;"></i>
+                </div>
+
                 <div style="margin-top:20px;">
                     <img src="relleno-radio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Estudios RDMLS')">
+                    <span class="img-desc">Cabina RDMLS: La voz de nuestra gente.</span>
+                    
                     <img src="serenito-bus.jpg" class="graphic-filler" onclick="lupa(this.src, 'Buses Eléctricos 2026')">
+                    <span class="img-desc">Electromovilidad: Futuro verde.</span>
                 </div>
             </div>
         </div>
@@ -208,7 +231,10 @@
 
             <div style="margin-top:20px;">
                 <img src="comic-cielo.jpg" class="graphic-filler" onclick="lupa(this.src, 'Cielos de La Serena')">
+                <span class="img-desc">Astronomía: Ventana al universo.</span>
+                
                 <img src="comic-patrimonio.jpg" class="graphic-filler" onclick="lupa(this.src, 'Plan Serena')">
+                <span class="img-desc">Patrimonio: Historia viva.</span>
             </div>
         </div>
 
@@ -242,21 +268,21 @@
     <audio id="radio" src="https://az11.yesstreaming.net:8590/radio.mp3" crossorigin="anonymous"></audio>
 
     <script>
-        // GLOBALES PARA LOOP CAMINATA
+        // GLOBALES
         let serenitoMesh = null;
         let isWalking = false;
-        let walkStartPos = null;
         let walkTargetPos = null;
-        let walkSpeed = 0.5;
-        let ticketIcon = L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png', // TICKET VERDE
-            iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
-        });
         let routePolyline = null;
         let destMarker = null;
+        // ICONO TICKET VERDE
+        const ticketIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/148/148767.png',
+            iconSize: [40, 40], iconAnchor: [20, 40], popupAnchor: [0, -40]
+        });
 
         function initApp() {
             crearFavicon();
+            fetchWeather(); // Clima
             const r = document.getElementById('radio');
             r.play().catch(() => {
                 const start = () => { r.play(); document.removeEventListener('click', start); document.removeEventListener('touchstart', start); };
@@ -264,6 +290,17 @@
             });
             setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'), 1000);
             window.addEventListener("resize", () => { engine.resize(); setTimeout(() => map.invalidateSize(), 100); });
+        }
+
+        // CLIMA REAL (API OPEN-METEO)
+        function fetchWeather() {
+            fetch('https://api.open-meteo.com/v1/forecast?latitude=-29.90&longitude=-71.25&current_weather=true')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('w-temp').innerText = d.current_weather.temperature + "°";
+                    document.getElementById('w-wind').innerText = "Viento: " + d.current_weather.windspeed + " km/h";
+                    document.getElementById('w-desc').innerText = "La Serena Al Día";
+                }).catch(e => console.log("Clima offline"));
         }
 
         function crearFavicon() {
@@ -310,7 +347,6 @@
         const metaIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1169/1169542.png', iconSize: [40, 40], iconAnchor: [20, 40] });
         
         function calcDirect(lat, lon, name) {
-            // 1. DIBUJAR RUTA EN MAPA
             map.invalidateSize();
             const R=6371; const dLat=(lat-LS[0])*Math.PI/180; const dLon=(lon-LS[1])*Math.PI/180;
             const a = Math.sin(dLat/2)**2 + Math.cos(LS[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
@@ -336,18 +372,12 @@
             destMarker = L.marker([lat,lon], {icon: ticketIcon}).addTo(map);
             map.fitBounds(routePolyline.getBounds(), {padding:[50,50]});
 
-            // 2. ACTIVAR CAMINATA INFINITA EN 3D
+            // 3D WALK
             if(serenitoMesh) {
-                // Calcular vector dirección (aprox)
-                let dX = (lon - LS[1]) * 1000; // Escala arbitraria para visualización
+                let dX = (lon - LS[1]) * 1000;
                 let dZ = (lat - LS[0]) * 1000;
-                
-                walkStartPos = new BABYLON.Vector3(0, 0, 0); // Inicio siempre centro
                 walkTargetPos = new BABYLON.Vector3(dX, 0, dZ);
-                
-                // Rotar Serenito hacia el destino
                 serenitoMesh.lookAt(walkTargetPos);
-                serenitoMesh.position = walkStartPos.clone(); // Resetear posición
                 isWalking = true;
             }
         }
@@ -442,33 +472,43 @@
         function toggleZoom(e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); }
         function closeLupa(e) { if(e.target.id === 'modal-lupa' || e.target.classList.contains('close-lupa')) document.getElementById('modal-lupa').style.display = 'none'; }
 
-        // PASEO
+        // PASEO 3D (TANK MODE REINSTAURADO)
         const canvas = document.getElementById("renderCanvas");
         const engine = new BABYLON.Engine(canvas, true);
         const scene = new BABYLON.Scene(engine); scene.clearColor = new BABYLON.Color4(0,0,0,0);
         const cam = new BABYLON.ArcRotateCamera("c", Math.PI/2, Math.PI/2.5, 100, BABYLON.Vector3.Zero(), scene);
         new BABYLON.HemisphericLight("l", new BABYLON.Vector3(0,1,0), scene);
+        
+        // SUELO INVISIBLE (PARA DETECTAR CLICS)
+        const ground = BABYLON.MeshBuilder.CreateGround("g", {width:10000, height:10000}, scene);
+        ground.isVisible = false; 
+
         BABYLON.SceneLoader.ImportMesh("", "./", "serenito.glb", scene, (m) => { 
             serenitoMesh = m[0]; 
             serenitoMesh.scaling = new BABYLON.Vector3(12,12,-12); 
             cam.lockedTarget = serenitoMesh;
             
-            // LOGICA DE CAMINATA EN LOOP
+            // LOGICA CAMINATA INFINITA Y MANUAL
             scene.registerBeforeRender(() => {
                 if(isWalking && serenitoMesh && walkTargetPos) {
-                    // Mover hacia adelante
                     serenitoMesh.moveWithCollisions(serenitoMesh.forward.scale(0.5));
-                    
-                    // Calcular distancia al inicio
-                    let dist = BABYLON.Vector3.Distance(serenitoMesh.position, walkStartPos);
-                    
-                    // Si se aleja mucho (simula llegar), resetear
-                    if (dist > 200) {
-                        serenitoMesh.position = walkStartPos.clone();
+                    // LOOP: Si se aleja > 200 unidades, vuelve al centro
+                    if (BABYLON.Vector3.Distance(serenitoMesh.position, new BABYLON.Vector3(0,0,0)) > 300) {
+                        serenitoMesh.position = new BABYLON.Vector3(0,0,0);
                     }
                 }
             });
         });
+
+        // CLIC EN SUELO 3D -> MOVER TIPO TANQUE
+        scene.onPointerDown = (evt, pickResult) => {
+            if (pickResult.hit && serenitoMesh) {
+                walkTargetPos = pickResult.pickedPoint;
+                serenitoMesh.lookAt(new BABYLON.Vector3(walkTargetPos.x, 0, walkTargetPos.z));
+                isWalking = true;
+            }
+        };
+
         engine.runRenderLoop(() => scene.render());
 
         let tourEngine;
